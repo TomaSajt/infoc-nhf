@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.11)
 project(infoc-nhf)
 
 # clangd support
@@ -9,7 +9,16 @@ find_package(
     COMPONENTS SDL3-shared
 )
 
-add_subdirectory(third_party/SDL3_gfx)
+include(FetchContent)
+
+# fork of SDL2_gfx for SDL3 support
+FetchContent_Declare(
+  SDL3_gfx
+  GIT_REPOSITORY https://github.com/sabdul-khabir/SDL3_gfx.git
+  GIT_TAG        add4f8c517d7b0275a6dcd67638d073be051ea88
+)
+
+FetchContent_MakeAvailable(SDL3_gfx)
 
 add_compile_options(
     -Wall
@@ -20,11 +29,8 @@ add_executable(infoc-nhf WIN32
     main.c
 )
 
-target_include_directories(infoc-nhf PRIVATE
-    third_party/SDL3_gfx
-)
-
 target_link_libraries(infoc-nhf PRIVATE
+    m # Maths
     SDL3::SDL3
     SDL3_gfx_Static
 )

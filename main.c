@@ -50,6 +50,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   SDL_SetRenderDrawColor(as->renderer, 255, 255, 0, SDL_ALPHA_OPAQUE); /*head*/
   SDL_RenderFillRect(as->renderer, &r);
 
+  circleRGBA(as->renderer, 100.0, 100.0, 50.0, 0, 255, 0, 255);
+
   SDL_RenderPresent(as->renderer);
   return SDL_APP_CONTINUE;
 }
