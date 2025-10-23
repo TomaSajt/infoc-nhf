@@ -1,6 +1,5 @@
-#include "debugmalloc.h"
+// #include "debugmalloc.h"
 
-#define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
@@ -40,14 +39,13 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
   return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult SDL_AppIterate(void *appstate) {
-  AppState *as = (AppState *)appstate;
+SDL_AppResult do_render(AppState *as) {
 
   SDL_SetRenderDrawColor(as->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(as->renderer);
 
   SDL_FRect r = {.x = 30.0, .y = 30.0, .w = 100.0, .h = 100.0};
-  SDL_SetRenderDrawColor(as->renderer, 255, 255, 0, SDL_ALPHA_OPAQUE); /*head*/
+  SDL_SetRenderDrawColor(as->renderer, 255, 255, 0, SDL_ALPHA_OPAQUE);
   SDL_RenderFillRect(as->renderer, &r);
 
   circleRGBA(as->renderer, 100.0, 100.0, 50.0, 0, 255, 0, 255);
@@ -56,35 +54,28 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult SDL_AppInit(void **_as, int argc, char *argv[]) {
-  if (!SDL_SetAppMetadata("Test SDL3 App", "1.0",
-                          "net.tomasajt.TestSDL3App")) {
+SDL_AppResult init_app(AppState *as, int argc, char *argv[]) {
+  if (!SDL_SetAppMetadata("NHF Geometry", "0.0.0",
+                          "net.tomasajt.NHFGeometry")) {
     return SDL_APP_FAILURE;
   }
 
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     return SDL_APP_FAILURE;
   }
-  AppState *as = (AppState *)malloc(sizeof(AppState));
-  if (!as) {
-    return SDL_APP_FAILURE;
-  }
-  *as = (AppState){.window = NULL, .renderer = NULL};
 
-  int window_flags = SDL_WINDOW_RESIZABLE;
+  const int window_flags = SDL_WINDOW_RESIZABLE;
 
   if (!SDL_CreateWindowAndRenderer("NHF1", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT,
                                    window_flags, &as->window, &as->renderer)) {
     return SDL_APP_FAILURE;
   }
 
-  *_as = as;
-
   return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult SDL_AppEvent(void *_as, SDL_Event *event) {
-  AppState *as = (AppState *)_as;
+SDL_AppResult handle_event(AppState *as, SDL_Event *event) {
+  SDL_Log("%d\n", event->type);
   switch (event->type) {
   case SDL_EVENT_QUIT:
     return SDL_APP_SUCCESS;
@@ -94,11 +85,29 @@ SDL_AppResult SDL_AppEvent(void *_as, SDL_Event *event) {
   return SDL_APP_CONTINUE;
 }
 
-void SDL_AppQuit(void *_as, SDL_AppResult result) {
-  AppState *as = (AppState *)_as;
-  if (as != NULL) {
-    SDL_DestroyRenderer(as->renderer);
-    SDL_DestroyWindow(as->window);
-    free(as);
+int main(int argc, char **argv) {
+
+  AppState as = {.window = NULL, .renderer = NULL};
+
+  SDL_AppResult rc = init_app(&as, argc, argv);
+
+  while (rc == SDL_APP_CONTINUE) {
+    SDL_Event event;
+    SDL_WaitEvent(&event);
+    rc = handle_event(&as, &event);
+
+    if (rc != SDL_APP_CONTINUE)
+      break;
+
+    rc = do_render(&as);
   }
+
+  if (as.renderer != NULL)
+    SDL_DestroyRenderer(as.renderer);
+  if (as.window != NULL)
+    SDL_DestroyWindow(as.window);
+
+  SDL_Quit();
+
+  return rc == SDL_APP_FAILURE ? 1 : 0;
 }
