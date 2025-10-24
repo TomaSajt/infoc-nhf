@@ -1,77 +1,169 @@
+#include <stdbool.h>
+
 typedef struct {
   double x;
   double y;
 } Pos2D;
 
-typedef struct PointProvider PointProvider;
-typedef struct LineProvider LineProvider;
+typedef struct {
+  bool invalid;
+  Pos2D pos;
+} PointEvaled;
+
+typedef enum {
+  L_EXT_SEGMENT = 0, //    start -> end
+  L_EXT_RAY = 1,     //    start -> end ->
+  L_EXT_LINE = 2,    // -> start -> end ->
+} LineExtMode;
+
+typedef struct {
+  bool invalid;
+  LineExtMode mode;
+  Pos2D start;
+  Pos2D end;
+} LineEvaled;
+
+typedef struct PointDef PointDef;
+typedef struct LineDef LineDef;
+typedef struct CircleDef CircleDef;
+
+typedef enum {
+  PD_LITERAL = 0,
+  PD_MIDPOINT = 1,
+  PD_GLIDER_ON_LINE = 2,
+  PD_INTSEC_LINE_LINE = 3,
+  PD_GLIDER_ON_CIRCLE = 4,
+  PD_INTSEC_LINE_CIRCLE = 5,
+} PointDefType;
 
 typedef struct {
   Pos2D pos;
-} Point;
-
-typedef enum {
-  PP_LITERAL = 0,
-  PP_MIDPOINT = 1,
-  PP_ON_LINE = 2,
-  PP_LINE_LINE_INTERSECTION = 3,
-} PointProviderType;
+} LiteralPD;
 
 typedef struct {
+  PointDef *p1;
+  PointDef *p2;
+} MidpointPD;
+
+typedef struct {
+  LineDef *l;
+  double prog; // ln.s * (1-p) + ln.e * p
+} GliderOnLinePD;
+
+typedef struct {
+  LineDef *l1;
+  LineDef *l2;
+} IntsecLineLinePD;
+
+typedef struct {
+  CircleDef *c;
+  double prog; // [0.0;1.0)
+} GliderOnCirclePD;
+
+typedef enum {
+  ILC_SIDE_START = 0,
+  ILC_SIDE_END = 1,
+} ILCSideType;
+
+typedef struct {
+  LineDef *l;
+  CircleDef *c;
+  // there are two intersection points, this chooses one of them
+  ILCSideType side;
+} IntsecLineCirclePD;
+
+typedef struct {
+  bool dirty;
+  bool invalid;
   Pos2D pos;
-} LiteralPP;
+} PointVal;
 
-typedef struct {
-  PointProvider *pt1;
-  PointProvider *pt2;
-} MidpointPP;
-
-typedef struct {
-  LineProvider *ln;
-  double progress;
-} OnLinePP;
-
-typedef struct {
-  LineProvider *ln1;
-  LineProvider *ln2;
-} LineLineIntersectionPP;
-
-struct PointProvider {
-  int type;
+struct PointDef {
+  PointDefType type;
   union {
-    LiteralPP literal;
-    MidpointPP midpoint;
-    OnLinePP on_line;
-    LineLineIntersectionPP line_line_intersection;
+    LiteralPD literal;
+    MidpointPD midpoint;
+    GliderOnLinePD glider_on_line;
+    IntsecLineLinePD intsec_line_line;
+    GliderOnCirclePD glider_on_circle;
+    IntsecLineCirclePD intsec_line_circle;
   };
+  PointVal val;
 };
 
 typedef enum {
-  LP_POINT_POINT = 0,
-  LP_PARALLEL = 1,
-  LP_PERPENDICULAR = 2
-} LineProviderType;
+  LD_POINT_TO_POINT = 0,
+  LD_PARALLEL = 1,
+  LD_PERPENDICULAR = 2
+} LineDefType;
 
 typedef struct {
-  PointProvider *pt1;
-  PointProvider *pt2;
-} PointPointLP;
+  PointDef *p1;
+  PointDef *p2;
+} PointToPointLD;
 
 typedef struct {
-  LineProvider *ln;
-  PointProvider *pt;
-} ParallelLP;
+  LineDef *l;
+  PointDef *p;
+} ParallelLD;
 
 typedef struct {
-  LineProvider *ln;
-  PointProvider *pt;
-} PerpendicularLP;
+  LineDef *l;
+  PointDef *p;
+} PerpendicularLD;
 
-struct LineProvider {
-  int type;
+typedef struct {
+  bool dirty;
+  bool invalid;
+  Pos2D start;
+  Pos2D end;
+} LineVal;
+
+struct LineDef {
+  LineExtMode ext_mode;
+  LineDefType type;
   union {
-    PointPointLP point_point;
-    ParallelLP parallel;
-    PerpendicularLP PerpendicularLP;
+    PointToPointLD point_to_point;
+    ParallelLD parallel;
+    PerpendicularLD perpendicular;
   };
+  LineVal val;
 };
+
+typedef enum {
+  CD_CENTER_POINT_OUTER_POINT = 0,
+  CD_CENTER_POINT_RADIUS_SEG = 1,
+} CircleProviderType;
+
+typedef struct {
+  PointDef *center;
+  PointDef *outer;
+} CenterPointOuterPointCD;
+
+typedef struct {
+  PointDef *center;
+  LineDef *rad_seg;
+} CenterPointRadiusSegCD;
+
+typedef struct {
+  bool dirty;
+  bool invalid;
+  Pos2D center;
+  double radius;
+} CircleVal;
+
+struct CircleDef {
+  CircleProviderType type;
+  union {
+    CenterPointOuterPointCD center_point_outer_point;
+    CenterPointRadiusSegCD center_point_radius_seg;
+  };
+  CircleVal val;
+};
+
+void eval_point(PointDef *pd);
+void eval_line(LineDef *ld);
+void eval_circle(CircleDef *cd);
+
+double pos_distance(Pos2D *pos1, Pos2D *pos2);
+double distance_from_line(Pos2D *pos, Pos2D *start, Pos2D *end);
