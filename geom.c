@@ -22,10 +22,10 @@ LineEq line_eq_from_start_end(Pos2D start, Pos2D end) {
 
 // returns false if no or infinite solutions
 // puts point into res
-bool intersect_line_eqs(LineEq le1, LineEq le2, Pos2D *res) {
+bool intsec_line_eqs(LineEq le1, LineEq le2, Pos2D *res) {
   double denom = le1.a * le2.b - le1.b * le2.a;
 
-  if (fabs(denom) < 0.00001) {
+  if (fabs(denom) < 1e-10) {
     return false;
   }
 
@@ -68,6 +68,35 @@ double distance_from_line(Pos2D *pos, Pos2D *start, Pos2D *end) {
       ((pos->x - start->x) * nx + (pos->y - start->y) * ny) / vec_len(nx, ny);
 
   return fabs(signed_dist);
+}
+
+bool intsec_line_circle(Pos2D *start, Pos2D *end, Pos2D *center, double radius,
+                        bool is_high_prog, Pos2D *res) {
+  double vx = end->x - start->x;
+  double vy = end->y - start->y;
+  double dx = center->x - start->x;
+  double dy = center->y - start->y;
+
+  double denom = vx * vx + vy * vy;
+
+  // assuming the line is not invalid, this should never be zero
+  // but let's be safe
+  if (denom < 1e-20) {
+    return false;
+  }
+  double p = (dx * vx + dy * vy) / denom;
+  double q = (dx * dx + dy * dy - radius * radius) / denom;
+
+  double ppmq = p * p - q;
+  if (ppmq < 0) {
+    // no intersections
+    return false;
+  }
+
+  double prog = is_high_prog ? p + sqrt(ppmq) : p - sqrt(ppmq);
+
+  *res = (Pos2D){.x = start->x + vx * prog, .y = start->y + vy * prog};
+  return true;
 }
 
 void eval_point(PointDef *pd) {
@@ -113,7 +142,7 @@ void eval_point(PointDef *pd) {
     if (!pd->val.invalid) {
       LineEq le1 = line_eq_from_start_end(l1->val.start, l1->val.end);
       LineEq le2 = line_eq_from_start_end(l2->val.start, l2->val.end);
-      pd->val.invalid = !intersect_line_eqs(le1, le2, &pd->val.pos);
+      pd->val.invalid = !intsec_line_eqs(le1, le2, &pd->val.pos);
     }
     break;
   }
@@ -146,7 +175,8 @@ void eval_line(LineDef *ld) {
     eval_point(p1);
     eval_point(p2);
 
-    ld->val.invalid = p1->val.invalid || p2->val.invalid;
+    ld->val.invalid = p1->val.invalid || p2->val.invalid ||
+                      pos_distance(&p1->val.pos, &p2->val.pos) < 1e-10;
     if (!ld->val.invalid) {
       ld->val.start = p1->val.pos;
       ld->val.end = p2->val.pos;
