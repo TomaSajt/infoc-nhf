@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdbool.h>
 
 typedef struct {
@@ -98,6 +100,7 @@ struct PointDef {
     IntsecCircleCirclePD intsec_circle_circle;
   };
   PointVal val;
+  int id;
 };
 
 typedef enum {
@@ -137,6 +140,7 @@ struct LineDef {
     PerpendicularLD perpendicular;
   };
   LineVal val;
+  int id;
 };
 
 typedef enum {
@@ -168,6 +172,7 @@ struct CircleDef {
     CenterPointRadiusSegCD center_point_radius_seg;
   };
   CircleVal val;
+  int id;
 };
 
 void eval_point(PointDef *pd);

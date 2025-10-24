@@ -28,6 +28,7 @@ add_compile_options(
 add_executable(infoc-nhf WIN32
     main.c
     geom.c
+    savedata.c
 )
 
 target_link_libraries(infoc-nhf PRIVATE

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #include "geom.h"
+#include "savedata.h"
 
 #define SDL_WINDOW_WIDTH 1000
 #define SDL_WINDOW_HEIGHT 600
@@ -130,7 +131,8 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
         (PointDef){.type = PD_MIDPOINT,
                    .midpoint = {.p1 = as->point_defs[as->point_def_count - 2],
                                 .p2 = as->point_defs[as->point_def_count - 1]},
-                   .val = {.dirty = true}};
+                   .val = {.dirty = true},
+                   .id = as->point_def_count};
     as->point_defs[as->point_def_count++] = point_def;
 
     break;
@@ -144,7 +146,8 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
         .type = LD_POINT_TO_POINT,
         .point_to_point = {.p1 = as->point_defs[as->point_def_count - 2],
                            .p2 = as->point_defs[as->point_def_count - 1]},
-        .val = {.dirty = true}};
+        .val = {.dirty = true},
+        .id = as->line_def_count};
     as->line_defs[as->line_def_count++] = line_def;
     break;
   }
@@ -158,7 +161,8 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
                     .center_point_outer_point =
                         {.center = as->point_defs[as->point_def_count - 2],
                          .outer = as->point_defs[as->point_def_count - 1]},
-                    .val = {.dirty = true}};
+                    .val = {.dirty = true},
+                    .id = as->circle_def_count};
     as->circle_defs[as->circle_def_count++] = circle_def;
     break;
   }
@@ -172,7 +176,8 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
         .type = PD_INTSEC_LINE_LINE,
         .intsec_line_line = {.l1 = as->line_defs[as->line_def_count - 2],
                              .l2 = as->line_defs[as->line_def_count - 1]},
-        .val = {.dirty = true}};
+        .val = {.dirty = true},
+        .id = as->point_def_count};
     as->point_defs[as->point_def_count++] = point_def;
 
     break;
@@ -188,7 +193,8 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
         .intsec_line_circle = {.l = as->line_defs[as->line_def_count - 1],
                                .c = as->circle_defs[as->circle_def_count - 1],
                                .prog_type = ILC_PROG_LOWER},
-        .val = {.dirty = true}};
+        .val = {.dirty = true},
+        .id = as->point_def_count};
     as->point_defs[as->point_def_count++] = point_def;
 
     break;
@@ -206,9 +212,9 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
                                  .c2 =
                                      as->circle_defs[as->circle_def_count - 1],
                                  .side = ICC_LEFT},
-        .val = {.dirty = true}};
+        .val = {.dirty = true},
+        .id = as->point_def_count};
     as->point_defs[as->point_def_count++] = point_def;
-
     break;
   }
   default: {
@@ -418,7 +424,9 @@ int main(int argc, char *argv[]) {
                  .point_defs = {},
                  .point_def_count = 0,
                  .line_defs = {},
-                 .line_def_count = 0};
+                 .line_def_count = 0,
+                 .circle_defs = {},
+                 .circle_def_count = 0};
 
   SDL_AppResult rc = init_app(&as);
   mark_everyting_dirty(&as);
@@ -432,6 +440,14 @@ int main(int argc, char *argv[]) {
       break;
 
     rc = do_render(&as);
+  }
+
+  if (rc == SDL_APP_SUCCESS) {
+    SDL_Log("Saving...\n");
+    FILE *handle = fopen("save.dat", "w");
+    save_to_file(handle, as.point_defs, as.point_def_count, as.line_defs,
+                 as.line_def_count, as.circle_defs, as.circle_def_count);
+    fclose(handle);
   }
 
   if (as.renderer != NULL)
