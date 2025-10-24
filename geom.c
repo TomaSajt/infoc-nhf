@@ -1,6 +1,5 @@
 #include "geom.h"
 #include <math.h>
-#include <stdlib.h>
 
 #define M_TAU 6.28318530717958647693
 
@@ -99,6 +98,29 @@ bool intsec_line_circle(Pos2D *start, Pos2D *end, Pos2D *center, double radius,
   return true;
 }
 
+bool intsec_circle_circle(Pos2D *center1, double radius1, Pos2D *center2,
+                          double radius2, ICCSide side, Pos2D *res) {
+  double dx = center2->x - center1->x;
+  double dy = center2->y - center1->y;
+
+  double numer = dx * dx + dy * dy + radius1 * radius1 - radius2 * radius2;
+  double denom = 2 * radius1 * sqrt(dx * dx + dy * dy);
+  if (fabs(denom) < 1e-20) {
+    return false;
+  }
+  if (fabs(numer) > fabs(denom)) {
+    return false;
+  }
+
+  // frac is in [-1;1]
+  double frac = numer / denom;
+  double angle = atan2(dy, dx) + (side == ICC_LEFT ? 1 : -1) * acos(frac);
+
+  *res = (Pos2D){.x = center1->x + radius1 * cos(angle),
+                 .y = center1->y + radius1 * sin(angle)};
+  return true;
+}
+
 void eval_point(PointDef *pd) {
   if (!pd->val.dirty)
     return;
@@ -168,6 +190,21 @@ void eval_point(PointDef *pd) {
       pd->val.invalid =
           !intsec_line_circle(&l->val.start, &l->val.end, &c->val.center,
                               c->val.radius, prog_type, &pd->val.pos);
+    }
+    break;
+  }
+  case PD_INTSEC_CIRCLE_CIRCLE: {
+    CircleDef *c1 = pd->intsec_circle_circle.c1;
+    CircleDef *c2 = pd->intsec_circle_circle.c2;
+    ICCSide side = pd->intsec_circle_circle.side;
+    eval_circle(c1);
+    eval_circle(c2);
+
+    pd->val.invalid = c1->val.invalid || c2->val.invalid;
+    if (!pd->val.invalid) {
+      pd->val.invalid = !intsec_circle_circle(&c1->val.center, c1->val.radius,
+                                              &c2->val.center, c2->val.radius,
+                                              side, &pd->val.pos);
     }
     break;
   }

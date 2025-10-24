@@ -29,6 +29,7 @@ typedef enum {
   PD_INTSEC_LINE_LINE = 3,
   PD_GLIDER_ON_CIRCLE = 4,
   PD_INTSEC_LINE_CIRCLE = 5,
+  PD_INTSEC_CIRCLE_CIRCLE = 6
 } PointDefType;
 
 typedef struct {
@@ -67,6 +68,18 @@ typedef struct {
   ILCProgType prog_type;
 } IntsecLineCirclePD;
 
+typedef enum {
+  ICC_RIGHT = 0,
+  ICC_LEFT = 1,
+} ICCSide;
+
+typedef struct {
+  CircleDef *c1;
+  CircleDef *c2;
+  // there are two intersection points, this chooses one of them
+  ICCSide side;
+} IntsecCircleCirclePD;
+
 typedef struct {
   bool dirty;
   bool invalid;
@@ -82,6 +95,7 @@ struct PointDef {
     IntsecLineLinePD intsec_line_line;
     GliderOnCirclePD glider_on_circle;
     IntsecLineCirclePD intsec_line_circle;
+    IntsecCircleCirclePD intsec_circle_circle;
   };
   PointVal val;
 };

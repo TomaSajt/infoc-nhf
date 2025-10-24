@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "SDL3/SDL_init.h"
 #include "geom.h"
 
 #define SDL_WINDOW_WIDTH 1000
@@ -178,8 +177,43 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
 
     break;
   }
-  default:
+  case SDL_SCANCODE_J: {
+
+    PointDef *point_def = malloc(sizeof(PointDef));
+    if (point_def == NULL)
+      return SDL_APP_FAILURE;
+
+    *point_def = (PointDef){
+        .type = PD_INTSEC_LINE_CIRCLE,
+        .intsec_line_circle = {.l = as->line_defs[as->line_def_count - 1],
+                               .c = as->circle_defs[as->circle_def_count - 1],
+                               .prog_type = ILC_PROG_LOWER},
+        .val = {.dirty = true}};
+    as->point_defs[as->point_def_count++] = point_def;
+
     break;
+  }
+  case SDL_SCANCODE_K: {
+
+    PointDef *point_def = malloc(sizeof(PointDef));
+    if (point_def == NULL)
+      return SDL_APP_FAILURE;
+
+    *point_def = (PointDef){
+        .type = PD_INTSEC_CIRCLE_CIRCLE,
+        .intsec_circle_circle = {.c1 =
+                                     as->circle_defs[as->circle_def_count - 2],
+                                 .c2 =
+                                     as->circle_defs[as->circle_def_count - 1],
+                                 .side = ICC_LEFT},
+        .val = {.dirty = true}};
+    as->point_defs[as->point_def_count++] = point_def;
+
+    break;
+  }
+  default: {
+    break;
+  }
   }
   return SDL_APP_CONTINUE;
 }
