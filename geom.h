@@ -5,11 +5,6 @@ typedef struct {
   double y;
 } Pos2D;
 
-typedef struct {
-  bool invalid;
-  Pos2D pos;
-} PointEvaled;
-
 typedef enum {
   L_EXT_SEGMENT = 0, //    start -> end
   L_EXT_RAY = 1,     //    start -> end ->
@@ -61,15 +56,15 @@ typedef struct {
 } GliderOnCirclePD;
 
 typedef enum {
-  ILC_SIDE_START = 0,
-  ILC_SIDE_END = 1,
-} ILCSideType;
+  ILC_PROG_LOWER = 0,
+  ILC_PROG_HIGHER = 1,
+} ILCProgType;
 
 typedef struct {
   LineDef *l;
   CircleDef *c;
   // there are two intersection points, this chooses one of them
-  ILCSideType side;
+  ILCProgType prog_type;
 } IntsecLineCirclePD;
 
 typedef struct {
@@ -167,3 +162,4 @@ void eval_circle(CircleDef *cd);
 
 double pos_distance(Pos2D *pos1, Pos2D *pos2);
 double distance_from_line(Pos2D *pos, Pos2D *start, Pos2D *end);
+double distance_from_circle(Pos2D *pos, Pos2D *center, double radius);

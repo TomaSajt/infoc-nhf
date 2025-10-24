@@ -71,7 +71,7 @@ double distance_from_line(Pos2D *pos, Pos2D *start, Pos2D *end) {
 }
 
 bool intsec_line_circle(Pos2D *start, Pos2D *end, Pos2D *center, double radius,
-                        bool is_high_prog, Pos2D *res) {
+                        ILCProgType prog_type, Pos2D *res) {
   double vx = end->x - start->x;
   double vy = end->y - start->y;
   double dx = center->x - start->x;
@@ -93,7 +93,7 @@ bool intsec_line_circle(Pos2D *start, Pos2D *end, Pos2D *center, double radius,
     return false;
   }
 
-  double prog = is_high_prog ? p + sqrt(ppmq) : p - sqrt(ppmq);
+  double prog = prog_type == ILC_PROG_HIGHER ? p + sqrt(ppmq) : p - sqrt(ppmq);
 
   *res = (Pos2D){.x = start->x + vx * prog, .y = start->y + vy * prog};
   return true;
@@ -157,7 +157,18 @@ void eval_point(PointDef *pd) {
     break;
   }
   case PD_INTSEC_LINE_CIRCLE: {
-    exit(1);
+    LineDef *l = pd->intsec_line_circle.l;
+    CircleDef *c = pd->intsec_line_circle.c;
+    ILCProgType prog_type = pd->intsec_line_circle.prog_type;
+    eval_line(l);
+    eval_circle(c);
+
+    pd->val.invalid = l->val.invalid || c->val.invalid;
+    if (!pd->val.invalid) {
+      pd->val.invalid =
+          !intsec_line_circle(&l->val.start, &l->val.end, &c->val.center,
+                              c->val.radius, prog_type, &pd->val.pos);
+    }
     break;
   }
   }
