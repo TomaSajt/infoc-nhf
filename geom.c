@@ -16,61 +16,46 @@ LineEq line_eq_from_start_end(Pos2D start, Pos2D end) {
   int x2 = end.x;
   int y2 = end.y;
   return (LineEq){
-      .a = y1 - y2, .b = x2 - x1, .c = (x2 - x1) * y1 + (y1 - y2) * x1};
+      .a = y1 - y2,
+      .b = x2 - x1,
+      .c = (x2 - x1) * y1 + (y1 - y2) * x1,
+  };
 }
 
 // returns false if no or infinite solutions
 // puts point into res
-bool intsec_line_eqs(LineEq le1, LineEq le2, Pos2D *res) {
+bool calc_intsec_line_eqs(LineEq le1, LineEq le2, Pos2D *res) {
   double denom = le1.a * le2.b - le1.b * le2.a;
 
   if (fabs(denom) < 1e-10) {
     return false;
   }
 
-  *res = (Pos2D){.x = (le1.c * le2.b - le1.b * le2.c) / denom,
-                 .y = (le1.a * le2.c - le1.c * le2.a) / denom};
+  *res = (Pos2D){
+      .x = (le1.c * le2.b - le1.b * le2.c) / denom,
+      .y = (le1.a * le2.c - le1.c * le2.a) / denom,
+  };
   return true;
 }
 
-Pos2D calc_mid(Pos2D *pos1, Pos2D *pos2) {
-  return (Pos2D){.x = (pos1->x + pos2->x) * 0.5,
-                 .y = (pos1->y + pos2->y) * 0.5};
-}
-
 Pos2D lerp(Pos2D *start, Pos2D *end, double prog) {
-  return (Pos2D){.x = start->x * (1.0 - prog) + end->x * prog,
-                 .y = start->y * (1.0 - prog) + end->y * prog};
+  return (Pos2D){
+      .x = start->x * (1.0 - prog) + end->x * prog,
+      .y = start->y * (1.0 - prog) + end->y * prog,
+  };
 }
 
 Pos2D calc_point_center_rot(Pos2D *center, double radius, double prog) {
-  return (Pos2D){.x = center->x + radius * cos(M_TAU * prog),
-                 .y = center->y + radius * sin(M_TAU * prog)};
+  return (Pos2D){
+      .x = center->x + radius * cos(M_TAU * prog),
+      .y = center->y + radius * sin(M_TAU * prog),
+  };
 }
 
 double vec_len(double x, double y) { return sqrt(x * x + y * y); }
 
-double pos_distance(Pos2D *pos1, Pos2D *pos2) {
-  return vec_len(pos1->x - pos2->x, pos1->y - pos2->y);
-}
-
-double distance_from_circle(Pos2D *pos, Pos2D *center, double radius) {
-  double signed_dist = pos_distance(pos, center) - radius;
-  return fabs(signed_dist);
-}
-
-double distance_from_line(Pos2D *pos, Pos2D *start, Pos2D *end) {
-  double nx = end->y - start->y;
-  double ny = -(end->x - start->x);
-
-  double signed_dist =
-      ((pos->x - start->x) * nx + (pos->y - start->y) * ny) / vec_len(nx, ny);
-
-  return fabs(signed_dist);
-}
-
-bool intsec_line_circle(Pos2D *start, Pos2D *end, Pos2D *center, double radius,
-                        ILCProgType prog_type, Pos2D *res) {
+bool calc_intsec_line_circle(Pos2D *start, Pos2D *end, Pos2D *center,
+                             double radius, ILCProgType prog_type, Pos2D *res) {
   double vx = end->x - start->x;
   double vy = end->y - start->y;
   double dx = center->x - start->x;
@@ -94,12 +79,15 @@ bool intsec_line_circle(Pos2D *start, Pos2D *end, Pos2D *center, double radius,
 
   double prog = prog_type == ILC_PROG_HIGHER ? p + sqrt(ppmq) : p - sqrt(ppmq);
 
-  *res = (Pos2D){.x = start->x + vx * prog, .y = start->y + vy * prog};
+  *res = (Pos2D){
+      .x = start->x + vx * prog,
+      .y = start->y + vy * prog,
+  };
   return true;
 }
 
-bool intsec_circle_circle(Pos2D *center1, double radius1, Pos2D *center2,
-                          double radius2, ICCSide side, Pos2D *res) {
+bool calc_intsec_circle_circle(Pos2D *center1, double radius1, Pos2D *center2,
+                               double radius2, ICCSide side, Pos2D *res) {
   double dx = center2->x - center1->x;
   double dy = center2->y - center1->y;
 
@@ -116,8 +104,10 @@ bool intsec_circle_circle(Pos2D *center1, double radius1, Pos2D *center2,
   double frac = numer / denom;
   double angle = atan2(dy, dx) + (side == ICC_LEFT ? 1 : -1) * acos(frac);
 
-  *res = (Pos2D){.x = center1->x + radius1 * cos(angle),
-                 .y = center1->y + radius1 * sin(angle)};
+  *res = (Pos2D){
+      .x = center1->x + radius1 * cos(angle),
+      .y = center1->y + radius1 * sin(angle),
+  };
   return true;
 }
 
@@ -139,7 +129,7 @@ void eval_point(PointDef *pd) {
 
     pd->val.invalid = p1->val.invalid || p2->val.invalid;
     if (!pd->val.invalid) {
-      pd->val.pos = calc_mid(&p1->val.pos, &p2->val.pos);
+      pd->val.pos = lerp(&p1->val.pos, &p2->val.pos, 0.5);
     }
     break;
   }
@@ -164,7 +154,7 @@ void eval_point(PointDef *pd) {
     if (!pd->val.invalid) {
       LineEq le1 = line_eq_from_start_end(l1->val.start, l1->val.end);
       LineEq le2 = line_eq_from_start_end(l2->val.start, l2->val.end);
-      pd->val.invalid = !intsec_line_eqs(le1, le2, &pd->val.pos);
+      pd->val.invalid = !calc_intsec_line_eqs(le1, le2, &pd->val.pos);
     }
     break;
   }
@@ -188,8 +178,8 @@ void eval_point(PointDef *pd) {
     pd->val.invalid = l->val.invalid || c->val.invalid;
     if (!pd->val.invalid) {
       pd->val.invalid =
-          !intsec_line_circle(&l->val.start, &l->val.end, &c->val.center,
-                              c->val.radius, prog_type, &pd->val.pos);
+          !calc_intsec_line_circle(&l->val.start, &l->val.end, &c->val.center,
+                                   c->val.radius, prog_type, &pd->val.pos);
     }
     break;
   }
@@ -202,9 +192,9 @@ void eval_point(PointDef *pd) {
 
     pd->val.invalid = c1->val.invalid || c2->val.invalid;
     if (!pd->val.invalid) {
-      pd->val.invalid = !intsec_circle_circle(&c1->val.center, c1->val.radius,
-                                              &c2->val.center, c2->val.radius,
-                                              side, &pd->val.pos);
+      pd->val.invalid = !calc_intsec_circle_circle(
+          &c1->val.center, c1->val.radius, &c2->val.center, c2->val.radius,
+          side, &pd->val.pos);
     }
     break;
   }
@@ -224,7 +214,7 @@ void eval_line(LineDef *ld) {
     eval_point(p2);
 
     ld->val.invalid = p1->val.invalid || p2->val.invalid ||
-                      pos_distance(&p1->val.pos, &p2->val.pos) < 1e-10;
+                      dist_from_pos(&p1->val.pos, &p2->val.pos) < 1e-10;
     if (!ld->val.invalid) {
       ld->val.start = p1->val.pos;
       ld->val.end = p2->val.pos;
@@ -240,8 +230,10 @@ void eval_line(LineDef *ld) {
     ld->val.invalid = l->val.invalid || p->val.invalid;
     if (!ld->val.invalid) {
       ld->val.start = p->val.pos;
-      ld->val.end = (Pos2D){.x = p->val.pos.x + (l->val.end.x - l->val.start.x),
-                            .y = p->val.pos.y + (l->val.end.y - l->val.end.y)};
+      ld->val.end = (Pos2D){
+          .x = p->val.pos.x + (l->val.end.x - l->val.start.x),
+          .y = p->val.pos.y + (l->val.end.y - l->val.end.y),
+      };
     }
     break;
   }
@@ -254,9 +246,10 @@ void eval_line(LineDef *ld) {
     ld->val.invalid = l->val.invalid || p->val.invalid;
     if (!ld->val.invalid) {
       ld->val.start = p->val.pos;
-      ld->val.end =
-          (Pos2D){.x = p->val.pos.x + (l->val.end.y - l->val.end.y),
-                  .y = p->val.pos.y - (l->val.end.x - l->val.start.x)};
+      ld->val.end = (Pos2D){
+          .x = p->val.pos.x + (l->val.end.y - l->val.end.y),
+          .y = p->val.pos.y - (l->val.end.x - l->val.start.x),
+      };
     }
     break;
   }
@@ -278,7 +271,7 @@ void eval_circle(CircleDef *cd) {
     cd->val.invalid = p1->val.invalid || p2->val.invalid;
     if (!cd->val.invalid) {
       cd->val.center = p1->val.pos;
-      cd->val.radius = pos_distance(&p1->val.pos, &p2->val.pos);
+      cd->val.radius = dist_from_pos(&p1->val.pos, &p2->val.pos);
     }
     break;
   }
@@ -292,11 +285,30 @@ void eval_circle(CircleDef *cd) {
         p->val.invalid || l->val.invalid || l->ext_mode != L_EXT_SEGMENT;
     if (!cd->val.invalid) {
       cd->val.center = p->val.pos;
-      cd->val.radius = pos_distance(&l->val.start, &l->val.end);
+      cd->val.radius = dist_from_pos(&l->val.start, &l->val.end);
     }
     break;
   }
   }
 
   cd->val.dirty = false;
+}
+
+double dist_from_pos(Pos2D *pos1, Pos2D *pos2) {
+  return vec_len(pos1->x - pos2->x, pos1->y - pos2->y);
+}
+
+double dist_from_circle(Pos2D *pos, Pos2D *center, double radius) {
+  double signed_dist = dist_from_pos(pos, center) - radius;
+  return fabs(signed_dist);
+}
+
+double dist_from_line(Pos2D *pos, Pos2D *start, Pos2D *end) {
+  double nx = end->y - start->y;
+  double ny = -(end->x - start->x);
+
+  double signed_dist =
+      ((pos->x - start->x) * nx + (pos->y - start->y) * ny) / vec_len(nx, ny);
+
+  return fabs(signed_dist);
 }

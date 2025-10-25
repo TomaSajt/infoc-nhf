@@ -177,15 +177,9 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     if (ld == NULL)
       return SDL_APP_FAILURE;
 
-    *ld = (LineDef){
-        .type = LD_POINT_TO_POINT,
-        .point_to_point =
-            {
-                .p1 = as->point_defs[as->point_def_count - 2],
-                .p2 = as->point_defs[as->point_def_count - 1],
-            },
-        .val = {.dirty = true},
-    };
+    *ld = make_line_point_to_point(L_EXT_SEGMENT,
+                                   as->point_defs[as->point_def_count - 2],
+                                   as->point_defs[as->point_def_count - 1]);
     register_line(as, ld);
     break;
   }
@@ -393,7 +387,7 @@ SDL_AppResult do_render(AppState *as) {
       if (pd->val.invalid)
         continue;
 
-      double d = pos_distance(&pd->val.pos, &mouse_pos);
+      double d = dist_from_pos(&pd->val.pos, &mouse_pos);
       if (d * as->view_info.scale > POINT_HITBOX_RADIUS)
         continue;
 
@@ -413,7 +407,7 @@ SDL_AppResult do_render(AppState *as) {
       if (ld->val.invalid)
         continue;
 
-      double d = distance_from_line(&mouse_pos, &ld->val.start, &ld->val.end);
+      double d = dist_from_line(&mouse_pos, &ld->val.start, &ld->val.end);
       if (d * as->view_info.scale > LINE_HITBOX_RADIUS)
         continue;
 
@@ -434,7 +428,7 @@ SDL_AppResult do_render(AppState *as) {
         continue;
 
       double d =
-          distance_from_circle(&mouse_pos, &cd->val.center, cd->val.radius);
+          dist_from_circle(&mouse_pos, &cd->val.center, cd->val.radius);
       if (d * as->view_info.scale > LINE_HITBOX_RADIUS)
         continue;
 
