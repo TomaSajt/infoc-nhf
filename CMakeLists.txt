@@ -26,8 +26,9 @@ add_compile_options(
 )
 add_executable(infoc-nhf WIN32
     main.c
-    geom.c
     geom_defs.c
+    geom.c
+    geom_state.c
     savedata.c
 )
 

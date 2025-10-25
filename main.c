@@ -10,6 +10,7 @@
 
 #include "geom.h"
 #include "geom_defs.h"
+#include "geom_state.h"
 #include "savedata.h"
 
 #define SDL_WINDOW_WIDTH 1000
@@ -29,25 +30,8 @@ typedef struct {
   SDL_Window *window;
   SDL_Renderer *renderer;
   ViewInfo view_info;
-  PointDef *point_defs[100];
-  int point_def_count;
-  LineDef *line_defs[100];
-  int line_def_count;
-  CircleDef *circle_defs[100];
-  int circle_def_count;
+  GeometryState gs;
 } AppState;
-
-void register_point(AppState *as, PointDef *pd) {
-  as->point_defs[as->point_def_count++] = pd;
-}
-
-void register_line(AppState *as, LineDef *ld) {
-  as->line_defs[as->line_def_count++] = ld;
-}
-
-void register_circle(AppState *as, CircleDef *cd) {
-  as->circle_defs[as->circle_def_count++] = cd;
-}
 
 Pos2D pos_world_to_view(ViewInfo *view_info, Pos2D pos) {
   return (Pos2D){
@@ -91,18 +75,6 @@ Pos2D pos_screen_to_world(SDL_Renderer *renderer, ViewInfo *view_info,
   return pos_view_to_world(view_info, pos_screen_to_view(renderer, pos));
 }
 
-void mark_everyting_dirty(AppState *as) {
-  for (int i = 0; i < as->point_def_count; i++) {
-    as->point_defs[i]->val.dirty = true;
-  }
-  for (int i = 0; i < as->line_def_count; i++) {
-    as->line_defs[i]->val.dirty = true;
-  }
-  for (int i = 0; i < as->circle_def_count; i++) {
-    as->circle_defs[i]->val.dirty = true;
-  }
-}
-
 SDL_AppResult init_app(AppState *as) {
   if (!SDL_SetAppMetadata("NHF Geometry", "0.0.0",
                           "net.tomasajt.NHFGeometry")) {
@@ -127,8 +99,7 @@ void do_save(AppState *as) {
   SDL_Log("Saving...\n");
   FILE *handle = fopen("save.dat", "w");
   if (handle != NULL) {
-    save_to_file(handle, as->point_defs, as->point_def_count, as->line_defs,
-                 as->line_def_count, as->circle_defs, as->circle_def_count);
+    save_to_file(handle, &as->gs);
     fclose(handle);
   } else {
     printf("Failed to open file\n");
@@ -161,9 +132,9 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     if (pd == NULL)
       return SDL_APP_FAILURE;
 
-    *pd = make_point_midpoint(as->point_defs[as->point_def_count - 2],
-                              as->point_defs[as->point_def_count - 1]);
-    register_point(as, pd);
+    *pd = make_point_midpoint(as->gs.point_defs[as->gs.p_n - 2],
+                              as->gs.point_defs[as->gs.p_n - 1]);
+    register_point(&as->gs, pd);
     break;
   }
   case SDL_SCANCODE_L: {
@@ -172,9 +143,9 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
       return SDL_APP_FAILURE;
 
     *ld = make_line_point_to_point(L_EXT_SEGMENT,
-                                   as->point_defs[as->point_def_count - 2],
-                                   as->point_defs[as->point_def_count - 1]);
-    register_line(as, ld);
+                                   as->gs.point_defs[as->gs.p_n - 2],
+                                   as->gs.point_defs[as->gs.p_n - 1]);
+    register_line(&as->gs, ld);
     break;
   }
   case SDL_SCANCODE_C: {
@@ -183,9 +154,8 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
       return SDL_APP_FAILURE;
 
     *cd = make_circle_center_point_outer_point(
-        as->point_defs[as->point_def_count - 2],
-        as->point_defs[as->point_def_count - 1]);
-    register_circle(as, cd);
+        as->gs.point_defs[as->gs.p_n - 2], as->gs.point_defs[as->gs.p_n - 1]);
+    register_circle(&as->gs, cd);
     break;
   }
   case SDL_SCANCODE_I: {
@@ -193,9 +163,9 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     if (pd == NULL)
       return SDL_APP_FAILURE;
 
-    *pd = make_point_intsec_line_line(as->line_defs[as->line_def_count - 2],
-                                      as->line_defs[as->line_def_count - 1]);
-    register_point(as, pd);
+    *pd = make_point_intsec_line_line(as->gs.line_defs[as->gs.l_n - 2],
+                                      as->gs.line_defs[as->gs.l_n - 1]);
+    register_point(&as->gs, pd);
     break;
   }
   case SDL_SCANCODE_J: {
@@ -203,10 +173,9 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     if (pd == NULL)
       return SDL_APP_FAILURE;
 
-    *pd = make_point_intsec_line_circle(
-        as->line_defs[as->line_def_count - 1],
-        as->circle_defs[as->circle_def_count - 1]);
-    register_point(as, pd);
+    *pd = make_point_intsec_line_circle(as->gs.line_defs[as->gs.l_n - 1],
+                                        as->gs.circle_defs[as->gs.c_n - 1]);
+    register_point(&as->gs, pd);
     break;
   }
   case SDL_SCANCODE_K: {
@@ -214,10 +183,9 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     if (pd == NULL)
       return SDL_APP_FAILURE;
 
-    *pd = make_point_intsec_circle_circle(
-        as->circle_defs[as->circle_def_count - 2],
-        as->circle_defs[as->circle_def_count - 1]);
-    register_point(as, pd);
+    *pd = make_point_intsec_circle_circle(as->gs.circle_defs[as->gs.c_n - 2],
+                                          as->gs.circle_defs[as->gs.c_n - 1]);
+    register_point(&as->gs, pd);
     break;
   }
   case SDL_SCANCODE_S: {
@@ -228,15 +196,16 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     SDL_Log("Loading...\n");
     FILE *handle = fopen("save.dat", "r");
     if (handle != NULL) {
-      SaveData sd;
-      bool res = load_from_file(handle, &sd);
+      GeometryState new_gs = {};
+      bool res = load_from_file(handle, &new_gs);
       if (res) {
-        printf("Success\n");
-        eval_point(sd.point_defs[0]);
-        printf("Point0: %lf %lf\n", sd.point_defs[0]->val.pos.x,
-               sd.point_defs[0]->val.pos.y);
-      } else
-        printf("Fail\n");
+        //clear_geometry_state(&new_gs);
+        clear_geometry_state(&as->gs);
+        as->gs = new_gs;
+        printf("Load successful\n");
+      } else {
+        printf("Load failed\n");
+      }
 
       fclose(handle);
     } else {
@@ -272,7 +241,7 @@ SDL_AppResult handle_event(AppState *as, SDL_Event *event) {
         return SDL_APP_FAILURE;
 
       *pd = make_point_literal(w_pos);
-      register_point(as, pd);
+      register_point(&as->gs, pd);
     }
     break;
   }
@@ -290,6 +259,7 @@ void w_draw_point(AppState *as, PointDef *pd, Uint32 color) {
     return;
   Pos2D screen_pos =
       pos_world_to_screen(as->renderer, &as->view_info, pd->val.pos);
+  // printf("drawing point: %lf %lf\n", pd->val.pos.x, pd->val.pos.y);
 
   filledCircleColor(as->renderer, screen_pos.x, screen_pos.y,
                     POINT_RENDER_RADIUS, color);
@@ -321,6 +291,7 @@ SDL_AppResult do_render(AppState *as) {
   SDL_SetRenderDrawColor(as->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(as->renderer);
 
+
   {
     PointDef p1 = make_point_literal((Pos2D){0.0, 0.0});
     PointDef p2 = make_point_literal((Pos2D){10.0, 0.0});
@@ -344,8 +315,8 @@ SDL_AppResult do_render(AppState *as) {
   PointDef *closest_point_def = NULL;
   {
     double best_dist = 0;
-    for (int i = 0; i < as->point_def_count; i++) {
-      PointDef *pd = as->point_defs[i];
+    for (int i = 0; i < as->gs.p_n; i++) {
+      PointDef *pd = as->gs.point_defs[i];
       eval_point(pd);
       if (pd->val.invalid)
         continue;
@@ -364,8 +335,8 @@ SDL_AppResult do_render(AppState *as) {
   LineDef *closest_line_def = NULL;
   {
     double best_dist = 0;
-    for (int i = 0; i < as->line_def_count; i++) {
-      LineDef *ld = as->line_defs[i];
+    for (int i = 0; i < as->gs.l_n; i++) {
+      LineDef *ld = as->gs.line_defs[i];
       eval_line(ld);
       if (ld->val.invalid)
         continue;
@@ -384,8 +355,8 @@ SDL_AppResult do_render(AppState *as) {
   CircleDef *closest_circle_def = NULL;
   {
     double best_dist = 0;
-    for (int i = 0; i < as->circle_def_count; i++) {
-      CircleDef *cd = as->circle_defs[i];
+    for (int i = 0; i < as->gs.c_n; i++) {
+      CircleDef *cd = as->gs.circle_defs[i];
       eval_circle(cd);
       if (cd->val.invalid)
         continue;
@@ -404,12 +375,12 @@ SDL_AppResult do_render(AppState *as) {
   if ((flags & SDL_BUTTON_RMASK) != 0) {
     if (closest_point_def != NULL && closest_point_def->type == PD_LITERAL) {
       closest_point_def->literal.pos = mouse_pos;
-      mark_everyting_dirty(as);
+      mark_everyting_dirty(&as->gs);
     }
   }
 
-  for (int i = 0; i < as->point_def_count; i++) {
-    PointDef *pd = as->point_defs[i];
+  for (int i = 0; i < as->gs.p_n; i++) {
+    PointDef *pd = as->gs.point_defs[i];
     if (pd != closest_point_def) {
       w_draw_point(as, pd, 0xffffffff);
     }
@@ -418,8 +389,8 @@ SDL_AppResult do_render(AppState *as) {
     w_draw_point(as, closest_point_def, 0xff0000ff);
   }
 
-  for (int i = 0; i < as->line_def_count; i++) {
-    LineDef *ld = as->line_defs[i];
+  for (int i = 0; i < as->gs.l_n; i++) {
+    LineDef *ld = as->gs.line_defs[i];
     if (ld != closest_line_def) {
       w_draw_line(as, ld, 0xffffffff);
     }
@@ -428,8 +399,8 @@ SDL_AppResult do_render(AppState *as) {
     w_draw_line(as, closest_line_def, 0xff0000ff);
   }
 
-  for (int i = 0; i < as->circle_def_count; i++) {
-    CircleDef *cd = as->circle_defs[i];
+  for (int i = 0; i < as->gs.c_n; i++) {
+    CircleDef *cd = as->gs.circle_defs[i];
     if (cd != closest_circle_def) {
       w_draw_circle(as, cd, 0xffffffff);
     }
@@ -452,12 +423,15 @@ int main(int argc, char *argv[]) {
               .center = {.x = 0, .y = 0},
               .scale = 1.0,
           },
-      .point_defs = {},
-      .point_def_count = 0,
-      .line_defs = {},
-      .line_def_count = 0,
-      .circle_defs = {},
-      .circle_def_count = 0,
+      .gs =
+          {
+              .point_defs = {},
+              .p_n = 0,
+              .line_defs = {},
+              .l_n = 0,
+              .circle_defs = {},
+              .c_n = 0,
+          },
   };
 
   SDL_AppResult rc = init_app(&as);
@@ -478,17 +452,7 @@ int main(int argc, char *argv[]) {
   if (as.window != NULL)
     SDL_DestroyWindow(as.window);
 
-  for (int i = 0; i < as.point_def_count; i++) {
-    free(as.point_defs[i]);
-  }
-
-  for (int i = 0; i < as.line_def_count; i++) {
-    free(as.line_defs[i]);
-  }
-
-  for (int i = 0; i < as.circle_def_count; i++) {
-    free(as.circle_defs[i]);
-  }
+  clear_geometry_state(&as.gs);
 
   SDL_Quit();
 
