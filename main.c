@@ -36,26 +36,48 @@ typedef struct {
   int circle_def_count;
 } AppState;
 
+void register_point(AppState *as, PointDef *pd) {
+  as->point_defs[as->point_def_count++] = pd;
+}
+
+void register_line(AppState *as, LineDef *ld) {
+  as->line_defs[as->line_def_count++] = ld;
+}
+
+void register_circle(AppState *as, CircleDef *cd) {
+  as->circle_defs[as->circle_def_count++] = cd;
+}
+
 Pos2D pos_world_to_view(ViewInfo *view_info, Pos2D pos) {
-  return (Pos2D){.x = (pos.x - view_info->center.x) * view_info->scale,
-                 .y = (pos.y - view_info->center.y) * view_info->scale};
+  return (Pos2D){
+      .x = (pos.x - view_info->center.x) * view_info->scale,
+      .y = (pos.y - view_info->center.y) * view_info->scale,
+  };
 }
 
 Pos2D pos_view_to_world(ViewInfo *view_info, Pos2D pos) {
-  return (Pos2D){.x = pos.x / view_info->scale + view_info->center.x,
-                 .y = pos.y / view_info->scale + view_info->center.y};
+  return (Pos2D){
+      .x = pos.x / view_info->scale + view_info->center.x,
+      .y = pos.y / view_info->scale + view_info->center.y,
+  };
 }
 
 Pos2D pos_view_to_screen(SDL_Renderer *renderer, Pos2D pos) {
   int ww, wh;
   SDL_GetRenderOutputSize(renderer, &ww, &wh);
-  return (Pos2D){.x = ww * 0.5 + pos.x, .y = wh * 0.5 - pos.y};
+  return (Pos2D){
+      .x = ww * 0.5 + pos.x,
+      .y = wh * 0.5 - pos.y,
+  };
 }
 
 Pos2D pos_screen_to_view(SDL_Renderer *renderer, Pos2D pos) {
   int ww, wh;
   SDL_GetRenderOutputSize(renderer, &ww, &wh);
-  return (Pos2D){.x = pos.x - ww * 0.5, .y = wh * 0.5 - pos.y};
+  return (Pos2D){
+      .x = pos.x - ww * 0.5,
+      .y = wh * 0.5 - pos.y,
+  };
 }
 
 Pos2D pos_world_to_screen(SDL_Renderer *renderer, ViewInfo *view_info,
@@ -100,6 +122,18 @@ SDL_AppResult init_app(AppState *as) {
   return SDL_APP_CONTINUE;
 }
 
+void do_save(AppState *as) {
+  SDL_Log("Saving...\n");
+  FILE *handle = fopen("save.dat", "w");
+  if (handle != NULL) {
+    save_to_file(handle, as->point_defs, as->point_def_count, as->line_defs,
+                 as->line_def_count, as->circle_defs, as->circle_def_count);
+    fclose(handle);
+  } else {
+    printf("Failed to open file\n");
+  }
+}
+
 SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
   switch (key_code) {
   case SDL_SCANCODE_ESCAPE:
@@ -122,123 +156,131 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     as->view_info.center.y -= 1.0;
     break;
   case SDL_SCANCODE_M: {
-
-    PointDef *point_def = malloc(sizeof(PointDef));
-    if (point_def == NULL)
+    PointDef *pd = malloc(sizeof(PointDef));
+    if (pd == NULL)
       return SDL_APP_FAILURE;
 
-    *point_def =
-        (PointDef){.type = PD_MIDPOINT,
-                   .midpoint = {.p1 = as->point_defs[as->point_def_count - 2],
-                                .p2 = as->point_defs[as->point_def_count - 1]},
-                   .val = {.dirty = true},
-                   .id = as->point_def_count};
-    as->point_defs[as->point_def_count++] = point_def;
-
+    *pd = (PointDef){
+        .type = PD_MIDPOINT,
+        .midpoint =
+            {
+                .p1 = as->point_defs[as->point_def_count - 2],
+                .p2 = as->point_defs[as->point_def_count - 1],
+            },
+        .val = {.dirty = true},
+    };
+    register_point(as, pd);
     break;
   }
   case SDL_SCANCODE_L: {
-    LineDef *line_def = malloc(sizeof(LineDef));
-    if (line_def == NULL)
+    LineDef *ld = malloc(sizeof(LineDef));
+    if (ld == NULL)
       return SDL_APP_FAILURE;
 
-    *line_def = (LineDef){
+    *ld = (LineDef){
         .type = LD_POINT_TO_POINT,
-        .point_to_point = {.p1 = as->point_defs[as->point_def_count - 2],
-                           .p2 = as->point_defs[as->point_def_count - 1]},
+        .point_to_point =
+            {
+                .p1 = as->point_defs[as->point_def_count - 2],
+                .p2 = as->point_defs[as->point_def_count - 1],
+            },
         .val = {.dirty = true},
-        .id = as->line_def_count};
-    as->line_defs[as->line_def_count++] = line_def;
+    };
+    register_line(as, ld);
     break;
   }
   case SDL_SCANCODE_C: {
-    CircleDef *circle_def = malloc(sizeof(CircleDef));
-    if (circle_def == NULL)
+    CircleDef *cd = malloc(sizeof(CircleDef));
+    if (cd == NULL)
       return SDL_APP_FAILURE;
 
-    *circle_def =
-        (CircleDef){.type = CD_CENTER_POINT_OUTER_POINT,
-                    .center_point_outer_point =
-                        {.center = as->point_defs[as->point_def_count - 2],
-                         .outer = as->point_defs[as->point_def_count - 1]},
-                    .val = {.dirty = true},
-                    .id = as->circle_def_count};
-    as->circle_defs[as->circle_def_count++] = circle_def;
+    *cd = (CircleDef){
+        .type = CD_CENTER_POINT_OUTER_POINT,
+        .center_point_outer_point =
+            {
+                .center = as->point_defs[as->point_def_count - 2],
+                .outer = as->point_defs[as->point_def_count - 1],
+            },
+        .val = {.dirty = true},
+    };
+    register_circle(as, cd);
     break;
   }
   case SDL_SCANCODE_I: {
-
-    PointDef *point_def = malloc(sizeof(PointDef));
-    if (point_def == NULL)
+    PointDef *pd = malloc(sizeof(PointDef));
+    if (pd == NULL)
       return SDL_APP_FAILURE;
 
-    *point_def = (PointDef){
+    *pd = (PointDef){
         .type = PD_INTSEC_LINE_LINE,
-        .intsec_line_line = {.l1 = as->line_defs[as->line_def_count - 2],
-                             .l2 = as->line_defs[as->line_def_count - 1]},
+        .intsec_line_line =
+            {
+                .l1 = as->line_defs[as->line_def_count - 2],
+                .l2 = as->line_defs[as->line_def_count - 1],
+            },
         .val = {.dirty = true},
-        .id = as->point_def_count};
-    as->point_defs[as->point_def_count++] = point_def;
-
+    };
+    register_point(as, pd);
     break;
   }
   case SDL_SCANCODE_J: {
-
-    PointDef *point_def = malloc(sizeof(PointDef));
-    if (point_def == NULL)
+    PointDef *pd = malloc(sizeof(PointDef));
+    if (pd == NULL)
       return SDL_APP_FAILURE;
 
-    *point_def = (PointDef){
+    *pd = (PointDef){
         .type = PD_INTSEC_LINE_CIRCLE,
-        .intsec_line_circle = {.l = as->line_defs[as->line_def_count - 1],
-                               .c = as->circle_defs[as->circle_def_count - 1],
-                               .prog_type = ILC_PROG_LOWER},
+        .intsec_line_circle =
+            {
+                .l = as->line_defs[as->line_def_count - 1],
+                .c = as->circle_defs[as->circle_def_count - 1],
+                .prog_type = ILC_PROG_LOWER,
+            },
         .val = {.dirty = true},
-        .id = as->point_def_count};
-    as->point_defs[as->point_def_count++] = point_def;
-
+    };
+    register_point(as, pd);
     break;
   }
   case SDL_SCANCODE_K: {
-
-    PointDef *point_def = malloc(sizeof(PointDef));
-    if (point_def == NULL)
+    PointDef *pd = malloc(sizeof(PointDef));
+    if (pd == NULL)
       return SDL_APP_FAILURE;
 
-    *point_def = (PointDef){
+    *pd = (PointDef){
         .type = PD_INTSEC_CIRCLE_CIRCLE,
-        .intsec_circle_circle = {.c1 =
-                                     as->circle_defs[as->circle_def_count - 2],
-                                 .c2 =
-                                     as->circle_defs[as->circle_def_count - 1],
-                                 .side = ICC_LEFT},
+        .intsec_circle_circle =
+            {
+                .c1 = as->circle_defs[as->circle_def_count - 2],
+                .c2 = as->circle_defs[as->circle_def_count - 1],
+                .side = ICC_LEFT,
+            },
         .val = {.dirty = true},
-        .id = as->point_def_count};
-    as->point_defs[as->point_def_count++] = point_def;
+    };
+    register_point(as, pd);
     break;
   }
   case SDL_SCANCODE_S: {
-    SDL_Log("Saving...\n");
-    FILE *handle = fopen("save.dat", "w");
-    save_to_file(handle, as->point_defs, as->point_def_count, as->line_defs,
-                 as->line_def_count, as->circle_defs, as->circle_def_count);
-    fclose(handle);
+    do_save(as);
     break;
   }
   case SDL_SCANCODE_R: {
     SDL_Log("Loading...\n");
     FILE *handle = fopen("save.dat", "r");
-    SaveData sd;
-    bool res = load_from_file(handle, &sd);
-    if (res) {
-      printf("Success\n");
-      eval_point(sd.point_defs[0]);
-      printf("Point0: %lf %lf\n", sd.point_defs[0]->val.pos.x,
-             sd.point_defs[0]->val.pos.y);
-    } else
-      printf("Fail\n");
+    if (handle != NULL) {
+      SaveData sd;
+      bool res = load_from_file(handle, &sd);
+      if (res) {
+        printf("Success\n");
+        eval_point(sd.point_defs[0]);
+        printf("Point0: %lf %lf\n", sd.point_defs[0]->val.pos.x,
+               sd.point_defs[0]->val.pos.y);
+      } else
+        printf("Fail\n");
 
-    fclose(handle);
+      fclose(handle);
+    } else {
+      printf("Failed to open file\n");
+    }
     break;
   }
   default: {
@@ -258,19 +300,22 @@ SDL_AppResult handle_event(AppState *as, SDL_Event *event) {
   }
   case SDL_EVENT_MOUSE_BUTTON_DOWN: {
     if (event->button.button == 1) {
-      double x = event->button.x;
-      double y = event->button.y;
-      Pos2D w_pos =
-          pos_screen_to_world(as->renderer, &as->view_info, (Pos2D){x, y});
-      PointDef *point_def = malloc(sizeof(PointDef));
-      if (point_def == NULL)
+      Pos2D s_pos = (Pos2D){
+          .x = event->button.x,
+          .y = event->button.y,
+      };
+      Pos2D w_pos = pos_screen_to_world(as->renderer, &as->view_info, s_pos);
+
+      PointDef *pd = malloc(sizeof(PointDef));
+      if (pd == NULL)
         return SDL_APP_FAILURE;
 
-      *point_def = (PointDef){.type = PD_LITERAL,
-                              .literal = {.pos = w_pos},
-                              .val = {.dirty = true},
-                              .id = as->point_def_count};
-      as->point_defs[as->point_def_count++] = point_def;
+      *pd = (PointDef){
+          .type = PD_LITERAL,
+          .literal = {.pos = w_pos},
+          .val = {.dirty = true},
+      };
+      register_point(as, pd);
     }
     break;
   }

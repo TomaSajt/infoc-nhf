@@ -100,7 +100,8 @@ struct PointDef {
     IntsecCircleCirclePD intsec_circle_circle;
   };
   PointVal val;
-  int id;
+  // This value is only ever meant to be set/used inside save functions
+  int save_id;
 };
 
 typedef enum {
@@ -140,7 +141,7 @@ struct LineDef {
     PerpendicularLD perpendicular;
   };
   LineVal val;
-  int id;
+  int save_id;
 };
 
 typedef enum {
@@ -172,7 +173,7 @@ struct CircleDef {
     CenterPointRadiusSegCD center_point_radius_seg;
   };
   CircleVal val;
-  int id;
+  int save_id;
 };
 
 void eval_point(PointDef *pd);
