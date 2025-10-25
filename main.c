@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #include "geom.h"
+#include "geom_defs.h"
 #include "savedata.h"
 
 #define SDL_WINDOW_WIDTH 1000
@@ -160,15 +161,8 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     if (pd == NULL)
       return SDL_APP_FAILURE;
 
-    *pd = (PointDef){
-        .type = PD_MIDPOINT,
-        .midpoint =
-            {
-                .p1 = as->point_defs[as->point_def_count - 2],
-                .p2 = as->point_defs[as->point_def_count - 1],
-            },
-        .val = {.dirty = true},
-    };
+    *pd = make_point_midpoint(as->point_defs[as->point_def_count - 2],
+                              as->point_defs[as->point_def_count - 1]);
     register_point(as, pd);
     break;
   }
@@ -188,15 +182,9 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     if (cd == NULL)
       return SDL_APP_FAILURE;
 
-    *cd = (CircleDef){
-        .type = CD_CENTER_POINT_OUTER_POINT,
-        .center_point_outer_point =
-            {
-                .center = as->point_defs[as->point_def_count - 2],
-                .outer = as->point_defs[as->point_def_count - 1],
-            },
-        .val = {.dirty = true},
-    };
+    *cd = make_circle_center_point_outer_point(
+        as->point_defs[as->point_def_count - 2],
+        as->point_defs[as->point_def_count - 1]);
     register_circle(as, cd);
     break;
   }
@@ -205,15 +193,8 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     if (pd == NULL)
       return SDL_APP_FAILURE;
 
-    *pd = (PointDef){
-        .type = PD_INTSEC_LINE_LINE,
-        .intsec_line_line =
-            {
-                .l1 = as->line_defs[as->line_def_count - 2],
-                .l2 = as->line_defs[as->line_def_count - 1],
-            },
-        .val = {.dirty = true},
-    };
+    *pd = make_point_intsec_line_line(as->line_defs[as->line_def_count - 2],
+                                      as->line_defs[as->line_def_count - 1]);
     register_point(as, pd);
     break;
   }
@@ -222,16 +203,9 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     if (pd == NULL)
       return SDL_APP_FAILURE;
 
-    *pd = (PointDef){
-        .type = PD_INTSEC_LINE_CIRCLE,
-        .intsec_line_circle =
-            {
-                .l = as->line_defs[as->line_def_count - 1],
-                .c = as->circle_defs[as->circle_def_count - 1],
-                .prog_type = ILC_PROG_LOWER,
-            },
-        .val = {.dirty = true},
-    };
+    *pd = make_point_intsec_line_circle(
+        as->line_defs[as->line_def_count - 1],
+        as->circle_defs[as->circle_def_count - 1]);
     register_point(as, pd);
     break;
   }
@@ -240,16 +214,9 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     if (pd == NULL)
       return SDL_APP_FAILURE;
 
-    *pd = (PointDef){
-        .type = PD_INTSEC_CIRCLE_CIRCLE,
-        .intsec_circle_circle =
-            {
-                .c1 = as->circle_defs[as->circle_def_count - 2],
-                .c2 = as->circle_defs[as->circle_def_count - 1],
-                .side = ICC_LEFT,
-            },
-        .val = {.dirty = true},
-    };
+    *pd = make_point_intsec_circle_circle(
+        as->circle_defs[as->circle_def_count - 2],
+        as->circle_defs[as->circle_def_count - 1]);
     register_point(as, pd);
     break;
   }
@@ -304,11 +271,7 @@ SDL_AppResult handle_event(AppState *as, SDL_Event *event) {
       if (pd == NULL)
         return SDL_APP_FAILURE;
 
-      *pd = (PointDef){
-          .type = PD_LITERAL,
-          .literal = {.pos = w_pos},
-          .val = {.dirty = true},
-      };
+      *pd = make_point_literal(w_pos);
       register_point(as, pd);
     }
     break;
@@ -359,9 +322,9 @@ SDL_AppResult do_render(AppState *as) {
   SDL_RenderClear(as->renderer);
 
   {
-    PointDef p1 = {.literal = {.pos = {0.0, 0.0}}, .val = {.dirty = true}};
-    PointDef p2 = {.literal = {.pos = {10.0, 0.0}}, .val = {.dirty = true}};
-    PointDef p3 = {.literal = {.pos = {0.0, 10.0}}, .val = {.dirty = true}};
+    PointDef p1 = make_point_literal((Pos2D){0.0, 0.0});
+    PointDef p2 = make_point_literal((Pos2D){10.0, 0.0});
+    PointDef p3 = make_point_literal((Pos2D){0.0, 10.0});
     w_draw_point(as, &p1, 0xffffffff);
     w_draw_point(as, &p2, 0xffffffff);
     w_draw_point(as, &p3, 0xffffffff);
@@ -427,8 +390,7 @@ SDL_AppResult do_render(AppState *as) {
       if (cd->val.invalid)
         continue;
 
-      double d =
-          dist_from_circle(&mouse_pos, &cd->val.center, cd->val.radius);
+      double d = dist_from_circle(&mouse_pos, &cd->val.center, cd->val.radius);
       if (d * as->view_info.scale > LINE_HITBOX_RADIUS)
         continue;
 
@@ -482,18 +444,23 @@ SDL_AppResult do_render(AppState *as) {
 
 int main(int argc, char *argv[]) {
 
-  AppState as = {.window = NULL,
-                 .renderer = NULL,
-                 .view_info = {.center = {.x = 0, .y = 0}, .scale = 1.0},
-                 .point_defs = {},
-                 .point_def_count = 0,
-                 .line_defs = {},
-                 .line_def_count = 0,
-                 .circle_defs = {},
-                 .circle_def_count = 0};
+  AppState as = {
+      .window = NULL,
+      .renderer = NULL,
+      .view_info =
+          {
+              .center = {.x = 0, .y = 0},
+              .scale = 1.0,
+          },
+      .point_defs = {},
+      .point_def_count = 0,
+      .line_defs = {},
+      .line_def_count = 0,
+      .circle_defs = {},
+      .circle_def_count = 0,
+  };
 
   SDL_AppResult rc = init_app(&as);
-  mark_everyting_dirty(&as);
 
   while (rc == SDL_APP_CONTINUE) {
     SDL_Event event;
