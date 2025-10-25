@@ -217,6 +217,30 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     as->point_defs[as->point_def_count++] = point_def;
     break;
   }
+  case SDL_SCANCODE_S: {
+    SDL_Log("Saving...\n");
+    FILE *handle = fopen("save.dat", "w");
+    save_to_file(handle, as->point_defs, as->point_def_count, as->line_defs,
+                 as->line_def_count, as->circle_defs, as->circle_def_count);
+    fclose(handle);
+    break;
+  }
+  case SDL_SCANCODE_R: {
+    SDL_Log("Loading...\n");
+    FILE *handle = fopen("save.dat", "r");
+    SaveData sd;
+    bool res = load_from_file(handle, &sd);
+    if (res) {
+      printf("Success\n");
+      eval_point(sd.point_defs[0]);
+      printf("Point0: %lf %lf\n", sd.point_defs[0]->val.pos.x,
+             sd.point_defs[0]->val.pos.y);
+    } else
+      printf("Fail\n");
+
+    fclose(handle);
+    break;
+  }
   default: {
     break;
   }
@@ -244,7 +268,8 @@ SDL_AppResult handle_event(AppState *as, SDL_Event *event) {
 
       *point_def = (PointDef){.type = PD_LITERAL,
                               .literal = {.pos = w_pos},
-                              .val = {.dirty = true}};
+                              .val = {.dirty = true},
+                              .id = as->point_def_count};
       as->point_defs[as->point_def_count++] = point_def;
     }
     break;
@@ -440,14 +465,6 @@ int main(int argc, char *argv[]) {
       break;
 
     rc = do_render(&as);
-  }
-
-  if (rc == SDL_APP_SUCCESS) {
-    SDL_Log("Saving...\n");
-    FILE *handle = fopen("save.dat", "w");
-    save_to_file(handle, as.point_defs, as.point_def_count, as.line_defs,
-                 as.line_def_count, as.circle_defs, as.circle_def_count);
-    fclose(handle);
   }
 
   if (as.renderer != NULL)

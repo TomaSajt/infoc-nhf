@@ -24,7 +24,6 @@ add_compile_options(
     -Wall
     -Werror
 )
-
 add_executable(infoc-nhf WIN32
     main.c
     geom.c

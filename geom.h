@@ -146,7 +146,7 @@ struct LineDef {
 typedef enum {
   CD_CENTER_POINT_OUTER_POINT = 0,
   CD_CENTER_POINT_RADIUS_SEG = 1,
-} CircleProviderType;
+} CircleDefType;
 
 typedef struct {
   PointDef *center;
@@ -166,7 +166,7 @@ typedef struct {
 } CircleVal;
 
 struct CircleDef {
-  CircleProviderType type;
+  CircleDefType type;
   union {
     CenterPointOuterPointCD center_point_outer_point;
     CenterPointRadiusSegCD center_point_radius_seg;
