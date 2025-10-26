@@ -19,14 +19,6 @@
 #define SDL_WINDOW_WIDTH 1000
 #define SDL_WINDOW_HEIGHT 600
 
-const SDL_Color BLACK = /*  */ {.r = 0x00, .g = 0x00, .b = 0x00, .a = 0xff};
-const SDL_Color RED = /*    */ {.r = 0xff, .g = 0x00, .b = 0x00, .a = 0xff};
-const SDL_Color GREEN = /*  */ {.r = 0x00, .g = 0xff, .b = 0x00, .a = 0xff};
-const SDL_Color YELLOW = /* */ {.r = 0xff, .g = 0xff, .b = 0x00, .a = 0xff};
-const SDL_Color BLUE = /*   */ {.r = 0x00, .g = 0x00, .b = 0xff, .a = 0xff};
-const SDL_Color MAGENTA = /**/ {.r = 0xff, .g = 0x00, .b = 0xff, .a = 0xff};
-const SDL_Color CYAN = /*   */ {.r = 0x00, .g = 0xff, .b = 0xff, .a = 0xff};
-const SDL_Color WHITE = /*  */ {.r = 0xff, .g = 0xff, .b = 0xff, .a = 0xff};
 
 void zoom(ViewInfo *view_info, Pos2D fp, double mul) {
   *view_info = (ViewInfo){
