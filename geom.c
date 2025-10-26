@@ -47,7 +47,7 @@ Pos2D lerp(Pos2D *start, Pos2D *end, double prog) {
   };
 }
 
-Pos2D calc_point_center_rot(Pos2D *center, double radius, double prog) {
+Pos2D pos_from_circle_prog(Pos2D *center, double radius, double prog) {
   return (Pos2D){
       .x = center->x + radius * cos(M_TAU * prog),
       .y = center->y + radius * sin(M_TAU * prog),
@@ -166,7 +166,7 @@ void eval_point(PointDef *pd) {
     eval_circle(c);
     pd->val.invalid = c->val.invalid;
     if (!pd->val.invalid) {
-      pd->val.pos = calc_point_center_rot(&c->val.center, c->val.radius, prog);
+      pd->val.pos = pos_from_circle_prog(&c->val.center, c->val.radius, prog);
     }
     break;
   }
@@ -413,9 +413,24 @@ double dist_from_pos(Pos2D *pos1, Pos2D *pos2) {
   return vec_len(pos1->x - pos2->x, pos1->y - pos2->y);
 }
 
-double dist_from_circle(Pos2D *pos, Pos2D *center, double radius) {
-  double signed_dist = dist_from_pos(pos, center) - radius;
-  return fabs(signed_dist);
+double clamp_line_prog(double prog, LineExtMode ext_mode) {
+  switch (ext_mode) {
+  case L_EXT_SEGMENT:
+    return prog < 0 ? 0 : prog > 1 ? 1 : prog;
+  case L_EXT_RAY:
+    return prog < 0 ? 0 : prog;
+  default:
+    return prog;
+  }
+}
+
+double pos_to_closest_line_prog(Pos2D *pos, Pos2D *s, Pos2D *e) {
+  double vx = e->x - s->x;
+  double vy = e->y - s->y;
+  double dx = pos->x - s->x;
+  double dy = pos->y - s->y;
+  double prog = (dx * vx + dy * vy) / (vx * vx + vy * vy);
+  return prog;
 }
 
 double dist_from_line(Pos2D *pos, Pos2D *start, Pos2D *end) {
@@ -425,5 +440,18 @@ double dist_from_line(Pos2D *pos, Pos2D *start, Pos2D *end) {
   double signed_dist =
       ((pos->x - start->x) * nx + (pos->y - start->y) * ny) / vec_len(nx, ny);
 
+  return fabs(signed_dist);
+}
+
+double pos_to_closest_circle_prog(Pos2D *pos, Pos2D *c) {
+  double dx = pos->x - c->x;
+  double dy = pos->y - c->y;
+  double angle = atan2(dy, dx);
+  double prog = angle / M_TAU;
+  return prog - floor(prog); // [0;1)
+}
+
+double dist_from_circle(Pos2D *pos, Pos2D *center, double radius) {
+  double signed_dist = dist_from_pos(pos, center) - radius;
   return fabs(signed_dist);
 }

@@ -1,6 +1,3 @@
-#include "SDL3/SDL_events.h"
-#include "SDL3/SDL_init.h"
-#include "SDL3/SDL_scancode.h"
 #include "debugmalloc.h"
 
 #include <SDL3/SDL.h>
@@ -222,16 +219,26 @@ CircleDef *get_hovered_circle(AppState *as, Pos2D w_mouse_pos) {
 }
 
 void try_move_point_to_pos(PointDef *pd, Pos2D pos) {
+  printf("Trying to move point\n");
   switch (pd->type) {
-  case PD_LITERAL:
+  case PD_LITERAL: {
     pd->literal.pos = pos;
     break;
-  case PD_GLIDER_ON_LINE:
-    printf("TODO: implement glider on line\n");
+  }
+  case PD_GLIDER_ON_LINE: {
+    LineExtMode ext_mode = pd->glider_on_line.l->ext_mode;
+    Pos2D *s = &pd->glider_on_line.l->val.start;
+    Pos2D *e = &pd->glider_on_line.l->val.end;
+    double prog = pos_to_closest_line_prog(&pos, s, e);
+    pd->glider_on_line.prog = clamp_line_prog(prog, ext_mode);
     break;
-  case PD_GLIDER_ON_CIRCLE:
-    printf("TODO: implement glider on circle\n");
+  }
+  case PD_GLIDER_ON_CIRCLE: {
+    Pos2D *c = &pd->glider_on_circle.c->val.center;
+    double prog = pos_to_closest_circle_prog(&pos, c);
+    pd->glider_on_circle.prog = prog;
     break;
+  }
   default:
     printf("Can't move non-literal, non-glider points!\n");
     break;
@@ -252,20 +259,20 @@ void move__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
   }
 }
 
-void delete__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
-  PointDef *hovered_point = get_hovered_point(as, w_mouse_pos);
-  if (hovered_point == NULL)
-    return;
-  delete_point(&as->gs, hovered_point);
-}
-
-void move__on_mouse_up(AppState *as) { as->es.elem_type = FE_NONE; }
-
 void move__on_mouse_motion(AppState *as, Pos2D w_mouse_pos) {
   if (as->es.elem_type != FE_POINT)
     return;
   try_move_point_to_pos(as->es.p, w_mouse_pos);
   mark_everyting_dirty(&as->gs);
+}
+
+void move__on_mouse_up(AppState *as) { as->es.elem_type = FE_NONE; }
+
+void delete__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
+  PointDef *hovered_point = get_hovered_point(as, w_mouse_pos);
+  if (hovered_point == NULL)
+    return;
+  delete_point(&as->gs, hovered_point);
 }
 
 SDL_AppResult point__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
@@ -301,6 +308,24 @@ SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
 
     *pd = make_point_midpoint(as->gs.point_defs[as->gs.p_n - 2],
                               as->gs.point_defs[as->gs.p_n - 1]);
+    register_point(&as->gs, pd);
+    break;
+  }
+  case SDL_SCANCODE_G: {
+    PointDef *pd = malloc(sizeof(PointDef));
+    if (pd == NULL)
+      return SDL_APP_FAILURE;
+
+    *pd = make_point_glider_on_line(as->gs.line_defs[as->gs.l_n - 1], 0.5);
+    register_point(&as->gs, pd);
+    break;
+  }
+  case SDL_SCANCODE_H: {
+    PointDef *pd = malloc(sizeof(PointDef));
+    if (pd == NULL)
+      return SDL_APP_FAILURE;
+
+    *pd = make_point_glider_on_circle(as->gs.circle_defs[as->gs.c_n - 1], 0.5);
     register_point(&as->gs, pd);
     break;
   }
