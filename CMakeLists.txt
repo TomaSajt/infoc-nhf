@@ -28,12 +28,15 @@ add_compile_options(
     -include ${CMAKE_SOURCE_DIR}/debugmalloc.h
 )
 add_executable(infoc-nhf WIN32
-    main.c
-    geom_defs.c
-    geom.c
-    geom_state.c
-    savedata.c
     draw.c
+    geom.c
+    geom_defs.c
+    geom_state.c
+    hover.c
+    main.c
+    savedata.c
+
+    mode/point.c
 )
 
 target_link_libraries(infoc-nhf PRIVATE
