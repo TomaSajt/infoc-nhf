@@ -30,14 +30,16 @@ void save_point(FILE *handle, PointDef *pd) {
             pd->glider_on_circle.c->save_id, pd->glider_on_line.prog);
     break;
   case PD_INTSEC_LINE_CIRCLE:
-    fprintf(handle, "%d %d", /**/
+    fprintf(handle, "%d %d %d", /**/
             pd->intsec_line_circle.l->save_id,
-            pd->intsec_line_circle.c->save_id);
+            pd->intsec_line_circle.c->save_id,
+            pd->intsec_line_circle.prog_type);
     break;
   case PD_INTSEC_CIRCLE_CIRCLE:
-    fprintf(handle, "%d %d", /**/
+    fprintf(handle, "%d %d %d", /**/
             pd->intsec_circle_circle.c1->save_id,
-            pd->intsec_circle_circle.c2->save_id);
+            pd->intsec_circle_circle.c2->save_id,
+            pd->intsec_circle_circle.side);
     break;
   }
   fprintf(handle, "\n");
@@ -188,26 +190,35 @@ bool parse_point(char *data, PointDef *pd, GeometryState *gs,
   }
   case PD_INTSEC_LINE_CIRCLE: {
     int id1, id2;
-    if (sscanf(data, "%*d %d %d", &id1, &id2) != 2)
+    int prog_type_i;
+    if (sscanf(data, "%*d %d %d %d", &id1, &id2, &prog_type_i) != 3)
+      return false;
+    ILCProgType prog_type = (ILCProgType)prog_type_i;
+    if (prog_type != ILC_PROG_LOWER && prog_type != ILC_PROG_HIGHER)
       return false;
     int ind1 = id_to_index(id1, sorted_l_results, gs->l_n);
     int ind2 = id_to_index(id2, sorted_c_results, gs->c_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
     *pd = make_point_intsec_line_circle(gs->line_defs[ind1],
-                                        gs->circle_defs[ind2]);
+                                        gs->circle_defs[ind2], prog_type);
     return true;
   }
   case PD_INTSEC_CIRCLE_CIRCLE: {
     int id1, id2;
-    if (sscanf(data, "%*d %d %d", &id1, &id2) != 2)
+    int side_i;
+    if (sscanf(data, "%*d %d %d %d", &id1, &id2, &side_i) != 3)
+      return false;
+
+    ICCSide side = (ICCSide)side_i;
+    if (side != ICC_LEFT && side != ICC_RIGHT)
       return false;
     int ind1 = id_to_index(id1, sorted_c_results, gs->c_n);
     int ind2 = id_to_index(id2, sorted_c_results, gs->c_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
     *pd = make_point_intsec_circle_circle(gs->circle_defs[ind1],
-                                          gs->circle_defs[ind2]);
+                                          gs->circle_defs[ind2], side);
     return true;
   }
   }

@@ -18,8 +18,8 @@
 #define SDL_WINDOW_WIDTH 1000
 #define SDL_WINDOW_HEIGHT 600
 
-#define POINT_RENDER_RADIUS 10.0
-#define POINT_HITBOX_RADIUS 15.0
+#define POINT_RENDER_RADIUS 4.0
+#define POINT_HITBOX_RADIUS 10.0
 
 #define LINE_HITBOX_RADIUS 8.0
 
@@ -305,11 +305,21 @@ void delete__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
 }
 
 PointDef point__get_potential_point(AppState *as, Pos2D w_mouse_pos) {
+  // TODO: implement get_hovered_lines and get_hovered_circles
+  //       for line-line and circle-circle intersections
   LineDef *hovered_line = get_hovered_line(as, w_mouse_pos);
   CircleDef *hovered_circle = get_hovered_circle(as, w_mouse_pos);
   if (hovered_line != NULL) {
     if (hovered_circle != NULL) {
-      return make_point_intsec_line_circle(hovered_line, hovered_circle);
+      PointDef pot1 = make_point_intsec_line_circle(
+          hovered_line, hovered_circle, ILC_PROG_LOWER);
+      PointDef pot2 = make_point_intsec_line_circle(
+          hovered_line, hovered_circle, ILC_PROG_HIGHER);
+      eval_point(&pot1);
+      eval_point(&pot2);
+      double d1 = dist_from_pos(&w_mouse_pos, &pot1.val.pos);
+      double d2 = dist_from_pos(&w_mouse_pos, &pot2.val.pos);
+      return d1 < d2 ? pot1 : pot2;
     } else {
       double prog = line_closest_prog_from_pos(
           &w_mouse_pos, &hovered_line->val.start, &hovered_line->val.end,
@@ -418,7 +428,8 @@ SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
       return SDL_APP_FAILURE;
 
     *pd = make_point_intsec_line_circle(as->gs.line_defs[as->gs.l_n - 1],
-                                        as->gs.circle_defs[as->gs.c_n - 1]);
+                                        as->gs.circle_defs[as->gs.c_n - 1],
+                                        ILC_PROG_LOWER);
     register_point(&as->gs, pd);
     break;
   }
@@ -428,7 +439,8 @@ SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
       return SDL_APP_FAILURE;
 
     *pd = make_point_intsec_circle_circle(as->gs.circle_defs[as->gs.c_n - 2],
-                                          as->gs.circle_defs[as->gs.c_n - 1]);
+                                          as->gs.circle_defs[as->gs.c_n - 1],
+                                          ICC_RIGHT);
     register_point(&as->gs, pd);
     break;
   }
@@ -537,6 +549,8 @@ void draw_point(AppState *as, PointDef *pd, SDL_Color color) {
   Pos2D screen_pos =
       pos_world_to_screen(as->renderer, &as->view_info, pd->val.pos);
 
+  filledCircleRGBA(as->renderer, screen_pos.x, screen_pos.y,
+                   POINT_HITBOX_RADIUS, color.r, color.g, color.b, color.a / 2);
   filledCircleRGBA(as->renderer, screen_pos.x, screen_pos.y,
                    POINT_RENDER_RADIUS, color.r, color.g, color.b, color.a);
 }

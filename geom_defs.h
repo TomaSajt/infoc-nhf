@@ -185,8 +185,10 @@ PointDef make_point_midpoint(PointDef *p1, PointDef *p2);
 PointDef make_point_glider_on_line(LineDef *l, float prog);
 PointDef make_point_intsec_line_line(LineDef *l1, LineDef *l2);
 PointDef make_point_glider_on_circle(CircleDef *c, float prog);
-PointDef make_point_intsec_line_circle(LineDef *l, CircleDef *c);
-PointDef make_point_intsec_circle_circle(CircleDef *c1, CircleDef *c2);
+PointDef make_point_intsec_line_circle(LineDef *l, CircleDef *c,
+                                       ILCProgType prog_type);
+PointDef make_point_intsec_circle_circle(CircleDef *c1, CircleDef *c2,
+                                         ICCSide side);
 
 LineDef make_line_point_to_point(LineExtMode ext_mode, PointDef *p1,
                                  PointDef *p2);

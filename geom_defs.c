@@ -40,18 +40,20 @@ PointDef make_point_glider_on_circle(CircleDef *c, float prog) {
       .del_flag = DF_DONT_KNOW,
   };
 }
-PointDef make_point_intsec_line_circle(LineDef *l, CircleDef *c) {
+PointDef make_point_intsec_line_circle(LineDef *l, CircleDef *c,
+                                       ILCProgType prog_type) {
   return (PointDef){
       .type = PD_INTSEC_LINE_CIRCLE,
-      .intsec_line_circle = {.l = l, .c = c},
+      .intsec_line_circle = {.l = l, .c = c, .prog_type = prog_type},
       .val = {.dirty = true},
       .del_flag = DF_DONT_KNOW,
   };
 }
-PointDef make_point_intsec_circle_circle(CircleDef *c1, CircleDef *c2) {
+PointDef make_point_intsec_circle_circle(CircleDef *c1, CircleDef *c2,
+                                         ICCSide side) {
   return (PointDef){
       .type = PD_INTSEC_CIRCLE_CIRCLE,
-      .intsec_circle_circle = {.c1 = c1, .c2 = c2},
+      .intsec_circle_circle = {.c1 = c1, .c2 = c2, .side = side},
       .val = {.dirty = true},
       .del_flag = DF_DONT_KNOW,
   };
