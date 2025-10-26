@@ -9,6 +9,10 @@ find_package(
     COMPONENTS SDL3-shared
 )
 
+find_package(
+    SDL3_ttf REQUIRED CONFIG REQUIRED
+)
+
 include(FetchContent)
 
 # fork of SDL2_gfx for SDL3 support
@@ -35,5 +39,6 @@ add_executable(infoc-nhf WIN32
 target_link_libraries(infoc-nhf PRIVATE
     m # Maths
     SDL3::SDL3
+    SDL3_ttf::SDL3_ttf
     SDL3_gfx_Static
 )

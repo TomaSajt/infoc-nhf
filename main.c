@@ -3,6 +3,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
+#include <SDL3_ttf/SDL_ttf.h>
+
 #include <SDL3_gfxPrimitives.h>
 
 #include <stdio.h>
@@ -59,6 +61,7 @@ typedef struct {
 typedef struct {
   SDL_Window *window;
   SDL_Renderer *renderer;
+  TTF_Font *font;
   ViewInfo view_info;
   GeometryState gs;
   EditorState es;
@@ -516,6 +519,19 @@ SDL_AppResult do_render(AppState *as) {
   SDL_SetRenderDrawColor(as->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(as->renderer);
 
+  SDL_Color white = (SDL_Color){.r = 255, .g = 255, .b = 255, .a = 255};
+  SDL_Surface *text_surf = TTF_RenderText_Solid(as->font, "Árvíztűrő tükörfúrógép", 0, white);
+  if (text_surf != NULL) {
+    SDL_Texture *texture =
+        SDL_CreateTextureFromSurface(as->renderer, text_surf);
+    if (texture != NULL) {
+      SDL_FRect rect = {.x = 20, .y = 20, .w = texture->w, .h = texture->h};
+      SDL_RenderTexture(as->renderer, texture, NULL, &rect);
+      SDL_DestroyTexture(texture);
+    }
+    SDL_DestroySurface(text_surf);
+  }
+
   {
     PointDef p1 = make_point_literal((Pos2D){0.0, 0.0});
     PointDef p2 = make_point_literal((Pos2D){10.0, 0.0});
@@ -592,14 +608,31 @@ SDL_AppResult init_app(AppState *as) {
     return SDL_APP_FAILURE;
   }
 
+  if (!TTF_Init()) {
+    return SDL_APP_FAILURE;
+  }
+  as->font = TTF_OpenFont("./fonts/liberation/LiberationSerif-Regular.ttf", 32);
+  if (as->font == NULL) {
+    printf("Font not found!\n");
+    return SDL_APP_FAILURE;
+  }
+
   return SDL_APP_CONTINUE;
 }
 
 void deinit_appstate(AppState *as) {
-  if (as->renderer != NULL)
+  if (as->renderer != NULL) {
     SDL_DestroyRenderer(as->renderer);
-  if (as->window != NULL)
+    as->renderer = NULL;
+  }
+  if (as->window != NULL) {
     SDL_DestroyWindow(as->window);
+    as->window = NULL;
+  }
+  if (as->font != NULL) {
+    TTF_CloseFont(as->font);
+    as->font = NULL;
+  }
 
   clear_geometry_state(&as->gs);
 }
