@@ -8,6 +8,12 @@ typedef struct {
 } Pos2D;
 
 typedef enum {
+  DF_DONT_KNOW = 0,
+  DF_NO = 1,
+  DF_YES = 2,
+} DeletionFlag;
+
+typedef enum {
   L_EXT_SEGMENT = 0, //    start -> end
   L_EXT_RAY = 1,     //    start -> end ->
   L_EXT_LINE = 2,    // -> start -> end ->
@@ -24,7 +30,7 @@ typedef enum {
   PD_INTSEC_LINE_LINE = 3,
   PD_GLIDER_ON_CIRCLE = 4,
   PD_INTSEC_LINE_CIRCLE = 5,
-  PD_INTSEC_CIRCLE_CIRCLE = 6
+  PD_INTSEC_CIRCLE_CIRCLE = 6,
 } PointDefType;
 
 typedef struct {
@@ -93,6 +99,7 @@ struct PointDef {
     IntsecCircleCirclePD intsec_circle_circle;
   };
   PointVal val;
+  DeletionFlag del_flag;
   // This value is only ever meant to be set/used inside save functions
   int save_id;
 };
@@ -100,7 +107,7 @@ struct PointDef {
 typedef enum {
   LD_POINT_TO_POINT = 0,
   LD_PARALLEL = 1,
-  LD_PERPENDICULAR = 2
+  LD_PERPENDICULAR = 2,
 } LineDefType;
 
 typedef struct {
@@ -134,6 +141,7 @@ struct LineDef {
     PerpendicularLD perpendicular;
   };
   LineVal val;
+  DeletionFlag del_flag;
   // This value is only ever meant to be set/used inside save functions
   int save_id;
 };
@@ -167,6 +175,7 @@ struct CircleDef {
     CenterPointRadiusSegCD center_point_radius_seg;
   };
   CircleVal val;
+  DeletionFlag del_flag;
   // This value is only ever meant to be set/used inside save functions
   int save_id;
 };

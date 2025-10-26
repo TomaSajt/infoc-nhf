@@ -199,7 +199,6 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
       GeometryState new_gs = {};
       bool res = load_from_file(handle, &new_gs);
       if (res) {
-        //clear_geometry_state(&new_gs);
         clear_geometry_state(&as->gs);
         as->gs = new_gs;
         printf("Load successful\n");
@@ -211,6 +210,11 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     } else {
       printf("Failed to open file\n");
     }
+    break;
+  }
+  case SDL_SCANCODE_N: {
+    SDL_Log("Creating new canvas...\n");
+    clear_geometry_state(&as->gs);
     break;
   }
   default: {
@@ -259,7 +263,6 @@ void w_draw_point(AppState *as, PointDef *pd, Uint32 color) {
     return;
   Pos2D screen_pos =
       pos_world_to_screen(as->renderer, &as->view_info, pd->val.pos);
-  // printf("drawing point: %lf %lf\n", pd->val.pos.x, pd->val.pos.y);
 
   filledCircleColor(as->renderer, screen_pos.x, screen_pos.y,
                     POINT_RENDER_RADIUS, color);
@@ -287,10 +290,10 @@ void w_draw_circle(AppState *as, CircleDef *cd, Uint32 color) {
 }
 
 SDL_AppResult do_render(AppState *as) {
+  printf("%d %d %d\n", as->gs.p_n, as->gs.l_n, as->gs.c_n);
 
   SDL_SetRenderDrawColor(as->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(as->renderer);
-
 
   {
     PointDef p1 = make_point_literal((Pos2D){0.0, 0.0});
@@ -376,6 +379,16 @@ SDL_AppResult do_render(AppState *as) {
     if (closest_point_def != NULL && closest_point_def->type == PD_LITERAL) {
       closest_point_def->literal.pos = mouse_pos;
       mark_everyting_dirty(&as->gs);
+    }
+  }
+  if ((flags & SDL_BUTTON_MMASK) != 0) {
+    if (closest_point_def != NULL) {
+      delete_point(&as->gs, closest_point_def);
+      // just to be safe
+      // TODO: recalculate correct closest
+      closest_point_def = NULL;
+      closest_line_def = NULL;
+      closest_circle_def = NULL;
     }
   }
 

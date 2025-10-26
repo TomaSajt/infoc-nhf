@@ -1,4 +1,5 @@
 #include "debugmalloc.h"
+#include "geom_defs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -131,13 +132,14 @@ bool parse_point(char *data, PointDef *pd, GeometryState *gs,
   int type_i;
   if (sscanf(data, "%d", &type_i) != 1)
     return false;
-  pd->type = (PointDefType)type_i;
-  switch (pd->type) {
+
+  switch ((PointDefType)type_i) {
   case PD_LITERAL: {
-    if (sscanf(data, "%*d %lf %lf", &pd->literal.pos.x, &pd->literal.pos.y) !=
-        2)
+    Pos2D pos;
+    if (sscanf(data, "%*d %lf %lf", &pos.x, &pos.y) != 2)
       return false;
-    break;
+    *pd = make_point_literal(pos);
+    return true;
   }
   case PD_MIDPOINT: {
     int id1, id2;
@@ -147,19 +149,19 @@ bool parse_point(char *data, PointDef *pd, GeometryState *gs,
     int ind2 = id_to_index(id2, sorted_p_results, gs->p_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    pd->midpoint.p1 = gs->point_defs[ind1];
-    pd->midpoint.p2 = gs->point_defs[ind2];
-    break;
+    *pd = make_point_midpoint(gs->point_defs[ind1], gs->point_defs[ind2]);
+    return true;
   }
   case PD_GLIDER_ON_LINE: {
     int id;
-    if (sscanf(data, "%*d %d %lf", &id, &pd->glider_on_line.prog) != 2)
+    double prog;
+    if (sscanf(data, "%*d %d %lf", &id, &prog) != 2)
       return false;
     int ind = id_to_index(id, sorted_l_results, gs->l_n);
     if (ind == -1)
       return false;
-    pd->glider_on_line.l = gs->line_defs[ind];
-    break;
+    *pd = make_point_glider_on_line(gs->line_defs[ind], prog);
+    return true;
   }
   case PD_INTSEC_LINE_LINE: {
     int id1, id2;
@@ -169,19 +171,20 @@ bool parse_point(char *data, PointDef *pd, GeometryState *gs,
     int ind2 = id_to_index(id2, sorted_l_results, gs->l_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    pd->intsec_line_line.l1 = gs->line_defs[ind1];
-    pd->intsec_line_line.l2 = gs->line_defs[ind2];
-    break;
+    *pd = make_point_intsec_line_line(gs->line_defs[ind1], gs->line_defs[ind2]);
+    return true;
   }
   case PD_GLIDER_ON_CIRCLE: {
     int id;
-    if (sscanf(data, "%*d %d %lf", &id, &pd->glider_on_circle.prog) != 2)
+    double prog;
+    if (sscanf(data, "%*d %d %lf", &id, &prog) != 2)
       return false;
     int ind = id_to_index(id, sorted_c_results, gs->c_n);
     if (ind == -1)
       return false;
-    pd->glider_on_circle.c = gs->circle_defs[ind];
-    break;
+
+    *pd = make_point_glider_on_circle(gs->circle_defs[ind], prog);
+    return true;
   }
   case PD_INTSEC_LINE_CIRCLE: {
     int id1, id2;
@@ -191,9 +194,9 @@ bool parse_point(char *data, PointDef *pd, GeometryState *gs,
     int ind2 = id_to_index(id2, sorted_c_results, gs->c_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    pd->intsec_line_circle.l = gs->line_defs[ind1];
-    pd->intsec_line_circle.c = gs->circle_defs[ind2];
-    break;
+    *pd = make_point_intsec_line_circle(gs->line_defs[ind1],
+                                        gs->circle_defs[ind2]);
+    return true;
   }
   case PD_INTSEC_CIRCLE_CIRCLE: {
     int id1, id2;
@@ -203,27 +206,31 @@ bool parse_point(char *data, PointDef *pd, GeometryState *gs,
     int ind2 = id_to_index(id2, sorted_c_results, gs->c_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    pd->intsec_circle_circle.c1 = gs->circle_defs[ind1];
-    pd->intsec_circle_circle.c2 = gs->circle_defs[ind2];
-    break;
+    *pd = make_point_intsec_circle_circle(gs->circle_defs[ind1],
+                                          gs->circle_defs[ind2]);
+    return true;
   }
   }
-  return true;
+  // type_i was not any of the expected enum values
+  return false;
 }
 
 bool parse_line(char *data, LineDef *ld, GeometryState *gs,
                 ReadResult **sorted_p_results, ReadResult **sorted_l_results,
                 ReadResult **sorted_c_results) {
-
   int ext_mode_i;
   int type_i;
   if (sscanf(data, "%d %d", &ext_mode_i, &type_i) != 2)
     return false;
-  ld->ext_mode = (LineExtMode)ext_mode_i;
-  ld->type = (LineDefType)type_i;
 
-  switch (ld->type) {
+  LineExtMode ext_mode = (LineExtMode)ext_mode_i;
+
+  switch ((LineDefType)type_i) {
   case LD_POINT_TO_POINT: {
+    if (ext_mode != L_EXT_SEGMENT && ext_mode != L_EXT_RAY &&
+        ext_mode != L_EXT_LINE)
+      return false;
+
     int id1, id2;
     if (sscanf(data, "%*d %*d %d %d", &id1, &id2) != 2)
       return false;
@@ -231,11 +238,15 @@ bool parse_line(char *data, LineDef *ld, GeometryState *gs,
     int ind2 = id_to_index(id2, sorted_p_results, gs->p_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    ld->point_to_point.p1 = gs->point_defs[ind1];
-    ld->point_to_point.p2 = gs->point_defs[ind2];
-    break;
+
+    *ld = make_line_point_to_point(ext_mode, gs->point_defs[ind1],
+                                   gs->point_defs[ind2]);
+    return true;
   }
   case LD_PARALLEL: {
+    if (ext_mode != L_EXT_LINE)
+      return false;
+
     int id1, id2;
     if (sscanf(data, "%*d %*d %d %d", &id1, &id2) != 2)
       return false;
@@ -243,11 +254,13 @@ bool parse_line(char *data, LineDef *ld, GeometryState *gs,
     int ind2 = id_to_index(id2, sorted_p_results, gs->p_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    ld->parallel.l = gs->line_defs[ind1];
-    ld->parallel.p = gs->point_defs[ind2];
-    break;
+    *ld = make_line_parallel(gs->line_defs[ind1], gs->point_defs[ind2]);
+    return true;
   }
   case LD_PERPENDICULAR: {
+    if (ext_mode != L_EXT_LINE)
+      return false;
+
     int id1, id2;
     if (sscanf(data, "%*d %*d %d %d", &id1, &id2) != 2)
       return false;
@@ -255,12 +268,12 @@ bool parse_line(char *data, LineDef *ld, GeometryState *gs,
     int ind2 = id_to_index(id2, sorted_p_results, gs->p_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    ld->perpendicular.l = gs->line_defs[ind1];
-    ld->perpendicular.p = gs->point_defs[ind2];
-    break;
+    *ld = make_line_perpendicular(gs->line_defs[ind1], gs->point_defs[ind2]);
+    return true;
   }
   }
-  return true;
+  // type_i was not any of the expected enum values
+  return false;
 }
 
 bool parse_circle(char *data, CircleDef *cd, GeometryState *gs,
@@ -269,9 +282,8 @@ bool parse_circle(char *data, CircleDef *cd, GeometryState *gs,
   int type_i;
   if (sscanf(data, "%d", &type_i) != 1)
     return false;
-  cd->type = (CircleDefType)type_i;
 
-  switch (cd->type) {
+  switch ((CircleDefType)type_i) {
   case CD_CENTER_POINT_OUTER_POINT: {
     int id1, id2;
     if (sscanf(data, "%*d %d %d", &id1, &id2) != 2)
@@ -280,9 +292,9 @@ bool parse_circle(char *data, CircleDef *cd, GeometryState *gs,
     int ind2 = id_to_index(id2, sorted_p_results, gs->p_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    cd->center_point_outer_point.center = gs->point_defs[ind1];
-    cd->center_point_outer_point.outer = gs->point_defs[ind2];
-    break;
+    *cd = make_circle_center_point_outer_point(gs->point_defs[ind1],
+                                               gs->point_defs[ind2]);
+    return true;
   }
   case CD_CENTER_POINT_RADIUS_SEG: {
     int id1, id2;
@@ -294,10 +306,13 @@ bool parse_circle(char *data, CircleDef *cd, GeometryState *gs,
       return false;
     cd->center_point_radius_seg.center = gs->point_defs[ind1];
     cd->center_point_radius_seg.rad_seg = gs->line_defs[ind2];
-    break;
+    *cd = make_circle_center_point_radius_seg(gs->point_defs[ind1],
+                                              gs->line_defs[ind2]);
+    return true;
   }
   }
-  return true;
+  // type_i was not any of the expected enum values
+  return false;
 }
 
 bool load_from_file(FILE *handle, GeometryState *gs) {
@@ -373,17 +388,17 @@ bool load_from_file(FILE *handle, GeometryState *gs) {
 
   bool ok = true;
   for (int i = 0; ok && i < p_n; i++) {
-    ok = parse_point(srt_p_rrs[i]->rest, gs->point_defs[i], gs,
-                     srt_p_rrs, srt_l_rrs, srt_c_rrs);
+    ok = parse_point(srt_p_rrs[i]->rest, gs->point_defs[i], gs, srt_p_rrs,
+                     srt_l_rrs, srt_c_rrs);
   }
   for (int i = 0; ok && i < l_n; i++) {
-    ok = parse_line(srt_l_rrs[i]->rest, gs->line_defs[i], gs,
-                    srt_p_rrs, srt_l_rrs, srt_c_rrs);
+    ok = parse_line(srt_l_rrs[i]->rest, gs->line_defs[i], gs, srt_p_rrs,
+                    srt_l_rrs, srt_c_rrs);
   }
 
   for (int i = 0; ok && i < c_n; i++) {
-    ok = parse_circle(srt_c_rrs[i]->rest, gs->circle_defs[i], gs,
-                      srt_p_rrs, srt_l_rrs, srt_c_rrs);
+    ok = parse_circle(srt_c_rrs[i]->rest, gs->circle_defs[i], gs, srt_p_rrs,
+                      srt_l_rrs, srt_c_rrs);
   }
 
   if (!ok) {

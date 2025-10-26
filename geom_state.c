@@ -1,4 +1,6 @@
 #include "debugmalloc.h"
+#include "geom.h"
+#include "geom_defs.h"
 
 #include <stdlib.h>
 
@@ -42,4 +44,70 @@ void mark_everyting_dirty(GeometryState *gs) {
   for (int i = 0; i < gs->c_n; i++) {
     gs->circle_defs[i]->val.dirty = true;
   }
+}
+
+void delete_marked_cascading(GeometryState *gs) {
+  for (int i = 0; i < gs->p_n; i++) {
+    eval_point_del_flag(gs->point_defs[i]);
+  }
+  for (int i = 0; i < gs->l_n; i++) {
+    eval_line_del_flag(gs->line_defs[i]);
+  }
+  for (int i = 0; i < gs->c_n; i++) {
+    eval_circle_del_flag(gs->circle_defs[i]);
+  }
+
+  GeometryState new_gs = {
+      .point_defs = {},
+      .line_defs = {},
+      .circle_defs = {},
+      .p_n = 0,
+      .l_n = 0,
+      .c_n = 0,
+  };
+
+  for (int i = 0; i < gs->p_n; i++) {
+    PointDef *pd = gs->point_defs[i];
+    if (pd->del_flag == DF_YES) {
+      free(pd);
+    } else {
+      register_point(&new_gs, pd);
+      pd->del_flag = DF_DONT_KNOW;
+    }
+  }
+  for (int i = 0; i < gs->l_n; i++) {
+    LineDef *ld = gs->line_defs[i];
+    if (ld->del_flag == DF_YES) {
+      free(ld);
+    } else {
+      register_line(&new_gs, ld);
+      ld->del_flag = DF_DONT_KNOW;
+    }
+  }
+  for (int i = 0; i < gs->c_n; i++) {
+    CircleDef *cd = gs->circle_defs[i];
+    if (cd->del_flag == DF_YES) {
+      free(cd);
+    } else {
+      register_circle(&new_gs, cd);
+      cd->del_flag = DF_DONT_KNOW;
+    }
+  }
+
+  *gs = new_gs;
+}
+
+void delete_point(GeometryState *gs, PointDef *pd) {
+  pd->del_flag = DF_YES;
+  delete_marked_cascading(gs);
+}
+
+void delete_line(GeometryState *gs, LineDef *ld) {
+  ld->del_flag = DF_YES;
+  delete_marked_cascading(gs);
+}
+
+void delete_circle(GeometryState *gs, CircleDef *cd) {
+  cd->del_flag = DF_YES;
+  delete_marked_cascading(gs);
 }

@@ -1,5 +1,7 @@
 #include "geom.h"
+#include "geom_defs.h"
 #include <math.h>
+#include <stdio.h>
 
 #define M_TAU 6.28318530717958647693
 
@@ -292,6 +294,119 @@ void eval_circle(CircleDef *cd) {
   }
 
   cd->val.dirty = false;
+}
+
+bool eval_point_del_flag(PointDef *pd) {
+  printf("p %p\n", pd);
+  if (pd->del_flag != DF_DONT_KNOW)
+    return pd->del_flag == DF_YES;
+  printf("not cached\n");
+
+  bool res = false;
+  switch (pd->type) {
+  case PD_LITERAL: {
+    break;
+  }
+  case PD_MIDPOINT: {
+    PointDef *p1 = pd->midpoint.p1;
+    PointDef *p2 = pd->midpoint.p2;
+    res |= eval_point_del_flag(p1);
+    res |= eval_point_del_flag(p2);
+    break;
+  }
+  case PD_GLIDER_ON_LINE: {
+    LineDef *l = pd->glider_on_line.l;
+    res |= eval_line_del_flag(l);
+    break;
+  }
+  case PD_INTSEC_LINE_LINE: {
+    LineDef *l1 = pd->intsec_line_line.l1;
+    LineDef *l2 = pd->intsec_line_line.l2;
+    res |= eval_line_del_flag(l1);
+    res |= eval_line_del_flag(l2);
+    break;
+  }
+  case PD_GLIDER_ON_CIRCLE: {
+    CircleDef *c = pd->glider_on_circle.c;
+    res |= eval_circle_del_flag(c);
+    break;
+  }
+  case PD_INTSEC_LINE_CIRCLE: {
+    LineDef *l = pd->intsec_line_circle.l;
+    CircleDef *c = pd->intsec_line_circle.c;
+    res |= eval_line_del_flag(l);
+    res |= eval_circle_del_flag(c);
+    break;
+  }
+  case PD_INTSEC_CIRCLE_CIRCLE: {
+    CircleDef *c1 = pd->intsec_circle_circle.c1;
+    CircleDef *c2 = pd->intsec_circle_circle.c2;
+    res |= eval_circle_del_flag(c1);
+    res |= eval_circle_del_flag(c2);
+    break;
+  }
+  }
+  pd->del_flag = res ? DF_YES : DF_NO;
+  return res;
+}
+
+bool eval_line_del_flag(LineDef *ld) {
+  if (ld->del_flag != DF_DONT_KNOW)
+    return ld->del_flag == DF_YES;
+
+  bool res = false;
+  switch (ld->type) {
+  case LD_POINT_TO_POINT: {
+    PointDef *p1 = ld->point_to_point.p1;
+    PointDef *p2 = ld->point_to_point.p2;
+    res |= eval_point_del_flag(p1);
+    res |= eval_point_del_flag(p2);
+    break;
+  }
+  case LD_PARALLEL: {
+    LineDef *l = ld->parallel.l;
+    PointDef *p = ld->parallel.p;
+    res |= eval_line_del_flag(l);
+    res |= eval_point_del_flag(p);
+    break;
+  }
+  case LD_PERPENDICULAR: {
+    LineDef *l = ld->perpendicular.l;
+    PointDef *p = ld->perpendicular.p;
+    res |= eval_line_del_flag(l);
+    res |= eval_point_del_flag(p);
+    break;
+  }
+  }
+
+  ld->del_flag = res ? DF_YES : DF_NO;
+  return res;
+}
+
+bool eval_circle_del_flag(CircleDef *cd) {
+  if (cd->del_flag != DF_DONT_KNOW)
+    return cd->del_flag == DF_YES;
+
+  bool res = false;
+  switch (cd->type) {
+  case CD_CENTER_POINT_OUTER_POINT: {
+    PointDef *p1 = cd->center_point_outer_point.center;
+    PointDef *p2 = cd->center_point_outer_point.outer;
+    res |= eval_point_del_flag(p1);
+    res |= eval_point_del_flag(p2);
+    break;
+  }
+  case CD_CENTER_POINT_RADIUS_SEG: {
+    PointDef *p = cd->center_point_radius_seg.center;
+    LineDef *l = cd->center_point_radius_seg.rad_seg;
+    res |= eval_point_del_flag(p);
+    res |= eval_line_del_flag(l);
+    break;
+  }
+  }
+
+  cd->del_flag = res ? DF_YES : DF_NO;
+  return res;
 }
 
 double dist_from_pos(Pos2D *pos1, Pos2D *pos2) {
