@@ -75,31 +75,41 @@ Pos2D pos_screen_to_world(SDL_Renderer *renderer, ViewInfo *view_info,
   return pos_view_to_world(view_info, pos_screen_to_view(renderer, pos));
 }
 
-SDL_AppResult init_app(AppState *as) {
-  if (!SDL_SetAppMetadata("NHF Geometry", "0.0.0",
-                          "net.tomasajt.NHFGeometry")) {
-    return SDL_APP_FAILURE;
-  }
-
-  if (!SDL_Init(SDL_INIT_VIDEO)) {
-    return SDL_APP_FAILURE;
-  }
-
-  const int window_flags = SDL_WINDOW_RESIZABLE;
-
-  if (!SDL_CreateWindowAndRenderer("NHF1", SDL_WINDOW_WIDTH, SDL_WINDOW_HEIGHT,
-                                   window_flags, &as->window, &as->renderer)) {
-    return SDL_APP_FAILURE;
-  }
-
-  return SDL_APP_CONTINUE;
+void zoom(ViewInfo *view_info, Pos2D fp, double mul) {
+  *view_info = (ViewInfo){
+      .scale = view_info->scale * mul,
+      .center =
+          {
+              .x = fp.x + (view_info->center.x - fp.x) / mul,
+              .y = fp.y + (view_info->center.y - fp.y) / mul,
+          },
+  };
 }
 
-void do_save(AppState *as) {
+void do_save(GeometryState *gs) {
   SDL_Log("Saving...\n");
   FILE *handle = fopen("save.dat", "w");
   if (handle != NULL) {
-    save_to_file(handle, &as->gs);
+    save_to_file(handle, gs);
+    fclose(handle);
+  } else {
+    printf("Failed to open file\n");
+  }
+}
+
+void do_load(GeometryState *gs) {
+  SDL_Log("Loading...\n");
+  FILE *handle = fopen("save.dat", "r");
+  if (handle != NULL) {
+    GeometryState new_gs;
+    bool res = load_from_file(handle, &new_gs);
+    if (res) {
+      clear_geometry_state(gs);
+      *gs = new_gs;
+      printf("Load successful\n");
+    } else {
+      printf("Load failed\n");
+    }
     fclose(handle);
   } else {
     printf("Failed to open file\n");
@@ -111,22 +121,6 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
   case SDL_SCANCODE_ESCAPE:
   case SDL_SCANCODE_Q:
     return SDL_APP_SUCCESS;
-  case SDL_SCANCODE_RIGHT:
-    printf("RIGHT\n");
-    as->view_info.center.x += 1.0;
-    break;
-  case SDL_SCANCODE_UP:
-    printf("UP\n");
-    as->view_info.center.y += 1.0;
-    break;
-  case SDL_SCANCODE_LEFT:
-    printf("LEFT\n");
-    as->view_info.center.x -= 1.0;
-    break;
-  case SDL_SCANCODE_DOWN:
-    printf("DOWN\n");
-    as->view_info.center.y -= 1.0;
-    break;
   case SDL_SCANCODE_M: {
     PointDef *pd = malloc(sizeof(PointDef));
     if (pd == NULL)
@@ -189,27 +183,11 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
     break;
   }
   case SDL_SCANCODE_S: {
-    do_save(as);
+    do_save(&as->gs);
     break;
   }
   case SDL_SCANCODE_R: {
-    SDL_Log("Loading...\n");
-    FILE *handle = fopen("save.dat", "r");
-    if (handle != NULL) {
-      GeometryState new_gs = {};
-      bool res = load_from_file(handle, &new_gs);
-      if (res) {
-        clear_geometry_state(&as->gs);
-        as->gs = new_gs;
-        printf("Load successful\n");
-      } else {
-        printf("Load failed\n");
-      }
-
-      fclose(handle);
-    } else {
-      printf("Failed to open file\n");
-    }
+    do_load(&as->gs);
     break;
   }
   case SDL_SCANCODE_N: {
@@ -250,14 +228,20 @@ SDL_AppResult handle_event(AppState *as, SDL_Event *event) {
     break;
   }
   case SDL_EVENT_MOUSE_WHEEL: {
-    as->view_info.scale *= pow(1.1, event->wheel.y);
+    double mul = pow(1.1, event->wheel.y);
+    Pos2D s_pos = (Pos2D){
+        .x = event->wheel.mouse_x,
+        .y = event->wheel.mouse_y,
+    };
+    Pos2D fp = pos_screen_to_world(as->renderer, &as->view_info, s_pos);
+    zoom(&as->view_info, fp, mul);
     break;
   }
   }
   return SDL_APP_CONTINUE;
 }
 
-void w_draw_point(AppState *as, PointDef *pd, Uint32 color) {
+void draw_point(AppState *as, PointDef *pd, Uint32 color) {
   eval_point(pd);
   if (pd->val.invalid)
     return;
@@ -268,7 +252,7 @@ void w_draw_point(AppState *as, PointDef *pd, Uint32 color) {
                     POINT_RENDER_RADIUS, color);
 }
 
-void w_draw_line(AppState *as, LineDef *ld, Uint32 color) {
+void draw_line(AppState *as, LineDef *ld, Uint32 color) {
   eval_line(ld);
 
   Pos2D screen_start =
@@ -279,7 +263,7 @@ void w_draw_line(AppState *as, LineDef *ld, Uint32 color) {
             screen_end.y, color);
 }
 
-void w_draw_circle(AppState *as, CircleDef *cd, Uint32 color) {
+void draw_circle(AppState *as, CircleDef *cd, Uint32 color) {
   eval_circle(cd);
 
   Pos2D screen_center =
@@ -299,9 +283,9 @@ SDL_AppResult do_render(AppState *as) {
     PointDef p1 = make_point_literal((Pos2D){0.0, 0.0});
     PointDef p2 = make_point_literal((Pos2D){10.0, 0.0});
     PointDef p3 = make_point_literal((Pos2D){0.0, 10.0});
-    w_draw_point(as, &p1, 0xffffffff);
-    w_draw_point(as, &p2, 0xffffffff);
-    w_draw_point(as, &p3, 0xffffffff);
+    draw_point(as, &p1, 0xffffffff);
+    draw_point(as, &p2, 0xffffffff);
+    draw_point(as, &p3, 0xffffffff);
   }
 
   Pos2D mouse_pos;
@@ -395,40 +379,70 @@ SDL_AppResult do_render(AppState *as) {
   for (int i = 0; i < as->gs.p_n; i++) {
     PointDef *pd = as->gs.point_defs[i];
     if (pd != closest_point_def) {
-      w_draw_point(as, pd, 0xffffffff);
+      draw_point(as, pd, 0xffffffff);
     }
   }
   if (closest_point_def != NULL) {
-    w_draw_point(as, closest_point_def, 0xff0000ff);
+    draw_point(as, closest_point_def, 0xff0000ff);
   }
 
   for (int i = 0; i < as->gs.l_n; i++) {
     LineDef *ld = as->gs.line_defs[i];
     if (ld != closest_line_def) {
-      w_draw_line(as, ld, 0xffffffff);
+      draw_line(as, ld, 0xffffffff);
     }
   }
   if (closest_line_def != NULL) {
-    w_draw_line(as, closest_line_def, 0xff0000ff);
+    draw_line(as, closest_line_def, 0xff0000ff);
   }
 
   for (int i = 0; i < as->gs.c_n; i++) {
     CircleDef *cd = as->gs.circle_defs[i];
     if (cd != closest_circle_def) {
-      w_draw_circle(as, cd, 0xffffffff);
+      draw_circle(as, cd, 0xffffffff);
     }
   }
   if (closest_circle_def != NULL) {
-    w_draw_circle(as, closest_circle_def, 0xff0000ff);
+    draw_circle(as, closest_circle_def, 0xff0000ff);
   }
 
   SDL_RenderPresent(as->renderer);
   return SDL_APP_CONTINUE;
 }
 
+SDL_AppResult init_app(AppState *as) {
+  if (!SDL_SetAppMetadata("NHF Geometry", "0.0.0",
+                          "net.tomasajt.NHFGeometry")) {
+    return SDL_APP_FAILURE;
+  }
+
+  if (!SDL_Init(SDL_INIT_VIDEO)) {
+    return SDL_APP_FAILURE;
+  }
+
+  const int window_flags = SDL_WINDOW_RESIZABLE;
+
+  if (!SDL_CreateWindowAndRenderer("Geometry", SDL_WINDOW_WIDTH,
+                                   SDL_WINDOW_HEIGHT, window_flags, &as->window,
+                                   &as->renderer)) {
+    return SDL_APP_FAILURE;
+  }
+
+  return SDL_APP_CONTINUE;
+}
+
+void deinit_appstate(AppState *as) {
+  if (as->renderer != NULL)
+    SDL_DestroyRenderer(as->renderer);
+  if (as->window != NULL)
+    SDL_DestroyWindow(as->window);
+
+  clear_geometry_state(&as->gs);
+}
+
 int main(int argc, char *argv[]) {
 
-  AppState as = {
+  AppState appstate = {
       .window = NULL,
       .renderer = NULL,
       .view_info =
@@ -447,25 +461,20 @@ int main(int argc, char *argv[]) {
           },
   };
 
-  SDL_AppResult rc = init_app(&as);
+  SDL_AppResult rc = init_app(&appstate);
 
   while (rc == SDL_APP_CONTINUE) {
     SDL_Event event;
     SDL_WaitEvent(&event);
-    rc = handle_event(&as, &event);
+    rc = handle_event(&appstate, &event);
 
     if (rc != SDL_APP_CONTINUE)
       break;
 
-    rc = do_render(&as);
+    rc = do_render(&appstate);
   }
 
-  if (as.renderer != NULL)
-    SDL_DestroyRenderer(as.renderer);
-  if (as.window != NULL)
-    SDL_DestroyWindow(as.window);
-
-  clear_geometry_state(&as.gs);
+  deinit_appstate(&appstate);
 
   SDL_Quit();
 
