@@ -23,6 +23,15 @@
 
 #define LINE_HITBOX_RADIUS 8.0
 
+const SDL_Color BLACK = /*  */ {.r = 0x00, .g = 0x00, .b = 0x00, .a = 0xff};
+const SDL_Color RED = /*    */ {.r = 0xff, .g = 0x00, .b = 0x00, .a = 0xff};
+const SDL_Color GREEN = /*  */ {.r = 0x00, .g = 0xff, .b = 0x00, .a = 0xff};
+const SDL_Color YELLOW = /* */ {.r = 0xff, .g = 0xff, .b = 0x00, .a = 0xff};
+const SDL_Color BLUE = /*   */ {.r = 0x00, .g = 0x00, .b = 0xff, .a = 0xff};
+const SDL_Color MAGENTA = /**/ {.r = 0xff, .g = 0x00, .b = 0xff, .a = 0xff};
+const SDL_Color CYAN = /*   */ {.r = 0x00, .g = 0xff, .b = 0xff, .a = 0xff};
+const SDL_Color WHITE = /*  */ {.r = 0xff, .g = 0xff, .b = 0xff, .a = 0xff};
+
 typedef struct {
   Pos2D center;
   double scale;
@@ -272,10 +281,50 @@ void move__on_mouse_motion(AppState *as, Pos2D w_mouse_pos) {
 void move__on_mouse_up(AppState *as) { as->es.elem_type = FE_NONE; }
 
 void delete__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
-  PointDef *hovered_point = get_hovered_point(as, w_mouse_pos);
-  if (hovered_point == NULL)
-    return;
-  delete_point(&as->gs, hovered_point);
+  {
+    PointDef *hovered_point = get_hovered_point(as, w_mouse_pos);
+    if (hovered_point != NULL) {
+      delete_point(&as->gs, hovered_point);
+      return;
+    }
+  }
+  {
+    LineDef *hovered_line = get_hovered_line(as, w_mouse_pos);
+    if (hovered_line != NULL) {
+      delete_line(&as->gs, hovered_line);
+      return;
+    }
+  }
+  {
+    CircleDef *hovered_circle = get_hovered_circle(as, w_mouse_pos);
+    if (hovered_circle != NULL) {
+      delete_circle(&as->gs, hovered_circle);
+      return;
+    }
+  }
+}
+
+PointDef point__get_potential_point(AppState *as, Pos2D w_mouse_pos) {
+  LineDef *hovered_line = get_hovered_line(as, w_mouse_pos);
+  CircleDef *hovered_circle = get_hovered_circle(as, w_mouse_pos);
+  if (hovered_line != NULL) {
+    if (hovered_circle != NULL) {
+      return make_point_intsec_line_circle(hovered_line, hovered_circle);
+    } else {
+      double prog = line_closest_prog_from_pos(
+          &w_mouse_pos, &hovered_line->val.start, &hovered_line->val.end,
+          hovered_line->ext_mode);
+      return make_point_glider_on_line(hovered_line, prog);
+    }
+  } else {
+    if (hovered_circle != NULL) {
+      double prog = circle_closest_prog_from_pos(&w_mouse_pos,
+                                                 &hovered_circle->val.center);
+      return make_point_glider_on_circle(hovered_circle, prog);
+    } else {
+      return make_point_literal(w_mouse_pos);
+    }
+  }
 }
 
 SDL_AppResult point__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
@@ -283,7 +332,7 @@ SDL_AppResult point__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
   if (pd == NULL)
     return SDL_APP_FAILURE;
 
-  *pd = make_point_literal(w_mouse_pos);
+  *pd = point__get_potential_point(as, w_mouse_pos);
   register_point(&as->gs, pd);
   return SDL_APP_CONTINUE;
 }
@@ -481,36 +530,36 @@ SDL_AppResult on_event(AppState *as, SDL_Event *event) {
   return SDL_APP_CONTINUE;
 }
 
-void draw_point(AppState *as, PointDef *pd, Uint32 color) {
+void draw_point(AppState *as, PointDef *pd, SDL_Color color) {
   eval_point(pd);
   if (pd->val.invalid)
     return;
   Pos2D screen_pos =
       pos_world_to_screen(as->renderer, &as->view_info, pd->val.pos);
 
-  filledCircleColor(as->renderer, screen_pos.x, screen_pos.y,
-                    POINT_RENDER_RADIUS, color);
+  filledCircleRGBA(as->renderer, screen_pos.x, screen_pos.y,
+                   POINT_RENDER_RADIUS, color.r, color.g, color.b, color.a);
 }
 
-void draw_line(AppState *as, LineDef *ld, Uint32 color) {
+void draw_line(AppState *as, LineDef *ld, SDL_Color color) {
   eval_line(ld);
 
   Pos2D screen_start =
       pos_world_to_screen(as->renderer, &as->view_info, ld->val.start);
   Pos2D screen_end =
       pos_world_to_screen(as->renderer, &as->view_info, ld->val.end);
-  lineColor(as->renderer, screen_start.x, screen_start.y, screen_end.x,
-            screen_end.y, color);
+  lineRGBA(as->renderer, screen_start.x, screen_start.y, screen_end.x,
+           screen_end.y, color.r, color.g, color.b, color.a);
 }
 
-void draw_circle(AppState *as, CircleDef *cd, Uint32 color) {
+void draw_circle(AppState *as, CircleDef *cd, SDL_Color color) {
   eval_circle(cd);
 
   Pos2D screen_center =
       pos_world_to_screen(as->renderer, &as->view_info, cd->val.center);
   double screen_radius = as->view_info.scale * cd->val.radius;
-  circleColor(as->renderer, screen_center.x, screen_center.y, screen_radius,
-              color);
+  circleRGBA(as->renderer, screen_center.x, screen_center.y, screen_radius,
+             color.r, color.g, color.b, color.a);
 }
 
 SDL_Texture *make_text_texture(AppState *as, char *text, SDL_Color color) {
@@ -537,46 +586,49 @@ bool draw_text_to(AppState *as, char *text, SDL_Color color, float x, float y) {
 }
 
 void render_mode_info(AppState *as) {
-  SDL_Color white = {.r = 255, .g = 255, .b = 255, .a = 255};
   switch (as->es.mode) {
   case EM_MOVE:
-    draw_text_to(as, "Move", white, 10, 10);
+    draw_text_to(as, "Move", WHITE, 10, 10);
     break;
   case EM_DELETE:
-    draw_text_to(as, "Delete", white, 10, 10);
+    draw_text_to(as, "Delete", WHITE, 10, 10);
     break;
   case EM_POINT:
-    draw_text_to(as, "Point", white, 10, 10);
+    draw_text_to(as, "Point", WHITE, 10, 10);
     break;
   case EM_MIDPOINT:
-    draw_text_to(as, "Midpoint", white, 10, 10);
+    draw_text_to(as, "Midpoint", WHITE, 10, 10);
     break;
   case EM_SEGMENT:
-    draw_text_to(as, "Segment", white, 10, 10);
+    draw_text_to(as, "Segment", WHITE, 10, 10);
     break;
   case EM_RAY:
-    draw_text_to(as, "Ray", white, 10, 10);
+    draw_text_to(as, "Ray", WHITE, 10, 10);
     break;
   case EM_LINE:
-    draw_text_to(as, "Line", white, 10, 10);
+    draw_text_to(as, "Line", WHITE, 10, 10);
     break;
   case EM_CIRCLE:
-    draw_text_to(as, "Circle", white, 10, 10);
+    draw_text_to(as, "Circle", WHITE, 10, 10);
     break;
   case EM_CIRCLE_BY_LEN:
-    draw_text_to(as, "Circle by length", white, 10, 10);
+    draw_text_to(as, "Circle by length", WHITE, 10, 10);
     break;
   default:
-    draw_text_to(as, "Unknown", white, 10, 10);
+    draw_text_to(as, "Unknown", WHITE, 10, 10);
     break;
   }
+}
+
+void clear_screen(AppState *as, SDL_Color color) {
+  SDL_SetRenderDrawColor(as->renderer, color.r, color.g, color.b, color.a);
+  SDL_RenderClear(as->renderer);
 }
 
 SDL_AppResult do_render(AppState *as) {
   printf("%d %d %d\n", as->gs.p_n, as->gs.l_n, as->gs.c_n);
 
-  SDL_SetRenderDrawColor(as->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-  SDL_RenderClear(as->renderer);
+  clear_screen(as, BLACK);
 
   render_mode_info(as);
 
@@ -584,9 +636,9 @@ SDL_AppResult do_render(AppState *as) {
     PointDef p1 = make_point_literal((Pos2D){0.0, 0.0});
     PointDef p2 = make_point_literal((Pos2D){10.0, 0.0});
     PointDef p3 = make_point_literal((Pos2D){0.0, 10.0});
-    draw_point(as, &p1, 0xffffffff);
-    draw_point(as, &p2, 0xffffffff);
-    draw_point(as, &p3, 0xffffffff);
+    draw_point(as, &p1, WHITE);
+    draw_point(as, &p2, WHITE);
+    draw_point(as, &p3, WHITE);
   }
 
   Pos2D w_mouse_pos;
@@ -604,34 +656,39 @@ SDL_AppResult do_render(AppState *as) {
   LineDef *hovered_line = get_hovered_line(as, w_mouse_pos);
   CircleDef *hovered_circle = get_hovered_circle(as, w_mouse_pos);
 
+  if (as->es.mode == EM_POINT) {
+    PointDef potential_point = point__get_potential_point(as, w_mouse_pos);
+    draw_point(as, &potential_point, CYAN);
+  }
+
   for (int i = 0; i < as->gs.p_n; i++) {
     PointDef *pd = as->gs.point_defs[i];
     if (pd != hovered_point) {
-      draw_point(as, pd, 0xffffffff);
+      draw_point(as, pd, WHITE);
     }
   }
   if (hovered_point != NULL) {
-    draw_point(as, hovered_point, 0xff0000ff);
+    draw_point(as, hovered_point, RED);
   }
 
   for (int i = 0; i < as->gs.l_n; i++) {
     LineDef *ld = as->gs.line_defs[i];
     if (ld != hovered_line) {
-      draw_line(as, ld, 0xffffffff);
+      draw_line(as, ld, WHITE);
     }
   }
   if (hovered_line != NULL) {
-    draw_line(as, hovered_line, 0xff0000ff);
+    draw_line(as, hovered_line, RED);
   }
 
   for (int i = 0; i < as->gs.c_n; i++) {
     CircleDef *cd = as->gs.circle_defs[i];
     if (cd != hovered_circle) {
-      draw_circle(as, cd, 0xffffffff);
+      draw_circle(as, cd, WHITE);
     }
   }
   if (hovered_circle != NULL) {
-    draw_circle(as, hovered_circle, 0xff0000ff);
+    draw_circle(as, hovered_circle, RED);
   }
 
   SDL_RenderPresent(as->renderer);
