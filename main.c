@@ -1,3 +1,6 @@
+#include "SDL3/SDL_events.h"
+#include "SDL3/SDL_init.h"
+#include "SDL3/SDL_scancode.h"
 #include "debugmalloc.h"
 
 #include <SDL3/SDL.h>
@@ -26,11 +29,42 @@ typedef struct {
   double scale;
 } ViewInfo;
 
+typedef enum {
+  EM_MOVE,
+  EM_DELETE,
+  EM_POINT,
+  EM_MIDPOINT,
+  EM_SEGMENT,
+  EM_RAY,
+  EM_LINE,
+  EM_CIRCLE,
+  EM_CIRCLE_BY_LEN,
+} EditorMode;
+
+typedef enum {
+  FE_NONE = 0,
+  FE_POINT = 1,
+  FE_LINE = 2,
+  FE_CIRCLE = 3,
+} FocusedElemType;
+
+typedef struct {
+  EditorMode mode;
+  FocusedElemType elem_type;
+  union {
+    struct {}; // NONE
+    PointDef *p;
+    LineDef *l;
+    CircleDef *c;
+  };
+} EditorState;
+
 typedef struct {
   SDL_Window *window;
   SDL_Renderer *renderer;
   ViewInfo view_info;
   GeometryState gs;
+  EditorState es;
 } AppState;
 
 Pos2D pos_world_to_view(ViewInfo *view_info, Pos2D pos) {
@@ -116,11 +150,150 @@ void do_load(GeometryState *gs) {
   }
 }
 
-SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
+bool is_point_movable(PointDef *pd) {
+  return pd->type == PD_LITERAL || pd->type == PD_GLIDER_ON_LINE ||
+         pd->type == PD_GLIDER_ON_CIRCLE;
+}
+
+PointDef *get_hovered_point(AppState *as, Pos2D w_mouse_pos) {
+  PointDef *best = NULL;
+  double best_dist = 0;
+  for (int i = 0; i < as->gs.p_n; i++) {
+    PointDef *pd = as->gs.point_defs[i];
+    eval_point(pd);
+    if (pd->val.invalid)
+      continue;
+
+    double d = dist_from_pos(&w_mouse_pos, &pd->val.pos);
+    if (d * as->view_info.scale > POINT_HITBOX_RADIUS)
+      continue;
+
+    if (best == NULL || best_dist > d) {
+      best_dist = d;
+      best = pd;
+    }
+  }
+
+  return best;
+}
+
+LineDef *get_hovered_line(AppState *as, Pos2D w_mouse_pos) {
+  LineDef *best = NULL;
+  double best_dist = 0;
+  for (int i = 0; i < as->gs.l_n; i++) {
+    LineDef *ld = as->gs.line_defs[i];
+    eval_line(ld);
+    if (ld->val.invalid)
+      continue;
+
+    double d = dist_from_line(&w_mouse_pos, &ld->val.start, &ld->val.end);
+    if (d * as->view_info.scale > LINE_HITBOX_RADIUS)
+      continue;
+
+    if (best == NULL || best_dist > d) {
+      best_dist = d;
+      best = ld;
+    }
+  }
+
+  return best;
+}
+
+CircleDef *get_hovered_circle(AppState *as, Pos2D w_mouse_pos) {
+  CircleDef *best = NULL;
+  double best_dist = 0;
+  for (int i = 0; i < as->gs.c_n; i++) {
+    CircleDef *cd = as->gs.circle_defs[i];
+    eval_circle(cd);
+    if (cd->val.invalid)
+      continue;
+
+    double d = dist_from_circle(&w_mouse_pos, &cd->val.center, cd->val.radius);
+    if (d * as->view_info.scale > LINE_HITBOX_RADIUS)
+      continue;
+
+    if (best == NULL || best_dist > d) {
+      best_dist = d;
+      best = cd;
+    }
+  }
+
+  return best;
+}
+
+void try_move_point_to_pos(PointDef *pd, Pos2D pos) {
+  switch (pd->type) {
+  case PD_LITERAL:
+    pd->literal.pos = pos;
+    break;
+  case PD_GLIDER_ON_LINE:
+    printf("TODO: implement glider on line\n");
+    break;
+  case PD_GLIDER_ON_CIRCLE:
+    printf("TODO: implement glider on circle\n");
+    break;
+  default:
+    printf("Can't move non-literal, non-glider points!\n");
+    break;
+  }
+}
+
+void move__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
+  if (as->es.elem_type != FE_NONE)
+    return;
+
+  PointDef *hovered_point = get_hovered_point(as, w_mouse_pos);
+  if (hovered_point == NULL)
+    return;
+
+  if (is_point_movable(hovered_point)) {
+    as->es.elem_type = FE_POINT;
+    as->es.p = hovered_point;
+  }
+}
+
+void delete__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
+  PointDef *hovered_point = get_hovered_point(as, w_mouse_pos);
+  if (hovered_point == NULL)
+    return;
+  delete_point(&as->gs, hovered_point);
+}
+
+void move__on_mouse_up(AppState *as) { as->es.elem_type = FE_NONE; }
+
+void move__on_mouse_motion(AppState *as, Pos2D w_mouse_pos) {
+  if (as->es.elem_type != FE_POINT)
+    return;
+  try_move_point_to_pos(as->es.p, w_mouse_pos);
+  mark_everyting_dirty(&as->gs);
+}
+
+SDL_AppResult point__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
+  PointDef *pd = malloc(sizeof(PointDef));
+  if (pd == NULL)
+    return SDL_APP_FAILURE;
+
+  *pd = make_point_literal(w_mouse_pos);
+  register_point(&as->gs, pd);
+  return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
   switch (key_code) {
   case SDL_SCANCODE_ESCAPE:
   case SDL_SCANCODE_Q:
     return SDL_APP_SUCCESS;
+  case SDL_SCANCODE_0:
+  case SDL_SCANCODE_GRAVE:
+    as->es.mode = EM_MOVE;
+    as->es.elem_type = FE_NONE;
+    break;
+  case SDL_SCANCODE_1:
+    as->es.mode = EM_DELETE;
+    break;
+  case SDL_SCANCODE_2:
+    as->es.mode = EM_POINT;
+    break;
   case SDL_SCANCODE_M: {
     PointDef *pd = malloc(sizeof(PointDef));
     if (pd == NULL)
@@ -202,41 +375,80 @@ SDL_AppResult handle_key_event(AppState *as, SDL_Scancode key_code) {
   return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult handle_event(AppState *as, SDL_Event *event) {
+SDL_AppResult on_mouse_motion(AppState *as, SDL_MouseMotionEvent *motion) {
+  Pos2D s_mouse_pos = (Pos2D){.x = motion->x, .y = motion->y};
+  Pos2D w_mouse_pos =
+      pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
+
+  switch (as->es.mode) {
+  case EM_MOVE:
+    move__on_mouse_motion(as, w_mouse_pos);
+    break;
+  default:
+    break;
+  }
+  return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult on_mouse_button_down(AppState *as, SDL_MouseButtonEvent *event) {
+  Pos2D s_mouse_pos = (Pos2D){.x = event->x, .y = event->y};
+  Pos2D w_mouse_pos =
+      pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
+
+  switch (as->es.mode) {
+  case EM_MOVE:
+    if (event->button == 1)
+      move__on_mouse_down(as, w_mouse_pos);
+    break;
+  case EM_DELETE:
+    if (event->button == 1)
+      delete__on_mouse_down(as, w_mouse_pos);
+    break;
+  case EM_POINT:
+    if (event->button == 1)
+      return point__on_mouse_down(as, w_mouse_pos);
+    break;
+  default:
+    break;
+  }
+  return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult on_mouse_button_up(AppState *as, SDL_MouseButtonEvent *event) {
+  switch (as->es.mode) {
+  case EM_MOVE:
+    if (event->button == 1)
+      move__on_mouse_up(as);
+    break;
+  default:
+    break;
+  }
+  return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult on_mouse_wheel(AppState *as, SDL_MouseWheelEvent *event) {
+  double mul = pow(1.1, event->y);
+  Pos2D s_mouse_pos = (Pos2D){.x = event->mouse_x, .y = event->mouse_y};
+  Pos2D w_mouse_pos =
+      pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
+  zoom(&as->view_info, w_mouse_pos, mul);
+  return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult on_event(AppState *as, SDL_Event *event) {
   switch (event->type) {
-  case SDL_EVENT_QUIT: {
+  case SDL_EVENT_QUIT:
     return SDL_APP_SUCCESS;
-  }
-  case SDL_EVENT_KEY_DOWN: {
-    return handle_key_event(as, event->key.scancode);
-  }
-  case SDL_EVENT_MOUSE_BUTTON_DOWN: {
-    if (event->button.button == 1) {
-      Pos2D s_pos = (Pos2D){
-          .x = event->button.x,
-          .y = event->button.y,
-      };
-      Pos2D w_pos = pos_screen_to_world(as->renderer, &as->view_info, s_pos);
-
-      PointDef *pd = malloc(sizeof(PointDef));
-      if (pd == NULL)
-        return SDL_APP_FAILURE;
-
-      *pd = make_point_literal(w_pos);
-      register_point(&as->gs, pd);
-    }
-    break;
-  }
-  case SDL_EVENT_MOUSE_WHEEL: {
-    double mul = pow(1.1, event->wheel.y);
-    Pos2D s_pos = (Pos2D){
-        .x = event->wheel.mouse_x,
-        .y = event->wheel.mouse_y,
-    };
-    Pos2D fp = pos_screen_to_world(as->renderer, &as->view_info, s_pos);
-    zoom(&as->view_info, fp, mul);
-    break;
-  }
+  case SDL_EVENT_KEY_DOWN:
+    return on_key_down(as, event->key.scancode);
+  case SDL_EVENT_MOUSE_BUTTON_DOWN:
+    return on_mouse_button_down(as, &event->button);
+  case SDL_EVENT_MOUSE_BUTTON_UP:
+    return on_mouse_button_up(as, &event->button);
+  case SDL_EVENT_MOUSE_WHEEL:
+    return on_mouse_wheel(as, &event->wheel);
+  case SDL_EVENT_MOUSE_MOTION:
+    return on_mouse_motion(as, &event->motion);
   }
   return SDL_APP_CONTINUE;
 }
@@ -288,122 +500,49 @@ SDL_AppResult do_render(AppState *as) {
     draw_point(as, &p3, 0xffffffff);
   }
 
-  Pos2D mouse_pos;
-  SDL_MouseButtonFlags flags;
+  Pos2D w_mouse_pos;
   {
     float wmx, wmy;
-    flags = SDL_GetMouseState(&wmx, &wmy);
+    SDL_GetMouseState(&wmx, &wmy);
     float mx, my;
     SDL_RenderCoordinatesFromWindow(as->renderer, wmx, wmy, &mx, &my);
-    mouse_pos = pos_screen_to_world(as->renderer, &as->view_info,
-                                    (Pos2D){.x = mx, .y = my});
+    Pos2D s_mouse_pos = (Pos2D){.x = mx, .y = my};
+    w_mouse_pos =
+        pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
   }
 
-  PointDef *closest_point_def = NULL;
-  {
-    double best_dist = 0;
-    for (int i = 0; i < as->gs.p_n; i++) {
-      PointDef *pd = as->gs.point_defs[i];
-      eval_point(pd);
-      if (pd->val.invalid)
-        continue;
-
-      double d = dist_from_pos(&pd->val.pos, &mouse_pos);
-      if (d * as->view_info.scale > POINT_HITBOX_RADIUS)
-        continue;
-
-      if (closest_point_def == NULL || best_dist > d) {
-        best_dist = d;
-        closest_point_def = pd;
-      }
-    }
-  }
-
-  LineDef *closest_line_def = NULL;
-  {
-    double best_dist = 0;
-    for (int i = 0; i < as->gs.l_n; i++) {
-      LineDef *ld = as->gs.line_defs[i];
-      eval_line(ld);
-      if (ld->val.invalid)
-        continue;
-
-      double d = dist_from_line(&mouse_pos, &ld->val.start, &ld->val.end);
-      if (d * as->view_info.scale > LINE_HITBOX_RADIUS)
-        continue;
-
-      if (closest_line_def == NULL || best_dist > d) {
-        best_dist = d;
-        closest_line_def = ld;
-      }
-    }
-  }
-
-  CircleDef *closest_circle_def = NULL;
-  {
-    double best_dist = 0;
-    for (int i = 0; i < as->gs.c_n; i++) {
-      CircleDef *cd = as->gs.circle_defs[i];
-      eval_circle(cd);
-      if (cd->val.invalid)
-        continue;
-
-      double d = dist_from_circle(&mouse_pos, &cd->val.center, cd->val.radius);
-      if (d * as->view_info.scale > LINE_HITBOX_RADIUS)
-        continue;
-
-      if (closest_circle_def == NULL || best_dist > d) {
-        best_dist = d;
-        closest_circle_def = cd;
-      }
-    }
-  }
-
-  if ((flags & SDL_BUTTON_RMASK) != 0) {
-    if (closest_point_def != NULL && closest_point_def->type == PD_LITERAL) {
-      closest_point_def->literal.pos = mouse_pos;
-      mark_everyting_dirty(&as->gs);
-    }
-  }
-  if ((flags & SDL_BUTTON_MMASK) != 0) {
-    if (closest_point_def != NULL) {
-      delete_point(&as->gs, closest_point_def);
-      // just to be safe
-      // TODO: recalculate correct closest
-      closest_point_def = NULL;
-      closest_line_def = NULL;
-      closest_circle_def = NULL;
-    }
-  }
+  PointDef *hovered_point = get_hovered_point(as, w_mouse_pos);
+  LineDef *hovered_line = get_hovered_line(as, w_mouse_pos);
+  CircleDef *hovered_circle = get_hovered_circle(as, w_mouse_pos);
 
   for (int i = 0; i < as->gs.p_n; i++) {
     PointDef *pd = as->gs.point_defs[i];
-    if (pd != closest_point_def) {
+    if (pd != hovered_point) {
       draw_point(as, pd, 0xffffffff);
     }
   }
-  if (closest_point_def != NULL) {
-    draw_point(as, closest_point_def, 0xff0000ff);
+  if (hovered_point != NULL) {
+    draw_point(as, hovered_point, 0xff0000ff);
   }
 
   for (int i = 0; i < as->gs.l_n; i++) {
     LineDef *ld = as->gs.line_defs[i];
-    if (ld != closest_line_def) {
+    if (ld != hovered_line) {
       draw_line(as, ld, 0xffffffff);
     }
   }
-  if (closest_line_def != NULL) {
-    draw_line(as, closest_line_def, 0xff0000ff);
+  if (hovered_line != NULL) {
+    draw_line(as, hovered_line, 0xff0000ff);
   }
 
   for (int i = 0; i < as->gs.c_n; i++) {
     CircleDef *cd = as->gs.circle_defs[i];
-    if (cd != closest_circle_def) {
+    if (cd != hovered_circle) {
       draw_circle(as, cd, 0xffffffff);
     }
   }
-  if (closest_circle_def != NULL) {
-    draw_circle(as, closest_circle_def, 0xff0000ff);
+  if (hovered_circle != NULL) {
+    draw_circle(as, hovered_circle, 0xff0000ff);
   }
 
   SDL_RenderPresent(as->renderer);
@@ -459,6 +598,11 @@ int main(int argc, char *argv[]) {
               .circle_defs = {},
               .c_n = 0,
           },
+      .es =
+          {
+              .mode = EM_MOVE,
+              .elem_type = FE_NONE,
+          },
   };
 
   SDL_AppResult rc = init_app(&appstate);
@@ -466,7 +610,7 @@ int main(int argc, char *argv[]) {
   while (rc == SDL_APP_CONTINUE) {
     SDL_Event event;
     SDL_WaitEvent(&event);
-    rc = handle_event(&appstate, &event);
+    rc = on_event(&appstate, &event);
 
     if (rc != SDL_APP_CONTINUE)
       break;
