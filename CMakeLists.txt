@@ -34,6 +34,7 @@ add_executable(infoc-nhf WIN32
     geom.c
     geom_state.c
     savedata.c
+    draw.c
 )
 
 target_link_libraries(infoc-nhf PRIVATE
