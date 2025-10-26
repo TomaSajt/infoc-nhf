@@ -222,7 +222,6 @@ CircleDef *get_hovered_circle(AppState *as, Pos2D w_mouse_pos) {
 }
 
 void try_move_point_to_pos(PointDef *pd, Pos2D pos) {
-  printf("Trying to move point\n");
   switch (pd->type) {
   case PD_LITERAL: {
     pd->literal.pos = pos;
@@ -513,24 +512,72 @@ void draw_circle(AppState *as, CircleDef *cd, Uint32 color) {
               color);
 }
 
+SDL_Texture *make_text_texture(AppState *as, char *text, SDL_Color color) {
+  SDL_Surface *text_surf = TTF_RenderText_Blended(as->font, text, 0, color);
+  if (text_surf == NULL)
+    return NULL;
+  SDL_Texture *texture = SDL_CreateTextureFromSurface(as->renderer, text_surf);
+  SDL_DestroySurface(text_surf);
+  return texture;
+}
+
+bool draw_texture_to(AppState *as, SDL_Texture *texture, float x, float y) {
+  SDL_FRect rect = {.x = x, .y = y, .w = texture->w, .h = texture->h};
+  return SDL_RenderTexture(as->renderer, texture, NULL, &rect);
+}
+
+bool draw_text_to(AppState *as, char *text, SDL_Color color, float x, float y) {
+  SDL_Texture *texture = make_text_texture(as, text, color);
+  if (texture == NULL)
+    return false;
+  bool res = draw_texture_to(as, texture, x, y);
+  SDL_DestroyTexture(texture);
+  return res;
+}
+
+void render_mode_info(AppState *as) {
+  SDL_Color white = {.r = 255, .g = 255, .b = 255, .a = 255};
+  switch (as->es.mode) {
+  case EM_MOVE:
+    draw_text_to(as, "Move", white, 10, 10);
+    break;
+  case EM_DELETE:
+    draw_text_to(as, "Delete", white, 10, 10);
+    break;
+  case EM_POINT:
+    draw_text_to(as, "Point", white, 10, 10);
+    break;
+  case EM_MIDPOINT:
+    draw_text_to(as, "Midpoint", white, 10, 10);
+    break;
+  case EM_SEGMENT:
+    draw_text_to(as, "Segment", white, 10, 10);
+    break;
+  case EM_RAY:
+    draw_text_to(as, "Ray", white, 10, 10);
+    break;
+  case EM_LINE:
+    draw_text_to(as, "Line", white, 10, 10);
+    break;
+  case EM_CIRCLE:
+    draw_text_to(as, "Circle", white, 10, 10);
+    break;
+  case EM_CIRCLE_BY_LEN:
+    draw_text_to(as, "Circle by length", white, 10, 10);
+    break;
+  default:
+    draw_text_to(as, "Unknown", white, 10, 10);
+    break;
+  }
+}
+
 SDL_AppResult do_render(AppState *as) {
   printf("%d %d %d\n", as->gs.p_n, as->gs.l_n, as->gs.c_n);
 
   SDL_SetRenderDrawColor(as->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(as->renderer);
 
-  SDL_Color white = (SDL_Color){.r = 255, .g = 255, .b = 255, .a = 255};
-  SDL_Surface *text_surf = TTF_RenderText_Solid(as->font, "Árvíztűrő tükörfúrógép", 0, white);
-  if (text_surf != NULL) {
-    SDL_Texture *texture =
-        SDL_CreateTextureFromSurface(as->renderer, text_surf);
-    if (texture != NULL) {
-      SDL_FRect rect = {.x = 20, .y = 20, .w = texture->w, .h = texture->h};
-      SDL_RenderTexture(as->renderer, texture, NULL, &rect);
-      SDL_DestroyTexture(texture);
-    }
-    SDL_DestroySurface(text_surf);
-  }
+  render_mode_info(as);
 
   {
     PointDef p1 = make_point_literal((Pos2D){0.0, 0.0});
