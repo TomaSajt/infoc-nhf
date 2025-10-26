@@ -1,7 +1,13 @@
 #include "draw.h"
+
 #include "geom.h"
 
 #include <SDL3_gfxPrimitives.h>
+
+bool is_point_movable(PointDef *pd) {
+  return pd->type == PD_LITERAL || pd->type == PD_GLIDER_ON_LINE ||
+         pd->type == PD_GLIDER_ON_CIRCLE;
+}
 
 Pos2D pos_world_to_view(ViewInfo *view_info, Pos2D pos) {
   return (Pos2D){
@@ -53,8 +59,11 @@ void draw_point(AppState *as, PointDef *pd, SDL_Color color) {
   Pos2D screen_pos =
       pos_world_to_screen(as->renderer, &as->view_info, pd->val.pos);
 
-  filledCircleRGBA(as->renderer, screen_pos.x, screen_pos.y,
-                   POINT_HITBOX_RADIUS, color.r, color.g, color.b, color.a / 3);
+  if (is_point_movable(pd)) {
+    filledCircleRGBA(as->renderer, screen_pos.x, screen_pos.y,
+                     POINT_HITBOX_RADIUS, color.r, color.g, color.b,
+                     color.a / 4);
+  }
   filledCircleRGBA(as->renderer, screen_pos.x, screen_pos.y,
                    POINT_RENDER_RADIUS, color.r, color.g, color.b, color.a);
 }
@@ -80,6 +89,11 @@ void draw_circle(AppState *as, CircleDef *cd, SDL_Color color) {
   Pos2D screen_center =
       pos_world_to_screen(as->renderer, &as->view_info, cd->val.center);
   double screen_radius = as->view_info.scale * cd->val.radius;
+
+  // https://github.com/sabdul-khabir/SDL3_gfx/pull/18#issuecomment-3448747073
+  if (screen_radius < 1.0)
+    screen_radius = 0.0;
+
   circleRGBA(as->renderer, screen_center.x, screen_center.y, screen_radius,
              color.r, color.g, color.b, color.a);
 }

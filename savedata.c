@@ -1,10 +1,9 @@
-#include "debugmalloc.h"
+#include "savedata.h"
+
 #include "geom_defs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "savedata.h"
 
 void save_point(FILE *handle, PointDef *pd) {
   fprintf(handle, "p %d %d ", pd->save_id, pd->type);

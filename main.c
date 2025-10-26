@@ -1,4 +1,9 @@
-#include "debugmalloc.h"
+#include "draw.h"
+#include "geom.h"
+#include "geom_defs.h"
+#include "geom_state.h"
+#include "savedata.h"
+#include "state.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -9,16 +14,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "draw.h"
-#include "geom.h"
-#include "geom_defs.h"
-#include "geom_state.h"
-#include "savedata.h"
-#include "state.h"
-
 #define SDL_WINDOW_WIDTH 1000
 #define SDL_WINDOW_HEIGHT 600
-
 
 void zoom(ViewInfo *view_info, Pos2D fp, double mul) {
   *view_info = (ViewInfo){
@@ -59,11 +56,6 @@ void do_load(GeometryState *gs) {
   } else {
     printf("Failed to open file\n");
   }
-}
-
-bool is_point_movable(PointDef *pd) {
-  return pd->type == PD_LITERAL || pd->type == PD_GLIDER_ON_LINE ||
-         pd->type == PD_GLIDER_ON_CIRCLE;
 }
 
 PointDef *get_hovered_point(AppState *as, Pos2D w_mouse_pos) {
@@ -167,10 +159,8 @@ void move__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
   if (hovered_point == NULL)
     return;
 
-  if (is_point_movable(hovered_point)) {
-    as->es.elem_type = FE_POINT;
-    as->es.p = hovered_point;
-  }
+  as->es.elem_type = FE_POINT;
+  as->es.p = hovered_point;
 }
 
 void move__on_mouse_motion(AppState *as, Pos2D w_mouse_pos) {
@@ -240,12 +230,10 @@ PointDef point__get_potential_point(AppState *as, Pos2D w_mouse_pos) {
 }
 
 SDL_AppResult point__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
-  PointDef *pd = malloc(sizeof(PointDef));
+  PointDef *pd =
+      alloc_and_reg_point(&as->gs, point__get_potential_point(as, w_mouse_pos));
   if (pd == NULL)
     return SDL_APP_FAILURE;
-
-  *pd = point__get_potential_point(as, w_mouse_pos);
-  register_point(&as->gs, pd);
   return SDL_APP_CONTINUE;
 }
 
@@ -266,84 +254,62 @@ SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
     as->es.mode = EM_POINT;
     break;
   case SDL_SCANCODE_M: {
-    PointDef *pd = malloc(sizeof(PointDef));
+    PointDef *pd = alloc_and_reg_point(
+        &as->gs, make_point_midpoint(as->gs.point_defs[as->gs.p_n - 2],
+                                     as->gs.point_defs[as->gs.p_n - 1]));
     if (pd == NULL)
       return SDL_APP_FAILURE;
-
-    *pd = make_point_midpoint(as->gs.point_defs[as->gs.p_n - 2],
-                              as->gs.point_defs[as->gs.p_n - 1]);
-    register_point(&as->gs, pd);
     break;
   }
   case SDL_SCANCODE_G: {
-    PointDef *pd = malloc(sizeof(PointDef));
+    PointDef *pd = alloc_and_reg_point(
+        &as->gs,
+        make_point_glider_on_line(as->gs.line_defs[as->gs.l_n - 1], 0.5));
     if (pd == NULL)
       return SDL_APP_FAILURE;
-
-    *pd = make_point_glider_on_line(as->gs.line_defs[as->gs.l_n - 1], 0.5);
-    register_point(&as->gs, pd);
     break;
   }
   case SDL_SCANCODE_H: {
-    PointDef *pd = malloc(sizeof(PointDef));
+    PointDef *pd = alloc_and_reg_point(
+        &as->gs,
+        make_point_glider_on_circle(as->gs.circle_defs[as->gs.c_n - 1], 0.5));
     if (pd == NULL)
       return SDL_APP_FAILURE;
-
-    *pd = make_point_glider_on_circle(as->gs.circle_defs[as->gs.c_n - 1], 0.5);
-    register_point(&as->gs, pd);
     break;
   }
   case SDL_SCANCODE_L: {
-    LineDef *ld = malloc(sizeof(LineDef));
+    LineDef *ld = alloc_and_reg_line(
+        &as->gs, make_line_point_to_point(L_EXT_SEGMENT,
+                                          as->gs.point_defs[as->gs.p_n - 2],
+                                          as->gs.point_defs[as->gs.p_n - 1]));
     if (ld == NULL)
       return SDL_APP_FAILURE;
-
-    *ld = make_line_point_to_point(L_EXT_SEGMENT,
-                                   as->gs.point_defs[as->gs.p_n - 2],
-                                   as->gs.point_defs[as->gs.p_n - 1]);
-    register_line(&as->gs, ld);
     break;
   }
   case SDL_SCANCODE_C: {
-    CircleDef *cd = malloc(sizeof(CircleDef));
+    CircleDef *cd =
+        alloc_and_reg_circle(&as->gs, make_circle_center_point_outer_point(
+                                          as->gs.point_defs[as->gs.p_n - 2],
+                                          as->gs.point_defs[as->gs.p_n - 1]));
     if (cd == NULL)
       return SDL_APP_FAILURE;
-
-    *cd = make_circle_center_point_outer_point(
-        as->gs.point_defs[as->gs.p_n - 2], as->gs.point_defs[as->gs.p_n - 1]);
-    register_circle(&as->gs, cd);
     break;
   }
   case SDL_SCANCODE_I: {
-    PointDef *pd = malloc(sizeof(PointDef));
+    PointDef *pd = alloc_and_reg_point(
+        &as->gs, make_point_intsec_line_line(as->gs.line_defs[as->gs.l_n - 2],
+                                             as->gs.line_defs[as->gs.l_n - 1]));
     if (pd == NULL)
       return SDL_APP_FAILURE;
-
-    *pd = make_point_intsec_line_line(as->gs.line_defs[as->gs.l_n - 2],
-                                      as->gs.line_defs[as->gs.l_n - 1]);
-    register_point(&as->gs, pd);
-    break;
-  }
-  case SDL_SCANCODE_J: {
-    PointDef *pd = malloc(sizeof(PointDef));
-    if (pd == NULL)
-      return SDL_APP_FAILURE;
-
-    *pd = make_point_intsec_line_circle(as->gs.line_defs[as->gs.l_n - 1],
-                                        as->gs.circle_defs[as->gs.c_n - 1],
-                                        ILC_PROG_LOWER);
-    register_point(&as->gs, pd);
     break;
   }
   case SDL_SCANCODE_K: {
-    PointDef *pd = malloc(sizeof(PointDef));
+    PointDef *pd = alloc_and_reg_point(
+        &as->gs, make_point_intsec_circle_circle(
+                     as->gs.circle_defs[as->gs.c_n - 2],
+                     as->gs.circle_defs[as->gs.c_n - 1], ICC_RIGHT));
     if (pd == NULL)
       return SDL_APP_FAILURE;
-
-    *pd = make_point_intsec_circle_circle(as->gs.circle_defs[as->gs.c_n - 2],
-                                          as->gs.circle_defs[as->gs.c_n - 1],
-                                          ICC_RIGHT);
-    register_point(&as->gs, pd);
     break;
   }
   case SDL_SCANCODE_S: {
@@ -485,7 +451,7 @@ void clear_screen(AppState *as, SDL_Color color) {
 }
 
 SDL_AppResult on_render(AppState *as) {
-  printf("%d %d %d\n", as->gs.p_n, as->gs.l_n, as->gs.c_n);
+  printf("n=(%d, %d, %d)\n", as->gs.p_n, as->gs.l_n, as->gs.c_n);
 
   clear_screen(as, BLACK);
 

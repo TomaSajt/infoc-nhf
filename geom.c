@@ -1,7 +1,8 @@
 #include "geom.h"
+
 #include "geom_defs.h"
+
 #include <math.h>
-#include <stdio.h>
 
 #define M_TAU 6.28318530717958647693
 
@@ -297,10 +298,8 @@ void eval_circle(CircleDef *cd) {
 }
 
 bool eval_point_del_flag(PointDef *pd) {
-  printf("p %p\n", pd);
   if (pd->del_flag != DF_DONT_KNOW)
     return pd->del_flag == DF_YES;
-  printf("not cached\n");
 
   bool res = false;
   switch (pd->type) {

@@ -1,10 +1,9 @@
-#include "debugmalloc.h"
+#include "geom_state.h"
+
 #include "geom.h"
 #include "geom_defs.h"
 
 #include <stdlib.h>
-
-#include "geom_state.h"
 
 // free() all elements in the geometry state and set counts back to zero
 void clear_geometry_state(GeometryState *gs) {
@@ -34,6 +33,33 @@ void register_circle(GeometryState *gs, CircleDef *cd) {
   gs->circle_defs[gs->c_n++] = cd;
 }
 
+PointDef *alloc_and_reg_point(GeometryState *gs, PointDef pd) {
+  PointDef *alloc_pd = malloc(sizeof(PointDef));
+  if (alloc_pd == NULL)
+    return NULL;
+  *alloc_pd = pd;
+  register_point(gs, alloc_pd);
+  return alloc_pd;
+}
+
+LineDef *alloc_and_reg_line(GeometryState *gs, LineDef ld) {
+  LineDef *alloc_ld = malloc(sizeof(LineDef));
+  if (alloc_ld == NULL)
+    return NULL;
+  *alloc_ld = ld;
+  register_line(gs, alloc_ld);
+  return alloc_ld;
+}
+
+CircleDef *alloc_and_reg_circle(GeometryState *gs, CircleDef cd) {
+  CircleDef *alloc_cd = malloc(sizeof(CircleDef));
+  if (alloc_cd == NULL)
+    return NULL;
+  *alloc_cd = cd;
+  register_circle(gs, alloc_cd);
+  return alloc_cd;
+}
+
 void mark_everyting_dirty(GeometryState *gs) {
   for (int i = 0; i < gs->p_n; i++) {
     gs->point_defs[i]->val.dirty = true;
@@ -57,6 +83,7 @@ void delete_marked_cascading(GeometryState *gs) {
     eval_circle_del_flag(gs->circle_defs[i]);
   }
 
+  // TODO: implement in-place solution
   GeometryState new_gs = {
       .point_defs = {},
       .line_defs = {},

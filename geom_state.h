@@ -17,6 +17,10 @@ void register_point(GeometryState *gs, PointDef *pd);
 void register_line(GeometryState *gs, LineDef *ld);
 void register_circle(GeometryState *gs, CircleDef *cd);
 
+PointDef *alloc_and_reg_point(GeometryState *gs, PointDef pd);
+LineDef *alloc_and_reg_line(GeometryState *gs, LineDef ld);
+CircleDef *alloc_and_reg_circle(GeometryState *gs, CircleDef cd);
+
 void mark_everyting_dirty(GeometryState *gs);
 
 void delete_point(GeometryState *gs, PointDef *pd);

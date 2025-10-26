@@ -9,9 +9,7 @@ find_package(
     COMPONENTS SDL3-shared
 )
 
-find_package(
-    SDL3_ttf REQUIRED CONFIG REQUIRED
-)
+find_package(SDL3_ttf REQUIRED CONFIG REQUIRED)
 
 include(FetchContent)
 
@@ -27,6 +25,7 @@ FetchContent_MakeAvailable(SDL3_gfx)
 add_compile_options(
     -Wall
     -Werror
+    -include ${CMAKE_SOURCE_DIR}/debugmalloc.h
 )
 add_executable(infoc-nhf WIN32
     main.c

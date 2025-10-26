@@ -1,9 +1,9 @@
 #pragma once
 
+#include "geom_state.h"
+
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
-
-#include "geom_state.h"
 
 typedef struct {
   Pos2D center;
@@ -48,4 +48,3 @@ typedef struct {
   GeometryState gs;
   EditorState es;
 } AppState;
-
