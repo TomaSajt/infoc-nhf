@@ -186,7 +186,8 @@ LineDef *get_hovered_line(AppState *as, Pos2D w_mouse_pos) {
     if (ld->val.invalid)
       continue;
 
-    double d = dist_from_line(&w_mouse_pos, &ld->val.start, &ld->val.end);
+    double d = dist_from_line(&w_mouse_pos, &ld->val.start, &ld->val.end,
+                              ld->ext_mode);
     if (d * as->view_info.scale > LINE_HITBOX_RADIUS)
       continue;
 
@@ -231,13 +232,13 @@ void try_move_point_to_pos(PointDef *pd, Pos2D pos) {
     LineExtMode ext_mode = pd->glider_on_line.l->ext_mode;
     Pos2D *s = &pd->glider_on_line.l->val.start;
     Pos2D *e = &pd->glider_on_line.l->val.end;
-    double prog = pos_to_closest_line_prog(&pos, s, e);
-    pd->glider_on_line.prog = clamp_line_prog(prog, ext_mode);
+    double prog = line_closest_prog_from_pos(&pos, s, e, ext_mode);
+    pd->glider_on_line.prog = prog;
     break;
   }
   case PD_GLIDER_ON_CIRCLE: {
     Pos2D *c = &pd->glider_on_circle.c->val.center;
-    double prog = pos_to_closest_circle_prog(&pos, c);
+    double prog = circle_closest_prog_from_pos(&pos, c);
     pd->glider_on_circle.prog = prog;
     break;
   }

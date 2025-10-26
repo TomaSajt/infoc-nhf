@@ -424,26 +424,24 @@ double clamp_line_prog(double prog, LineExtMode ext_mode) {
   }
 }
 
-double pos_to_closest_line_prog(Pos2D *pos, Pos2D *s, Pos2D *e) {
+double line_closest_prog_from_pos(Pos2D *pos, Pos2D *s, Pos2D *e,
+                                  LineExtMode ext_mode) {
   double vx = e->x - s->x;
   double vy = e->y - s->y;
   double dx = pos->x - s->x;
   double dy = pos->y - s->y;
   double prog = (dx * vx + dy * vy) / (vx * vx + vy * vy);
-  return prog;
+  return clamp_line_prog(prog, ext_mode);
 }
 
-double dist_from_line(Pos2D *pos, Pos2D *start, Pos2D *end) {
-  double nx = end->y - start->y;
-  double ny = -(end->x - start->x);
-
-  double signed_dist =
-      ((pos->x - start->x) * nx + (pos->y - start->y) * ny) / vec_len(nx, ny);
-
-  return fabs(signed_dist);
+double dist_from_line(Pos2D *pos, Pos2D *start, Pos2D *end,
+                      LineExtMode ext_mode) {
+  double prog = line_closest_prog_from_pos(pos, start, end, ext_mode);
+  Pos2D res_pos = lerp(start, end, prog);
+  return dist_from_pos(pos, &res_pos);
 }
 
-double pos_to_closest_circle_prog(Pos2D *pos, Pos2D *c) {
+double circle_closest_prog_from_pos(Pos2D *pos, Pos2D *c) {
   double dx = pos->x - c->x;
   double dy = pos->y - c->y;
   double angle = atan2(dy, dx);
