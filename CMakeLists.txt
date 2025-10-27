@@ -37,6 +37,7 @@ add_executable(infoc-nhf WIN32
     savedata.c
 
     mode/delete.c
+    mode/move.c
     mode/point.c
 )
 
