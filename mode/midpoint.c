@@ -2,6 +2,7 @@
 
 #include "../draw.h"
 #include "../hover.h"
+#include <stdio.h>
 
 void enter_midpoint_mode(EditorState *es) {
   es->mode = EM_MIDPOINT;
@@ -37,8 +38,8 @@ SDL_AppResult midpoint__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
       LineDef *hovered_seg = get_hovered_seg(as, w_mouse_pos);
       if (hovered_seg != NULL) {
         PointDef *pd = alloc_and_reg_point(
-            &as->gs, make_point_midpoint(as->es.l->point_to_point.p1,
-                                         as->es.l->point_to_point.p2));
+            &as->gs, make_point_midpoint(hovered_seg->point_to_point.p1,
+                                         hovered_seg->point_to_point.p2));
         if (pd == NULL)
           return SDL_APP_FAILURE;
       }
