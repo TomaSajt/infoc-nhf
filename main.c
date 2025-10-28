@@ -8,6 +8,7 @@
 #include "mode/circle.h"
 #include "mode/delete.h"
 #include "mode/line.h"
+#include "mode/midpoint.h"
 #include "mode/move.h"
 #include "mode/point.h"
 
@@ -80,7 +81,10 @@ SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
     break;
   case SDL_SCANCODE_2:
   case SDL_SCANCODE_P:
-    enter_point_mode(&as->es);
+    if (as->es.mode != EM_POINT)
+      enter_point_mode(&as->es);
+    else
+      enter_midpoint_mode(&as->es);
     break;
   case SDL_SCANCODE_3:
   case SDL_SCANCODE_L:
@@ -159,6 +163,10 @@ SDL_AppResult on_mouse_button_down(AppState *as, SDL_MouseButtonEvent *event) {
   case EM_POINT:
     if (event->button == 1)
       return point__on_mouse_down(as, w_mouse_pos);
+    break;
+  case EM_MIDPOINT:
+    if (event->button == 1)
+      return midpoint__on_mouse_down(as, w_mouse_pos);
     break;
   case EM_LINE:
     if (event->button == 1)
@@ -288,6 +296,7 @@ SDL_AppResult on_render(AppState *as) {
     point__on_render(as, w_mouse_pos);
     break;
   case EM_MIDPOINT:
+    midpoint__on_render(as, w_mouse_pos);
     break;
   case EM_LINE:
     line__on_render(as, w_mouse_pos);

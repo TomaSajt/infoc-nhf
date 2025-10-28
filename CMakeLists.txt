@@ -41,6 +41,7 @@ add_executable(infoc-nhf WIN32
     mode/circle.c
     mode/delete.c
     mode/line.c
+    mode/midpoint.c
     mode/move.c
     mode/point.c
 )
