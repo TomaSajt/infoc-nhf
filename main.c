@@ -5,7 +5,9 @@
 #include "savedata.h"
 #include "state.h"
 
+#include "mode/circle.h"
 #include "mode/delete.h"
+#include "mode/line.h"
 #include "mode/move.h"
 #include "mode/point.h"
 
@@ -69,45 +71,25 @@ SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
     return SDL_APP_SUCCESS;
   case SDL_SCANCODE_0:
   case SDL_SCANCODE_GRAVE:
-    as->es.mode = EM_MOVE;
-    as->es.elem_type = FE_NONE;
+    enter_move_mode(&as->es);
     break;
   case SDL_SCANCODE_1:
-    as->es.mode = EM_DELETE;
+    enter_delete_mode(&as->es);
     break;
   case SDL_SCANCODE_2:
-    as->es.mode = EM_POINT;
+    enter_point_mode(&as->es);
+    break;
+  case SDL_SCANCODE_3:
+    enter_line_mode(&as->es);
+    break;
+  case SDL_SCANCODE_4:
+    enter_circle_mode(&as->es);
     break;
   case SDL_SCANCODE_M: {
     PointDef *pd = alloc_and_reg_point(
         &as->gs, make_point_midpoint(as->gs.point_defs[as->gs.p_n - 2],
                                      as->gs.point_defs[as->gs.p_n - 1]));
     if (pd == NULL)
-      return SDL_APP_FAILURE;
-    break;
-  }
-  case SDL_SCANCODE_G: {
-    PointDef *pd = alloc_and_reg_point(
-        &as->gs,
-        make_point_glider_on_line(as->gs.line_defs[as->gs.l_n - 1], 0.5));
-    if (pd == NULL)
-      return SDL_APP_FAILURE;
-    break;
-  }
-  case SDL_SCANCODE_H: {
-    PointDef *pd = alloc_and_reg_point(
-        &as->gs,
-        make_point_glider_on_circle(as->gs.circle_defs[as->gs.c_n - 1], 0.5));
-    if (pd == NULL)
-      return SDL_APP_FAILURE;
-    break;
-  }
-  case SDL_SCANCODE_L: {
-    LineDef *ld = alloc_and_reg_line(
-        &as->gs, make_line_point_to_point(L_EXT_SEGMENT,
-                                          as->gs.point_defs[as->gs.p_n - 2],
-                                          as->gs.point_defs[as->gs.p_n - 1]));
-    if (ld == NULL)
       return SDL_APP_FAILURE;
     break;
   }
@@ -190,6 +172,14 @@ SDL_AppResult on_mouse_button_down(AppState *as, SDL_MouseButtonEvent *event) {
     if (event->button == 1)
       return point__on_mouse_down(as, w_mouse_pos);
     break;
+  case EM_LINE:
+    if (event->button == 1)
+      return line__on_mouse_down(as, w_mouse_pos);
+    break;
+  case EM_CIRCLE:
+    if (event->button == 1)
+      return circle__on_mouse_down(as, w_mouse_pos);
+    break;
   default:
     break;
   }
@@ -249,12 +239,6 @@ void render_mode_info(AppState *as) {
   case EM_MIDPOINT:
     draw_text_to(as, "Midpoint", WHITE, 10, 10);
     break;
-  case EM_SEGMENT:
-    draw_text_to(as, "Segment", WHITE, 10, 10);
-    break;
-  case EM_RAY:
-    draw_text_to(as, "Ray", WHITE, 10, 10);
-    break;
   case EM_LINE:
     draw_text_to(as, "Line", WHITE, 10, 10);
     break;
@@ -286,9 +270,10 @@ SDL_AppResult on_render(AppState *as) {
     PointDef p1 = make_point_literal((Pos2D){0.0, 0.0});
     PointDef p2 = make_point_literal((Pos2D){10.0, 0.0});
     PointDef p3 = make_point_literal((Pos2D){0.0, 10.0});
-    draw_point(as, &p1, WHITE);
-    draw_point(as, &p2, WHITE);
-    draw_point(as, &p3, WHITE);
+    LineDef l1 = make_line_point_to_point(L_EXT_SEGMENT, &p1, &p2);
+    LineDef l2 = make_line_point_to_point(L_EXT_SEGMENT, &p1, &p3);
+    draw_line(as, &l1, YELLOW);
+    draw_line(as, &l2, YELLOW);
   }
 
   Pos2D w_mouse_pos;
@@ -316,13 +301,11 @@ SDL_AppResult on_render(AppState *as) {
     break;
   case EM_MIDPOINT:
     break;
-  case EM_SEGMENT:
-    break;
-  case EM_RAY:
-    break;
   case EM_LINE:
+    line__on_render(as, w_mouse_pos);
     break;
   case EM_CIRCLE:
+    circle__on_render(as, w_mouse_pos);
     break;
   case EM_CIRCLE_BY_LEN:
     break;

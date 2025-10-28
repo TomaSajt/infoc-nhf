@@ -2,6 +2,8 @@
 
 #include "../hover.h"
 
+void enter_delete_mode(EditorState *es) { es->mode = EM_DELETE; }
+
 void delete__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
   {
     PointDef *hovered_point = get_hovered_point(as, w_mouse_pos);
@@ -25,4 +27,3 @@ void delete__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
     }
   }
 }
-

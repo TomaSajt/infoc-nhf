@@ -30,6 +30,11 @@ void try_move_point_to_pos(PointDef *pd, Pos2D pos) {
   }
 }
 
+void enter_move_mode(EditorState *es) {
+  es->elem_type = FE_NONE;
+  es->mode = EM_MOVE;
+}
+
 void move__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
   if (as->es.elem_type != FE_NONE) {
     printf("Got mousedown even though an element was already grabbed");

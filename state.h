@@ -15,8 +15,6 @@ typedef enum {
   EM_DELETE,
   EM_POINT,
   EM_MIDPOINT,
-  EM_SEGMENT,
-  EM_RAY,
   EM_LINE,
   EM_CIRCLE,
   EM_CIRCLE_BY_LEN,

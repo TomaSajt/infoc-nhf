@@ -4,6 +4,8 @@
 #include "../geom.h"
 #include "../hover.h"
 
+void enter_point_mode(EditorState *es) { es->mode = EM_POINT; }
+
 PointDef point__get_potential_point(AppState *as, Pos2D w_mouse_pos) {
   // TODO: implement get_hovered_lines and get_hovered_circles
   //       for line-line and circle-circle intersections
