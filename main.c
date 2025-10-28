@@ -71,37 +71,25 @@ SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
     return SDL_APP_SUCCESS;
   case SDL_SCANCODE_0:
   case SDL_SCANCODE_GRAVE:
+  case SDL_SCANCODE_M:
     enter_move_mode(&as->es);
     break;
   case SDL_SCANCODE_1:
+  case SDL_SCANCODE_D:
     enter_delete_mode(&as->es);
     break;
   case SDL_SCANCODE_2:
+  case SDL_SCANCODE_P:
     enter_point_mode(&as->es);
     break;
   case SDL_SCANCODE_3:
+  case SDL_SCANCODE_L:
     enter_line_mode(&as->es);
     break;
   case SDL_SCANCODE_4:
+  case SDL_SCANCODE_C:
     enter_circle_mode(&as->es);
     break;
-  case SDL_SCANCODE_M: {
-    PointDef *pd = alloc_and_reg_point(
-        &as->gs, make_point_midpoint(as->gs.point_defs[as->gs.p_n - 2],
-                                     as->gs.point_defs[as->gs.p_n - 1]));
-    if (pd == NULL)
-      return SDL_APP_FAILURE;
-    break;
-  }
-  case SDL_SCANCODE_C: {
-    CircleDef *cd =
-        alloc_and_reg_circle(&as->gs, make_circle_center_point_outer_point(
-                                          as->gs.point_defs[as->gs.p_n - 2],
-                                          as->gs.point_defs[as->gs.p_n - 1]));
-    if (cd == NULL)
-      return SDL_APP_FAILURE;
-    break;
-  }
   case SDL_SCANCODE_I: {
     PointDef *pd = alloc_and_reg_point(
         &as->gs, make_point_intsec_line_line(as->gs.line_defs[as->gs.l_n - 2],
