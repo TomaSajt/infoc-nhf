@@ -24,6 +24,8 @@ FetchContent_MakeAvailable(SDL3_gfx)
 
 add_compile_options(
     -Wall
+    -Wextra
+    -Wpedantic
     -Werror
     -include ${CMAKE_SOURCE_DIR}/debugmalloc.h
 )

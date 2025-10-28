@@ -46,8 +46,12 @@ void move__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
 }
 
 void move__on_mouse_motion(AppState *as, Pos2D w_mouse_pos) {
+  if (as->es.elem_type == FE_NONE)
+    return;
+
   if (as->es.elem_type != FE_POINT) {
-    printf("Moving is only implemented for points!");
+    // TODO: maybe implement
+    printf("Moving is only implemented for points!\n");
     return;
   }
   try_move_point_to_pos(as->es.p, w_mouse_pos);

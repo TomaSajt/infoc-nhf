@@ -33,7 +33,6 @@ typedef struct {
   EditorMode mode;
   FocusedElemType elem_type;
   union {
-    struct {}; // NONE
     PointDef *p;
     LineDef *l;
     CircleDef *c;

@@ -409,8 +409,8 @@ void deinit_appstate(AppState *as) {
   clear_geometry_state(&as->gs);
 }
 
-int main(int argc, char *argv[]) {
-
+int main(void) {
+  // TODO: maybe put appstate onto heap?
   AppState appstate = {
       .window = NULL,
       .renderer = NULL,
@@ -421,11 +421,11 @@ int main(int argc, char *argv[]) {
           },
       .gs =
           {
-              .point_defs = {},
+              .point_defs = {0},
               .p_n = 0,
-              .line_defs = {},
+              .line_defs = {0},
               .l_n = 0,
-              .circle_defs = {},
+              .circle_defs = {0},
               .c_n = 0,
           },
       .es =

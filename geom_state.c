@@ -85,9 +85,9 @@ void delete_marked_cascading(GeometryState *gs) {
 
   // TODO: implement in-place solution
   GeometryState new_gs = {
-      .point_defs = {},
-      .line_defs = {},
-      .circle_defs = {},
+      .point_defs = {0},
+      .line_defs = {0},
+      .circle_defs = {0},
       .p_n = 0,
       .l_n = 0,
       .c_n = 0,

@@ -226,8 +226,7 @@ bool parse_point(char *data, PointDef *pd, GeometryState *gs,
 }
 
 bool parse_line(char *data, LineDef *ld, GeometryState *gs,
-                ReadResult **sorted_p_results, ReadResult **sorted_l_results,
-                ReadResult **sorted_c_results) {
+                ReadResult **sorted_p_results, ReadResult **sorted_l_results) {
   int ext_mode_i;
   int type_i;
   if (sscanf(data, "%d %d", &ext_mode_i, &type_i) != 2)
@@ -287,8 +286,8 @@ bool parse_line(char *data, LineDef *ld, GeometryState *gs,
 }
 
 bool parse_circle(char *data, CircleDef *cd, GeometryState *gs,
-                  ReadResult **sorted_p_results, ReadResult **sorted_l_results,
-                  ReadResult **sorted_c_results) {
+                  ReadResult **sorted_p_results,
+                  ReadResult **sorted_l_results) {
   int type_i;
   if (sscanf(data, "%d", &type_i) != 1)
     return false;
@@ -378,9 +377,9 @@ bool load_from_file(FILE *handle, GeometryState *gs) {
   sort_by_id(srt_c_rrs, c_n);
 
   *gs = (GeometryState){
-      .point_defs = {},
-      .line_defs = {},
-      .circle_defs = {},
+      .point_defs = {0},
+      .line_defs = {0},
+      .circle_defs = {0},
       .p_n = p_n,
       .l_n = l_n,
       .c_n = c_n,
@@ -403,12 +402,12 @@ bool load_from_file(FILE *handle, GeometryState *gs) {
   }
   for (int i = 0; ok && i < l_n; i++) {
     ok = parse_line(srt_l_rrs[i]->rest, gs->line_defs[i], gs, srt_p_rrs,
-                    srt_l_rrs, srt_c_rrs);
+                    srt_l_rrs);
   }
 
   for (int i = 0; ok && i < c_n; i++) {
     ok = parse_circle(srt_c_rrs[i]->rest, gs->circle_defs[i], gs, srt_p_rrs,
-                      srt_l_rrs, srt_c_rrs);
+                      srt_l_rrs);
   }
 
   if (!ok) {
