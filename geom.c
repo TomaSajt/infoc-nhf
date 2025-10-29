@@ -6,41 +6,6 @@
 
 #define M_TAU 6.28318530717958647693
 
-// a*x + b*y = c
-typedef struct {
-  double a;
-  double b;
-  double c;
-} LineEq;
-
-LineEq line_eq_from_start_end(Pos2D start, Pos2D end) {
-  int x1 = start.x;
-  int y1 = start.y;
-  int x2 = end.x;
-  int y2 = end.y;
-  return (LineEq){
-      .a = y1 - y2,
-      .b = x2 - x1,
-      .c = (x2 - x1) * y1 + (y1 - y2) * x1,
-  };
-}
-
-// returns false if no or infinite solutions
-// puts point into res
-bool calc_intsec_line_eqs(LineEq le1, LineEq le2, Pos2D *res) {
-  double denom = le1.a * le2.b - le1.b * le2.a;
-
-  if (fabs(denom) < 1e-10) {
-    return false;
-  }
-
-  *res = (Pos2D){
-      .x = (le1.c * le2.b - le1.b * le2.c) / denom,
-      .y = (le1.a * le2.c - le1.c * le2.a) / denom,
-  };
-  return true;
-}
-
 Pos2D lerp(Pos2D const *start, Pos2D const *end, double prog) {
   return (Pos2D){
       .x = start->x * (1.0 - prog) + end->x * prog,
@@ -48,11 +13,34 @@ Pos2D lerp(Pos2D const *start, Pos2D const *end, double prog) {
   };
 }
 
-Pos2D pos_from_circle_prog(Pos2D const *center, double radius, double prog) {
+Pos2D pos_from_circle_angle(Pos2D const *center, double radius, double angle) {
   return (Pos2D){
-      .x = center->x + radius * cos(M_TAU * prog),
-      .y = center->y + radius * sin(M_TAU * prog),
+      .x = center->x + radius * cos(angle),
+      .y = center->y + radius * sin(angle),
   };
+}
+
+// returns false if no or infinite solutions
+// puts point into res
+bool calc_intsec_line_line(Pos2D const *s1, Pos2D const *e1, Pos2D const *s2,
+                           Pos2D const *e2, Pos2D *res) {
+  double v1x = e1->x - s1->x;
+  double v1y = e1->y - s1->y;
+  double v2x = e2->x - s2->x;
+  double v2y = e2->y - s2->y;
+  double dx = s2->x - s1->x;
+  double dy = s2->y - s1->y;
+
+  double denom = v1x * v2y - v1y * v2x;
+
+  if (fabs(denom) < 1e-10) {
+    return false;
+  }
+
+  double prog = (dx * v2y - dy * v2x) / denom;
+
+  *res = lerp(s1, e1, prog);
+  return true;
 }
 
 double vec_len(double x, double y) { return sqrt(x * x + y * y); }
@@ -83,10 +71,7 @@ bool calc_intsec_line_circle(Pos2D const *start, Pos2D const *end,
 
   double prog = prog_type == ILC_PROG_HIGHER ? p + sqrt(ppmq) : p - sqrt(ppmq);
 
-  *res = (Pos2D){
-      .x = start->x + vx * prog,
-      .y = start->y + vy * prog,
-  };
+  *res = lerp(start, end, prog);
   return true;
 }
 
@@ -109,10 +94,7 @@ bool calc_intsec_circle_circle(Pos2D const *center1, double radius1,
   double frac = numer / denom;
   double angle = atan2(dy, dx) + (side == ICC_LEFT ? 1 : -1) * acos(frac);
 
-  *res = (Pos2D){
-      .x = center1->x + radius1 * cos(angle),
-      .y = center1->y + radius1 * sin(angle),
-  };
+  *res = pos_from_circle_angle(center1, radius1, angle);
   return true;
 }
 
@@ -157,9 +139,9 @@ void eval_point(PointDef *pd) {
 
     pd->val.invalid = l1->val.invalid || l2->val.invalid;
     if (!pd->val.invalid) {
-      LineEq le1 = line_eq_from_start_end(l1->val.start, l1->val.end);
-      LineEq le2 = line_eq_from_start_end(l2->val.start, l2->val.end);
-      pd->val.invalid = !calc_intsec_line_eqs(le1, le2, &pd->val.pos);
+      pd->val.invalid =
+          !calc_intsec_line_line(&l1->val.start, &l1->val.end, &l2->val.start,
+                                 &l2->val.end, &pd->val.pos);
     }
     break;
   }
@@ -169,7 +151,8 @@ void eval_point(PointDef *pd) {
     eval_circle(c);
     pd->val.invalid = c->val.invalid;
     if (!pd->val.invalid) {
-      pd->val.pos = pos_from_circle_prog(&c->val.center, c->val.radius, prog);
+      pd->val.pos =
+          pos_from_circle_angle(&c->val.center, c->val.radius, M_TAU * prog);
     }
     break;
   }
