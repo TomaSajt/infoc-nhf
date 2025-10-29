@@ -4,19 +4,19 @@
 
 #include <SDL3_gfxPrimitives.h>
 
-bool is_point_movable(PointDef *pd) {
+bool is_point_movable(PointDef const *pd) {
   return pd->type == PD_LITERAL || pd->type == PD_GLIDER_ON_LINE ||
          pd->type == PD_GLIDER_ON_CIRCLE;
 }
 
-Pos2D pos_world_to_view(ViewInfo *view_info, Pos2D pos) {
+Pos2D pos_world_to_view(ViewInfo const *view_info, Pos2D pos) {
   return (Pos2D){
       .x = (pos.x - view_info->center.x) * view_info->scale,
       .y = (pos.y - view_info->center.y) * view_info->scale,
   };
 }
 
-Pos2D pos_view_to_world(ViewInfo *view_info, Pos2D pos) {
+Pos2D pos_view_to_world(ViewInfo const *view_info, Pos2D pos) {
   return (Pos2D){
       .x = pos.x / view_info->scale + view_info->center.x,
       .y = pos.y / view_info->scale + view_info->center.y,
@@ -41,17 +41,17 @@ Pos2D pos_screen_to_view(SDL_Renderer *renderer, Pos2D pos) {
   };
 }
 
-Pos2D pos_world_to_screen(SDL_Renderer *renderer, ViewInfo *view_info,
+Pos2D pos_world_to_screen(SDL_Renderer *renderer, ViewInfo const *view_info,
                           Pos2D pos) {
   return pos_view_to_screen(renderer, pos_world_to_view(view_info, pos));
 }
 
-Pos2D pos_screen_to_world(SDL_Renderer *renderer, ViewInfo *view_info,
+Pos2D pos_screen_to_world(SDL_Renderer *renderer, ViewInfo const *view_info,
                           Pos2D pos) {
   return pos_view_to_world(view_info, pos_screen_to_view(renderer, pos));
 }
 
-void draw_point(AppState *as, PointDef *pd, SDL_Color color) {
+void draw_point(AppState const *as, PointDef *pd, SDL_Color color) {
   eval_point(pd);
   if (pd->val.invalid)
     return;
@@ -68,7 +68,7 @@ void draw_point(AppState *as, PointDef *pd, SDL_Color color) {
                    POINT_RENDER_RADIUS, color.r, color.g, color.b, color.a);
 }
 
-void draw_line(AppState *as, LineDef *ld, SDL_Color color) {
+void draw_line(AppState const *as, LineDef *ld, SDL_Color color) {
   eval_line(ld);
   if (ld->val.invalid)
     return;
@@ -81,7 +81,7 @@ void draw_line(AppState *as, LineDef *ld, SDL_Color color) {
            screen_end.y, color.r, color.g, color.b, color.a);
 }
 
-void draw_circle(AppState *as, CircleDef *cd, SDL_Color color) {
+void draw_circle(AppState const *as, CircleDef *cd, SDL_Color color) {
   eval_circle(cd);
   if (cd->val.invalid)
     return;
@@ -98,7 +98,8 @@ void draw_circle(AppState *as, CircleDef *cd, SDL_Color color) {
              color.r, color.g, color.b, color.a);
 }
 
-SDL_Texture *make_text_texture(AppState *as, char *text, SDL_Color color) {
+SDL_Texture *make_text_texture(AppState const *as, char *text,
+                               SDL_Color color) {
   SDL_Surface *text_surf = TTF_RenderText_Blended(as->font, text, 0, color);
   if (text_surf == NULL)
     return NULL;
@@ -107,16 +108,17 @@ SDL_Texture *make_text_texture(AppState *as, char *text, SDL_Color color) {
   return texture;
 }
 
-bool draw_texture_to(AppState *as, SDL_Texture *texture, float x, float y) {
+bool draw_texture_to(SDL_Renderer *renderer, SDL_Texture *texture, float x,
+                     float y) {
   SDL_FRect rect = {.x = x, .y = y, .w = texture->w, .h = texture->h};
-  return SDL_RenderTexture(as->renderer, texture, NULL, &rect);
+  return SDL_RenderTexture(renderer, texture, NULL, &rect);
 }
 
 bool draw_text_to(AppState *as, char *text, SDL_Color color, float x, float y) {
   SDL_Texture *texture = make_text_texture(as, text, color);
   if (texture == NULL)
     return false;
-  bool res = draw_texture_to(as, texture, x, y);
+  bool res = draw_texture_to(as->renderer, texture, x, y);
   SDL_DestroyTexture(texture);
   return res;
 }

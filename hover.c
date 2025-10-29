@@ -6,7 +6,7 @@
 #include "draw.h"
 #include "geom_defs.h"
 
-PointDef *get_hovered_point(AppState *as, Pos2D w_mouse_pos) {
+PointDef *get_hovered_point(AppState const *as, Pos2D w_mouse_pos) {
   PointDef *best = NULL;
   double best_dist = 0;
   for (int i = 0; i < as->gs.p_n; i++) {
@@ -28,7 +28,7 @@ PointDef *get_hovered_point(AppState *as, Pos2D w_mouse_pos) {
   return best;
 }
 
-LineDef *get_hovered_line(AppState *as, Pos2D w_mouse_pos) {
+LineDef *get_hovered_line(AppState const *as, Pos2D w_mouse_pos) {
   LineDef *best = NULL;
   double best_dist = 0;
   for (int i = 0; i < as->gs.l_n; i++) {
@@ -51,7 +51,7 @@ LineDef *get_hovered_line(AppState *as, Pos2D w_mouse_pos) {
   return best;
 }
 
-CircleDef *get_hovered_circle(AppState *as, Pos2D w_mouse_pos) {
+CircleDef *get_hovered_circle(AppState const *as, Pos2D w_mouse_pos) {
   CircleDef *best = NULL;
   double best_dist = 0;
   for (int i = 0; i < as->gs.c_n; i++) {
@@ -73,7 +73,7 @@ CircleDef *get_hovered_circle(AppState *as, Pos2D w_mouse_pos) {
   return best;
 }
 
-PointDef *get_hovered_or_make_potential_point(AppState *as, Pos2D w_mouse_pos,
+PointDef *get_hovered_or_make_potential_point(AppState const *as, Pos2D w_mouse_pos,
                                               PointDef *pot_out) {
   PointDef *hovered_point = get_hovered_point(as, w_mouse_pos);
   if (hovered_point != NULL)
