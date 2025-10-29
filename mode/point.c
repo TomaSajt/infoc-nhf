@@ -5,7 +5,7 @@
 
 void enter_point_mode(EditorState *es) { es->mode = EM_POINT; }
 
-SDL_AppResult point__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
+SDL_AppResult point__on_click(AppState *as, Pos2D w_mouse_pos) {
   PointDef pot;
   PointDef *hov = get_hovered_or_make_potential_point(as, w_mouse_pos, &pot);
   if (hov != NULL)

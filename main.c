@@ -147,51 +147,44 @@ SDL_AppResult on_mouse_motion(AppState *as, SDL_MouseMotionEvent *motion) {
 }
 
 SDL_AppResult on_mouse_button_down(AppState *as, SDL_MouseButtonEvent *event) {
+  if (event->button != 1)
+    return SDL_APP_CONTINUE;
+
   Pos2D s_mouse_pos = (Pos2D){.x = event->x, .y = event->y};
   Pos2D w_mouse_pos =
       pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
 
   switch (as->es.mode) {
   case EM_MOVE:
-    if (event->button == 1)
-      move__on_mouse_down(as, w_mouse_pos);
-    break;
+    move__on_click(as, w_mouse_pos);
+    return SDL_APP_CONTINUE;
   case EM_DELETE:
-    if (event->button == 1)
-      delete__on_mouse_down(as, w_mouse_pos);
-    break;
+    delete__on_click(as, w_mouse_pos);
+    return SDL_APP_CONTINUE;
   case EM_POINT:
-    if (event->button == 1)
-      return point__on_mouse_down(as, w_mouse_pos);
-    break;
+    return point__on_click(as, w_mouse_pos);
   case EM_MIDPOINT:
-    if (event->button == 1)
-      return midpoint__on_mouse_down(as, w_mouse_pos);
-    break;
+    return midpoint__on_click(as, w_mouse_pos);
   case EM_LINE:
-    if (event->button == 1)
-      return line__on_mouse_down(as, w_mouse_pos);
-    break;
+    return line__on_click(as, w_mouse_pos);
   case EM_CIRCLE:
-    if (event->button == 1)
-      return circle__on_mouse_down(as, w_mouse_pos);
-    break;
+    return circle__on_click(as, w_mouse_pos);
   default:
-    break;
+    return SDL_APP_CONTINUE;
   }
-  return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult on_mouse_button_up(AppState *as, SDL_MouseButtonEvent *event) {
+  if (event->button != 1)
+    return SDL_APP_CONTINUE;
+
   switch (as->es.mode) {
   case EM_MOVE:
-    if (event->button == 1)
-      move__on_mouse_up(as);
-    break;
+    move__on_click_release(as);
+    return SDL_APP_CONTINUE;
   default:
-    break;
+    return SDL_APP_CONTINUE;
   }
-  return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult on_mouse_wheel(AppState *as, SDL_MouseWheelEvent *event) {

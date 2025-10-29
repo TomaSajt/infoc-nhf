@@ -35,7 +35,7 @@ void enter_move_mode(EditorState *es) {
   es->mode = EM_MOVE;
 }
 
-void move__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
+void move__on_click(AppState *as, Pos2D w_mouse_pos) {
   if (as->es.elem_type != FE_NONE) {
     printf("Got mousedown even though an element was already grabbed");
     return;
@@ -63,4 +63,4 @@ void move__on_mouse_motion(AppState *as, Pos2D w_mouse_pos) {
   mark_everyting_dirty(&as->gs);
 }
 
-void move__on_mouse_up(AppState *as) { as->es.elem_type = FE_NONE; }
+void move__on_click_release(AppState *as) { as->es.elem_type = FE_NONE; }

@@ -8,7 +8,7 @@ void enter_line_mode(EditorState *es) {
   es->elem_type = FE_NONE;
 }
 
-SDL_AppResult line__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
+SDL_AppResult line__on_click(AppState *as, Pos2D w_mouse_pos) {
   if (as->es.elem_type == FE_POINT) {
 
     PointDef pot;

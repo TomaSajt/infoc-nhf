@@ -20,7 +20,7 @@ LineDef *get_hovered_seg(AppState *as, Pos2D w_mouse_pos) {
   return hovered_line;
 }
 
-SDL_AppResult midpoint__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
+SDL_AppResult midpoint__on_click(AppState *as, Pos2D w_mouse_pos) {
   PointDef *hovered_p = get_hovered_point(as, w_mouse_pos);
   if (hovered_p != NULL) {
     if (as->es.elem_type == FE_POINT) {

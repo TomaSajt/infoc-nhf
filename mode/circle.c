@@ -8,7 +8,7 @@ void enter_circle_mode(EditorState *es) {
   es->elem_type = FE_NONE;
 }
 
-SDL_AppResult circle__on_mouse_down(AppState *as, Pos2D w_mouse_pos) {
+SDL_AppResult circle__on_click(AppState *as, Pos2D w_mouse_pos) {
   PointDef *hovered = get_hovered_point(as, w_mouse_pos);
   if (hovered == NULL)
     return SDL_APP_CONTINUE;
