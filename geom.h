@@ -12,11 +12,11 @@ bool eval_circle_del_flag(CircleDef *cd);
 
 double clamp_line_prog(double prog, LineExtMode ext_mode);
 
-double line_closest_prog_from_pos(Pos2D *pos, Pos2D *s, Pos2D *e,
-                                  LineExtMode ext_mode);
-double circle_closest_prog_from_pos(Pos2D *pos, Pos2D *c);
+double line_closest_prog_from_pos(Pos2D const *pos, Pos2D const *s,
+                                  Pos2D const *e, LineExtMode ext_mode);
+double circle_closest_prog_from_pos(Pos2D const *pos, Pos2D const *c);
 
-double dist_from_pos(Pos2D *pos1, Pos2D *pos2);
-double dist_from_line(Pos2D *pos, Pos2D *start, Pos2D *end,
+double dist_from_pos(Pos2D const *pos1, Pos2D const *pos2);
+double dist_from_line(Pos2D const *pos, Pos2D const *start, Pos2D const *end,
                       LineExtMode ext_mode);
-double dist_from_circle(Pos2D *pos, Pos2D *center, double radius);
+double dist_from_circle(Pos2D const *pos, Pos2D const *center, double radius);

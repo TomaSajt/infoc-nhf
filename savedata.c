@@ -80,7 +80,7 @@ void save_circle(FILE *handle, CircleDef *cd) {
   fprintf(handle, "\n");
 }
 
-void save_to_file(FILE *handle, GeometryState *gs) {
+void save_to_file(FILE *handle, GeometryState const *gs) {
   // we assign an ID to each element to be saved
   // the IDs only have to be unique type-wise
   for (int i = 0; i < gs->p_n; i++)
@@ -103,7 +103,7 @@ typedef struct {
   char rest[256];
 } ReadResult;
 
-int id_cmp(const void *a, const void *b) {
+int id_cmp(void const *a, void const *b) {
   ReadResult *aa = *(ReadResult **)a;
   ReadResult *bb = *(ReadResult **)b;
   return aa->id - bb->id;
@@ -113,8 +113,8 @@ void sort_by_id(ReadResult **sorted_results, int n) {
   qsort(sorted_results, n, sizeof(ReadResult *), id_cmp);
 }
 
-int id_rr_cmp(const void *key, const void *elem) {
-  int id = *(const int *)key;            // key is int*
+int id_rr_cmp(void const *key, void const *elem) {
+  int id = *(int *)key;                  // key is int*
   ReadResult *rr = *(ReadResult **)elem; // elem is Person*
   return id - rr->id;
 }

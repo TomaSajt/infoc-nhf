@@ -41,14 +41,14 @@ bool calc_intsec_line_eqs(LineEq le1, LineEq le2, Pos2D *res) {
   return true;
 }
 
-Pos2D lerp(Pos2D *start, Pos2D *end, double prog) {
+Pos2D lerp(Pos2D const *start, Pos2D const *end, double prog) {
   return (Pos2D){
       .x = start->x * (1.0 - prog) + end->x * prog,
       .y = start->y * (1.0 - prog) + end->y * prog,
   };
 }
 
-Pos2D pos_from_circle_prog(Pos2D *center, double radius, double prog) {
+Pos2D pos_from_circle_prog(Pos2D const *center, double radius, double prog) {
   return (Pos2D){
       .x = center->x + radius * cos(M_TAU * prog),
       .y = center->y + radius * sin(M_TAU * prog),
@@ -57,8 +57,9 @@ Pos2D pos_from_circle_prog(Pos2D *center, double radius, double prog) {
 
 double vec_len(double x, double y) { return sqrt(x * x + y * y); }
 
-bool calc_intsec_line_circle(Pos2D *start, Pos2D *end, Pos2D *center,
-                             double radius, ILCProgType prog_type, Pos2D *res) {
+bool calc_intsec_line_circle(Pos2D const *start, Pos2D const *end,
+                             Pos2D const *center, double radius,
+                             ILCProgType prog_type, Pos2D *res) {
   double vx = end->x - start->x;
   double vy = end->y - start->y;
   double dx = center->x - start->x;
@@ -89,8 +90,9 @@ bool calc_intsec_line_circle(Pos2D *start, Pos2D *end, Pos2D *center,
   return true;
 }
 
-bool calc_intsec_circle_circle(Pos2D *center1, double radius1, Pos2D *center2,
-                               double radius2, ICCSide side, Pos2D *res) {
+bool calc_intsec_circle_circle(Pos2D const *center1, double radius1,
+                               Pos2D const *center2, double radius2,
+                               ICCSide side, Pos2D *res) {
   double dx = center2->x - center1->x;
   double dy = center2->y - center1->y;
 
@@ -408,7 +410,7 @@ bool eval_circle_del_flag(CircleDef *cd) {
   return res;
 }
 
-double dist_from_pos(Pos2D *pos1, Pos2D *pos2) {
+double dist_from_pos(Pos2D const *pos1, Pos2D const *pos2) {
   return vec_len(pos1->x - pos2->x, pos1->y - pos2->y);
 }
 
@@ -423,8 +425,8 @@ double clamp_line_prog(double prog, LineExtMode ext_mode) {
   }
 }
 
-double line_closest_prog_from_pos(Pos2D *pos, Pos2D *s, Pos2D *e,
-                                  LineExtMode ext_mode) {
+double line_closest_prog_from_pos(Pos2D const *pos, Pos2D const *s,
+                                  Pos2D const *e, LineExtMode ext_mode) {
   double vx = e->x - s->x;
   double vy = e->y - s->y;
   double dx = pos->x - s->x;
@@ -433,14 +435,14 @@ double line_closest_prog_from_pos(Pos2D *pos, Pos2D *s, Pos2D *e,
   return clamp_line_prog(prog, ext_mode);
 }
 
-double dist_from_line(Pos2D *pos, Pos2D *start, Pos2D *end,
+double dist_from_line(Pos2D const *pos, Pos2D const *start, Pos2D const *end,
                       LineExtMode ext_mode) {
   double prog = line_closest_prog_from_pos(pos, start, end, ext_mode);
   Pos2D res_pos = lerp(start, end, prog);
   return dist_from_pos(pos, &res_pos);
 }
 
-double circle_closest_prog_from_pos(Pos2D *pos, Pos2D *c) {
+double circle_closest_prog_from_pos(Pos2D const *pos, Pos2D const *c) {
   double dx = pos->x - c->x;
   double dy = pos->y - c->y;
   double angle = atan2(dy, dx);
@@ -448,7 +450,7 @@ double circle_closest_prog_from_pos(Pos2D *pos, Pos2D *c) {
   return prog - floor(prog); // [0;1)
 }
 
-double dist_from_circle(Pos2D *pos, Pos2D *center, double radius) {
+double dist_from_circle(Pos2D const *pos, Pos2D const *center, double radius) {
   double signed_dist = dist_from_pos(pos, center) - radius;
   return fabs(signed_dist);
 }

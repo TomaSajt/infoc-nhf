@@ -35,7 +35,7 @@ void zoom(ViewInfo *view_info, Pos2D fp, double mul) {
   };
 }
 
-void do_save(GeometryState *gs) {
+void do_save(GeometryState const *gs) {
   SDL_Log("Saving...\n");
   FILE *handle = fopen("save.dat", "w");
   if (handle != NULL) {
