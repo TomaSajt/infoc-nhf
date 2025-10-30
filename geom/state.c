@@ -1,7 +1,7 @@
-#include "geom_state.h"
+#include "state.h"
 
-#include "geom.h"
-#include "geom_defs.h"
+#include "util.h"
+#include "defs.h"
 
 #include <stdlib.h>
 

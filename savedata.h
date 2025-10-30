@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "geom_state.h"
+#include "geom/state.h"
 
 void save_to_file(FILE *handle, GeometryState const *gs);
 

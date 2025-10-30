@@ -31,12 +31,13 @@ add_compile_options(
 )
 add_executable(infoc-nhf WIN32
     draw.c
-    geom.c
-    geom_defs.c
-    geom_state.c
     hover.c
     main.c
     savedata.c
+
+    geom/defs.c
+    geom/state.c
+    geom/util.c
 
     mode/circle.c
     mode/delete.c

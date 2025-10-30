@@ -1,6 +1,6 @@
 #include "draw.h"
-#include "geom_defs.h"
-#include "geom_state.h"
+#include "geom/defs.h"
+#include "geom/state.h"
 #include "hover.h"
 #include "savedata.h"
 #include "state.h"

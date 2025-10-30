@@ -1,4 +1,4 @@
-#include "geom_defs.h"
+#include "defs.h"
 
 PointDef make_point_literal(Pos2D pos) {
   return (PointDef){

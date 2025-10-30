@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geom_defs.h"
+#include "defs.h"
 
 void eval_point(PointDef *pd);
 void eval_line(LineDef *ld);

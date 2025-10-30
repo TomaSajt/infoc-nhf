@@ -1,6 +1,6 @@
 #include "move.h"
 
-#include "../geom.h"
+#include "../geom/util.h"
 #include "../hover.h"
 #include <stdio.h>
 

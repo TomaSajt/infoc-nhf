@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geom_defs.h"
+#include "defs.h"
 
 typedef struct {
   PointDef *point_defs[100];

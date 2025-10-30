@@ -1,6 +1,6 @@
 #include "savedata.h"
 
-#include "geom_defs.h"
+#include "geom/defs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
