@@ -116,9 +116,29 @@
   - TODO: eldönteni, hogy milyen indikátor legyen
 - lehetséges módok:
   - "Move" - mozgatás
-    - A szabadsági fokkal rendelkező pontok "literál" vagy "csúszka"
+    - Lehet mozgatni a pontokat, amiknek vannak szabadsági fokai ("literál vagy "csúszka")
+    - Bal klikk lenyomásával a kurzor alatti pontot "megfogjuk", az egérrel arrébb helyezzük,
+      majd elengedjük a bal klikket, a mozgatás befejezéséhez
   - "Delete" - törlés
+    - Elemek kaszkádosított törlése
+    - A kurzor alatti elem és az összes tőle függő elem törlésre kerül bal klikkelésre
+    - Ha a kurzort az egyik elem fölé visszük,
+      akkor az elem és a tőle függő elemek más színnel (esetleg piros)
+      lesznek rajzolva, hogy lássuk, hogy mi fog törlésre kerülni
   - "Point" - pont
+    - Pontok létrehozása kattintásra
+    - Ha üres területre kattintunk "literál" pont jön létre
+    - Ha egy már létező pontra kattintunk, nem jön létre semmi
+    - Ha egy egyenes-szerű elemre kattintunk, "csúszka egyenesen" jön létre
+    - Ha egy körre kattintunk, "csúszka körön" jön létre
+    - Ha két egyenes-szerű elemre kattintunk rá egyszerre, azaz mindkét elem a kurzor alatt van,
+      akkor "egyenesek metszéspontja" jön létre
+    - Ha egy egyenes-szerű elemre és egy körre kattintunk rá egyszerre,
+      akkor "egyenes és kör metészpontja" jön létre
+    - Ha két körre kattintunk rá egyszerre,
+      akkor "körök metszéspontja" jön létre
+    - A fenti lista prioritási sorrendnek számítson:
+      - tehát ha a kurzor alatt két egyenes és egy kör van, akkor a két egyenes metszéspontja jön létre.
   - "Midpoint" - felezőpont
   - "Line" - egyenes
   - "Parallel/Perpendicular" - párhuzamos/merőleges
