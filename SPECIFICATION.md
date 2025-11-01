@@ -1,21 +1,21 @@
 # InfoC NHF Specifikáció
 
-- A program neve még később lesz eldöntve, nem része a specifikációnak!
-
 ## Rövid program összefoglaló
-- grafikus felületes síkgeometriai szerkesztőprogram
-- geometriai elemek egymással függőségi kapcsolatban
+- a program egy grafikus felületű síkgeometriai szerkesztőprogram
+- támogatott geometriai elemek: pontok, egyenesek/félegyenesek/szakaszok, körök
+- az elemek egymással függőségi viszonyban állnak
 - létrehozás után is változtathatóak az elemek pozíciói,
   - pl: ha elmozdul egy pont, akkor a tőle függő elemek (pl: rajta kereszülhaladó egyenesek) is vele változnak
-- állapot fájlba mentése és fájlból betöltése
+- a program képes az elemek definícióinak fájlba mentésére és fájlból betöltésére
 
 ## Programleírás
+- A program neve még később lesz eldöntve, nem része a specifikációnak!
 - A megjelenített szövegek angol nyelvűek.
 - A program grafikus megjelnítést használ.
 - Indítás után megjelenik egy grafikus felület, amit nevezzünk vászonnak.
 - A végtelen sík egy felhasználó által állítható része van megjelenítve meg a vásznon, nevezzül ezt a fókuszált területnek.
 - A végtelen sík tartalmazza majd a geometriai elemeket.
-- A végtelen sík eredetileg nem tartalmaz semmit.
+- A végtelen sík kezdő állapotában nem tartalmaz egy elemet sem.
 - A fókuszált terület méretén változtatni fel/le görgetéssel lehet, nevezzük ezt "zoomolásnak":
   - görgetés fel -> kisebb terület látszódik
   - görgetés le -> nagyobb terület látszódik
@@ -49,18 +49,17 @@
   - "csúszka egyenesen"
     - egy egyenes-szerű elemtől függ
     - csak az egyenes mentén csúsztatható el
-      - ha olyan helyre akarnánk húzni, ami nem az egyenesen van,
-        akkor az egyenes ahhoz leközelebb eső pontjához mozduljon a csúszka
-    - ha félegyenestől vagy szakasztól függ, akkor a csúszka annak csak a végpontjáig tud csúszni
+      - ha olyan helyre akarnánk húzni, ami nem az egyenesen-szerű elemen van,
+        akkor az egyenes-szerű elem ahhoz leközelebb eső pontjához mozduljon a csúszka
     - a csúszka állapota egy szabad `prog` paraméterben van tárolva
       - a pont pozíciója megkapható a `(1-prog)*S + prog*E` képlet által,
         ahol az S és E az egyenes-szerű elem segédpontjai (erről később bővebben)
         - prog [0;1] intervallumban, ha a csúszka szakaszon található
-        - prog [0;inf), ha a csúszka félegyenesegyen található
-        - prog (-inf;inf), ha a csúszka egyenesen található
+        - prog [0;inf) intervallumban, ha a csúszka félegyenesegyen található
+        - prog (-inf;inf) intervallumban, ha a csúszka egyenesen található
   - "egyenesek metszéspontja"
     - két egyenes-szerű elemtől függ
-    - az egyenes-szerű elemek valódi típusuktól függetlenül mindig teljes egyenesként értelmezendőek metszéspontszámításnál
+    - az egyenes-szerű elemek mindig teljes egyenesként értelmezendőek metszéspontszámításnál
     - a pont a két egyenes metszéspontjánál található
     - ha a két egyenes párhuzamos, akkor a pont "érvénytelen" állapotba kerül
   - "csúszka körön"
@@ -74,7 +73,7 @@
         - prog [0;1) intervallumban
   - "egyenes és kör metszéspontja"
     - egy egyenes-szerű elemtől és egy körtől függ
-    - az egyenes-szerű elemek valódi típusuktól függetlenül mindig teljes egyenesként értelmezendőek metszéspontszámításnál
+    - az egyenes-szerű elem mindig teljes egyenesként értelmezendő metszéspontszámításnál
     - a pont az egyenes és a kör egyik metszéspontjánál található
     - egy extra paraméter tárolja, hogy melyik metszéspontról beszélünk
     - ha nincs metszéspont, akkor "érvénytelen" állapotú a pont
@@ -85,7 +84,7 @@
     - ha nincs metszéspont, akkor "érvénytelen" állapotú a pont
 - egyenes-szerű elem
   - "pontból pontba"
-    - két ponttól függ, de a pontok sorrendje számít
+    - két ponttól függ
       - az első pont számít az S "start" segédpontnak
       - a másik pont számít az E "end" segédpontnak
     - választható, hogy szakaszként, félegyenesként vagy egyenesként legyen értelmezve az elem
@@ -101,46 +100,85 @@
     - csak egyenes típusú lehet
     - az egyenes keresztülhalad a ponton és merőleges az egyenes-szerű elemre
 - kör
-  - "középpont és külső pont"
-    - két ponttól függ, a középponttól és a külső ponttól
-    - a kör középpontja értelemszerűen a megadott középpont
+  - "pont körül, ponton keresztül"
+    - két ponttól függ, a középponttól és egy külső ponttól
+    - a kör középpontja a megadott középpont
     - a kör sugara akkora, hogy a kör keresztülmenjen a külső ponton
-  - "középpont és szakaszhossz"
+  - "pont körül, szakaszhossz sugárral"
     - egy ponttól és egy szakasztól függ
     - a kör középpontja a pontnál található
     - a kör sugara pontosan a szakasz hosszával egyenlő
 
 ### Módok
 - A programban különböző módok közül lehet választani
-- A jelenlegi módot egy indikátor jelzi
-  - TODO: eldönteni, hogy milyen indikátor legyen
-- lehetséges módok:
-  - "Move" - mozgatás
-    - Lehet mozgatni a pontokat, amiknek vannak szabadsági fokai ("literál vagy "csúszka")
-    - Bal klikk lenyomásával a kurzor alatti pontot "megfogjuk", az egérrel arrébb helyezzük,
-      majd elengedjük a bal klikket, a mozgatás befejezéséhez
-  - "Delete" - törlés
+- A módok kategóriákba vannak sorolva
+- A kategóriák és a bennük található módok:
+  - "Manage" (1)
+    - "Move" (M)
+    - "Delete" (D)
+  - "Points" (2)
+    - "Point" (P)
+    - "Midpoint"
+  - "Lines" (3)
+    - "Segment" (S)
+    - "Line" (L)
+    - "Ray"
+    - "Parallel"
+    - "Perpendicular"
+  - "Circles" (4)
+    - "Circle" (C)
+    - "Circle by length"
+- A kategória első módjába lépni a zárójelbe írt gombok egyikének megnyomásával lehet
+- Egyes módoknak van külön gyorsgombja, szintén zárójelbe írva
+- A kategória módjai között a Tab gomb megnyomásával lehet váltani
+  - Ha még nem értük el a kategória utolsó módját, akkor az alatta következő módba lépünk be
+  - Ha már elértük az utolsót, akkor visszalépünk az kategóra első módjába
+
+- módok:
+  - "Move"
+    - Pont mozgatása
+    - Belépő billentyűk: 1, M, Escape
+    - A szabadsági fokkal rendelkező pontokat lehet mozgatni ("literál" vagy "csúszka" pontokat)
+    - Bal klikk lenyomásával a kurzor alatti pontot "megfogjuk", egérr mozgatásával arrébb helyezzük,
+      majd a mozgatás befejezéséhez elengedjük a bal klikket.
+  - "Delete"
     - Elemek kaszkádosított törlése
+    - Belépő billentyűk: 2, D
     - A kurzor alatti elem és az összes tőle függő elem törlésre kerül bal klikkelésre
     - Ha a kurzort az egyik elem fölé visszük,
-      akkor az elem és a tőle függő elemek más színnel (esetleg piros)
+      akkor az elem és a tőle függő elemek más színnel (esetleg piros színnel)
       lesznek rajzolva, hogy lássuk, hogy mi fog törlésre kerülni
-  - "Point" - pont
-    - Pontok létrehozása kattintásra
-    - Ha üres területre kattintunk "literál" pont jön létre
-    - Ha egy már létező pontra kattintunk, nem jön létre semmi
-    - Ha egy egyenes-szerű elemre kattintunk, "csúszka egyenesen" jön létre
-    - Ha egy körre kattintunk, "csúszka körön" jön létre
-    - Ha két egyenes-szerű elemre kattintunk rá egyszerre, azaz mindkét elem a kurzor alatt van,
-      akkor "egyenesek metszéspontja" jön létre
-    - Ha egy egyenes-szerű elemre és egy körre kattintunk rá egyszerre,
-      akkor "egyenes és kör metészpontja" jön létre
-    - Ha két körre kattintunk rá egyszerre,
-      akkor "körök metszéspontja" jön létre
-    - A fenti lista prioritási sorrendnek számítson:
-      - tehát ha a kurzor alatt két egyenes és egy kör van, akkor a két egyenes metszéspontja jön létre.
-  - "Midpoint" - felezőpont
-  - "Line" - egyenes
+  - "Point"
+    - Pont létrehozása
+    - Belépő billentyűk: 3, P
+    - Bal klikkelésre az alábbiak közül a fentről lefele sorrendben a legkorábban bekövetkező kapjon prioritást:
+      - Ha egy már létező pontra kattintunk, nem jön létre semmi
+      - Ha két egyenes-szerű elemre kattintunk rá egyszerre, azaz mindkét elem a kurzor alatt van,
+        akkor "egyenesek metszéspontja" jön létre
+      - Ha egy egyenes-szerű elemre és egy körre kattintunk rá egyszerre,
+        akkor "egyenes és kör metészpontja" jön létre
+      - Ha két körre kattintunk rá egyszerre,
+        akkor "körök metszéspontja" jön létre
+      - Ha egy egyenes-szerű elemre kattintunk, "csúszka egyenesen" jön létre
+      - Ha egy körre kattintunk, "csúszka körön" jön létre
+      - Ha üres területre kattintunk "literál" pont jön létre
+    - A kurzor mozgatása során kattintás nélkül is előnézetben látjuk, hogy hova fog létrejönni az új pont
+    - TOVÁBBIAKBAN FONTOS:
+      - A további módokban, amikor arról van szó, hogy egy pontra kattintunk,
+        akkor valójában kattinthatunk bárhova, és ha nem egy pontra kattintunk,
+        akkor létrejön a fenti logika szerint egy új pont a kattintás következtében
+      - Tehát a többi módban is, ha éppen nem egy létező ponton van a kurzor,
+        akkor már előnézetben látjuk a pontot, ami kattintásra létrejönne
+  - "Midpoint"
+    - Felezőpont létrehozása
+    - Bal klikkeléssel kiválasztunk egy pontot, ez meg lesz jegyezve
+    - Ekkor a megjegyzett pont és a kurzor alatti, (nem feltétlenül létező) pont
+      között félúton megjelenik előnézetben a felezőpont
+    - Bal klikkelésre az előnézetben látható pont tényleg létrejön
+      az elsőnek kiválasztott pont és a kurzor alatti pont között
+  - "Segment", "Line", "Ray"
+    - Egyenes-szerű elem létrehozása
+    - 
   - "Parallel/Perpendicular" - párhuzamos/merőleges
   - "Circle" - kör
   - "Circle by length" - kör, hossz alapján
