@@ -1,18 +1,17 @@
 # InfoC NHF Specifikáció
 
-- *Megjegyzés: ezen dokumentum írásakor a program jelentős része már működőképes,
-  saját véleményem szerint el fogom tudni készíteni a specifikáció szerint.*
+- *Megjegyzés: ezen dokumentum írásakor a program jelentős része már működőképes.
+  Saját véleményem szerint el fogom tudni készíteni a specifikáció szerint, még akkor is, ha ennyire összetett.*
+- *(A program lényegében a https://www.desmos.com/geometry oldal butább verziója, de ugye ez nem elég specifikációnak.)*
+- Rövid összefoglaló
+  - A program egy grafikus felületű síkgeometriai szerkesztőprogram.
+  - Támogatott geometriai elemek: pontok, egyenesek/félegyenesek/szakaszok, körök.
+  - Az elemek egymással függőségi viszonyban állnak.
+  - Létrehozás után is változtathatóak az elemek pozíciói.
+    - pl: Ha elmozdul egy pont, akkor a tőle függő elemek (pl: rajta kereszülmenő egyenesek) is vele változnak.
+  - A program képes az elemek definícióinak fájlba mentésére és fájlból betöltésére.
 
-## Rövid program összefoglaló
-- *(Lényegében a https://www.desmos.com/geometry oldal butább verziója ez a program, de ugye ez nem elég specifikációnak.)*
-- A program egy grafikus felületű síkgeometriai szerkesztőprogram.
-- Támogatott geometriai elemek: pontok, egyenesek/félegyenesek/szakaszok, körök.
-- Az elemek egymással függőségi viszonyban állnak.
-- Létrehozás után is változtathatóak az elemek pozíciói.
-  - pl: Ha elmozdul egy pont, akkor a tőle függő elemek (pl: rajta kereszülmenő egyenesek) is vele változnak.
-- A program képes az elemek definícióinak fájlba mentésére és fájlból betöltésére.
-
-## Programleírás
+# Hosszú programleírás
 - Megjegyzés:
   - A program neve még később lesz eldöntve, nem része a specifikációnak!
   - A programban az egérrel való kattintás csak a bal egérgombnál csinál bármit is,
@@ -31,7 +30,7 @@
     lévő objektumok a kurzor közelében is maradnak a zoomolás után.
 - Az elemek pozícióját egér segítségével lehet beállítani, nincs lehetőség szövegdoboz/konzolablak segítségével pozíciókat bevinni.
 
-### Geometriai elemek
+## Geometriai elemek
 - A program pontokkal, egyenes-szerű elemekkel és körökkel képes dolgozni.
   - Az egyenes-szerű elemek alatt értsük az egyenest, a félegyenest és a szakaszt .
 - Az elemek egymással függőségi viszonyban vannak.
@@ -43,7 +42,7 @@
   - De akkor is, ha egy elem függ egy olyan másik elemtől, ami "érvénytelen" állapotban van.
   - Az érvénytelen állapotban lévő elemek nincsenek megjelenítve.
 
-#### Elemtípusok
+### Elemtípusok
 - Pont
   - "Literál"
     - Nem függ más elemektől.
@@ -116,7 +115,7 @@
     - A kör középpontja a pontnál található.
     - A kör sugara pontosan a szakasz hosszával egyenlő.
 
-### Kategóriák és módok
+## Kategóriák és módok
 - A programban különböző módok közül lehet választani.
 - A módok kategóriákba vannak sorolva.
 - A kategóriák és a bennük található módok:
@@ -193,7 +192,7 @@
     - Ha már van megjegyzett pont, akkor kattintásra a kurzor alatti potenciális ponton keresztülhaladó,
       a megjegyzett egyenes-szerű elemmel párhuzamos/merőleges egyenes jön létre.
       - Értelemszerűen a módtól függ, hogy melyik párhuzamos vagy merőleges egyenes jön létre.
-  - "Circle"
+  - "Circle" (C)
     - "Pont körül, ponton keresztül" típusú kör létrehozása.
     - Kattintással kiválasztunk egy pontot, ez meg lesz jegyezve mint a kör középpontja.
     - Ha már van megjegyzett pont, akkor kattintásra a megjegyzett középpont körüli, a kurzor alatti potenciális ponton
@@ -203,15 +202,20 @@
     - Kattintással kiválasztunk egy szakaszt, ez meg lesz jegyezve.
     - Ha már van megjegyzett szakasz, akkor kattintásra a megjegyzett szakaszhosszú sugárral
       a kurzor alatti potenciális pont középpontú kör jön létre.
+- Ha ez fentebbről nem derült volna ki: amint létrejön egy új elem, ami függ egy megjegyzett elemtől, akkor a program elfelejti.
+- Esc gomb megnyomásakor, ha van megjegyezve elem, akkor felejtse azt el.
+  - Ha megjegyzett elem kattintás előtt nem létezett, akkor nem kell kitörölni
+- Akkor is felejtse el a megjegyzett elemet, ha módváltás történik.
+  - Akor is történjen meg ez, ha ugyanabba a módba történik a váltás amiben eddig is volt a program.
 
 ## Mentés / Betöltés
 - A síkon található geometriai elemek jelenlegi állapotát el lehet menteni és vissza lehet tölteni.
-- Az elemek adatait a program egy fájlban fogja tárolni.
+- Az mentett elemek adatait a program egy fájlban fogja tárolni.
 
-### Formátum
-- A fájl kiterjesztése `.geom` legyen.
+### Mentési fájlformátum
+- A mentési fájl kiterjesztése `.geom` legyen.
   - A kiterjesztést a fájlnév végére tenni nem feltétlenül kötelező, de ajánlott.
-- A formátum specifikációja ezen dokumentum írásakor:
+- A formátum specifikációja:
   - Szöveges formátum.
   - Minden sor egy elem deklarációjával feleltethető meg.
   - S sorok szóközzel tagolva értelmezendőek.
@@ -223,22 +227,26 @@
   - Utána al-típustól függően tizedestört vagy egész számok sora következik.
     - Az egész számok tipikusan azonosítot vagy enum-ot jelölnek.
     - A tizedestört számok tipikusan szabad paramétert jelölnek.
-- Ez a formátum potenciálisan még változhat a fejlesztés során.
+    - A pontos al-típusonkénti leírás nagyon hosszú lenne, csak a lényeget írtam le.
+  - Ha több adat van egy sorban, mint ami kell az elem definícióhoz, akkor a extra adatokkal nem foglalkozik a program.
+- A fenti formátum potenciálisan még változhat a fejlesztés során.
   - A felhasználónak úgysem kell tudnia a program nélkül módosítania a file tartalmát.
-    - Ezért szerintem nem nagy probléma, ha nincs is specifikálva a formátum,
-      de azért a biztonság kedvéért leírtam a jelenlegi állapotot.
+    - Ezért szerintem nem is lenne nagy probléma, ha nem lenne specifikálva a formátum.
+    - De azért a biztonság kedvéért leírtam a jelenlegi állapotot.
 
 ### Futási argumentumok
 - Alapvetően, ha elindítjuk a programot, akkor egy üres síkkal fogunk kezdeni.
 - Ha a programnak argumentumként megadunk egy fájlt, akkor miután elindul a program,
-  megpróbálja azt argumentumként megadott fájlt betölteni.
-  - Lásd a "Megnyitás" funkciót lentebb.
+  megpróbálja azt argumentumként megadott fájlt megnyitni.
+  - Lásd az "Open" funkció leírását lentebb.
 - Ha valamiért több argumentumot adunk a programnak, akkor is csak az elsővel foglalkozik.
 
 ### Mentési állapot
 - A program számon tartja, hogy mentett-e már a felhasználó, és ha igen milyen fájlba mentett utoljára.
+  - Ezt az adat a vásznon valahol meg van jelenítve
   - Alapból a program indításakor úgy veszi a program, hogy még nem volt mentés.
   - A különféle mentési funkciók változtatnak ezen az állapoton, a következő részben erről olvashatunk.
+
 ### Funkciók
 - "Save as" / Mentés másként (Ctrl+Shift+S)
   - Megnyílik egy fájl-párbeszédablak, ahol meg kell adni, hogy melyik fájlba történjen a mentés.
@@ -253,9 +261,16 @@
     - Ha nem lett fájl választva, nem történik semmi
     - Ha ki lett választva egy fájl, a program rákérdez, hogy felül akarod-e írni a jelenlegi állapotot.
       - Ha nem, akkor nem lesz semmi sem felülírva.
-      - Ha igen, akkor megpróbálja betölteni a fájlból az adatokat
+      - Ha igen, akkor megpróbálja betölteni a fájlból az adatokat.
         - Ha hiba történik, akkor a hiba jelezve lesz egy felugró ablakban.
 - "New" / Új (Ctrl+N)
   - A program rákérdez, hogy felül akarod-e írni a jelenlegi állapotot.
     - Ha nem, akkor nem lesz semmi sem felülírva.
     - Ha igen, akkor az össszes elem törtlésre kerül és a program úgy veszi, hogy még nem történt mentés.
+- "Quit" / Bezárás (Ctrl+W)
+  - A program rákérdez, hogy biztosan be akarod-e zárni a programot.
+    - Ha igen, akkor bezár a program.
+    - Ha nem, akkor fut tovább a program.
+
+### Bezárás
+Ha a programot megpróbáljuk bezárni, akkor a fenti "Quit" funkció logikája fusson le.
