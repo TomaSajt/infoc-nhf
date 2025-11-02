@@ -182,3 +182,15 @@
   - "Parallel/Perpendicular" - párhuzamos/merőleges
   - "Circle" - kör
   - "Circle by length" - kör, hossz alapján
+
+## Mentés / Betöltés
+- A síkon található geometriai elemek jelenlegi állapotát el lehet menteni és vissza lehet tölteni
+- Ezt egy saját fájlformátumon keresztül valósítja meg a program
+  - Lehet szöveges vagy lehet bináris fájlformátum, ez nem része a specifikációnak
+  - A fájlkiterjesztés legyen `.geom`
+    - (ha esetleg más program már használna ilyen fájlkiterjesztést, az csak véletlen egybeesés)
+- "Ctrl+S" billentyűkombináció megnyomásával megnyílik egy fájl-párbeszédablak,
+ahol meg kell adni, hogy hova melyik fájlba legyenek mentve az elemek definíciói
+- "Ctrl+O" billentyűkombináció megnyomásával megnyílik egy fájl-párbeszédablak,
+ahol ki lehet választani, hogy melyik fájlból legyenek betöltve az elemek definíciói
+
