@@ -16,6 +16,7 @@
   - A program neve még később lesz eldöntve, nem része a specifikációnak!
   - A programban az egérrel való kattintás csak a bal egérgombnál csinál bármit is,
     tehát a specifikáció szövegezésében az "egérgomb" = "bal egérgomb", "kattintás" = "bal klikkelés".
+  - A specifikáció nem tartalmazza a felhasználói felület pontos színeit és pontos elrendezését.
 - A megjelenített szövegek angol nyelvűek.
 - A program grafikus megjelnítést használ.
 - Indítás után megjelenik egy grafikus felület, amit nevezzünk vászonnak.
@@ -134,14 +135,17 @@
   - "Circles" (4)
     - "Circle" (C)
     - "Circle by length"
-- Egy kategóriát kiválasztani a fenti listában a kategória neve mellett zárójelbe írt gomb megnyomásával lehet
+- A módok kategória szerint vannak megjelenítve a vásznon valahol.
+  - A módokat nevükkel és/vagy a módokat reprezentáló ikonokkal jelenítsük meg
+  - A jelenlegi mód legyen kiemelve másik színnel.
+- Egy kategóriát kiválasztani a fenti listában a kategória neve mellett zárójelbe írt billentyű megnyomásával lehet.
   - Ekkor a kategórián belül legutóbb használt módba fog lépni a program.
   - A program indításakor mindig az összes kategóriának az első módja számít utolsónak használtnak.
-- Fontosabb módoknak van külön gyorsgombja, szintén zárójelbe írva.
-- A kiválasztott kategória módjai között a Tab segítségével lehet váltani.
+- Fontosabb módoknak van külön gyorsbillentyűje, szintén zárójelbe írva.
+- A kiválasztott kategória módjai között a Tab billentyű megnyomásával lehet váltani.
   - Tab megnyomásával jelenlegi mód alatti módba lépünk át.
   - Ha nincs alatta mód, akkor visszatérünk a legfelső módhoz.
-  - Ha a Shift gomb nyomása közben nyomjuk meg a Tab-ot, akkor ez másik irányba történik meg.
+  - Ha a Shift billentyű nyomása közben nyomjuk meg a Tab-ot, akkor ez másik irányba történik meg.
     - Azaz felfele lépünk a módok között, és a legfelső után a legalsóhoz ugrunk.
 - Módok:
   - "Move" (M)
@@ -172,7 +176,7 @@
     - A további módokban, amikor arról van szó, hogy egy pontra kattintunk,
       akkor valójában kattinthatunk bárhova, és ha nem egy létező pontra kattintunk,
       akkor létrejön a fenti "Point" logika szerint egy új pont a kattintás következtében.
-    - Sőt, az tobábbi módokban még kattintás előtt is látszódik előnézetben,
+    - Sőt, a tobábbi módokban még kattintás előtt is látszódik előnézetben,
       hogy kattintásra hova jönne létre új elem, beleértve a kurzor alatti potenciális pontot és magát az új "fő" elemet is.
   - "Midpoint"
     - Felezőpont létrehozása.
@@ -189,24 +193,24 @@
   - "Parallel/Perpendicular"
     - Ponton keresztülmenő párhuzamos/merőleges létrehozása.
     - Kattintással kiválasztunk egy egyenes-szerű elemet, ez meg lesz jegyezve.
-    - Ha már van megjegyzett pont, akkor kattintásra a kurzor alatti potenciális ponton keresztülmenő,
+    - Ha már van megjegyzett egyenes-szerű elem, akkor kattintásra a kurzor alatti potenciális ponton keresztülmenő,
       a megjegyzett egyenes-szerű elemmel párhuzamos/merőleges egyenes jön létre.
-      - Értelemszerűen a módtól függ, hogy melyik párhuzamos vagy merőleges egyenes jön létre.
+      - Értelemszerűen a módtól függ, hogy párhuzamos vagy merőleges egyenes jön létre.
   - "Circle" (C)
     - "Pont körül, ponton keresztül" típusú kör létrehozása.
     - Kattintással kiválasztunk egy pontot, ez meg lesz jegyezve mint a kör középpontja.
     - Ha már van megjegyzett pont, akkor kattintásra a megjegyzett középpont körüli, a kurzor alatti potenciális ponton
       keresztülmenő "Pont körül, ponton keresztül" típusú kör jön létre.
   - "Circle by length"
-    - "Szakaszhossz sugarral, pont körül" típusú kör létrehozása.
+    - "Szakaszhossz sugárral, pont körül" típusú kör létrehozása.
     - Kattintással kiválasztunk egy szakaszt, ez meg lesz jegyezve.
     - Ha már van megjegyzett szakasz, akkor kattintásra a megjegyzett szakaszhosszú sugárral
       a kurzor alatti potenciális pont középpontú kör jön létre.
-- Ha ez fentebbről nem derült volna ki: amint létrejön egy új elem, ami függ egy megjegyzett elemtől, akkor a program elfelejti.
-- Esc gomb megnyomásakor, ha van megjegyezve elem, akkor felejtse azt el.
+- Amikor sikeresen létrejön egy új elem, akkor a program elfelejti a megjegyzett elemet.
+- Esc billentyű megnyomásakor, ha van megjegyezve elem, akkor azt elfelejti.
   - Ha megjegyzett elem kattintás előtt nem létezett, akkor nem kell kitörölni
 - Akkor is felejtse el a megjegyzett elemet, ha módváltás történik.
-  - Akor is történjen meg ez, ha ugyanabba a módba történik a váltás amiben eddig is volt a program.
+  - Akkor is történjen meg ez, ha ugyanabba a módba történik a váltás amiben eddig is volt a program.
 
 ## Mentés / Betöltés
 - A síkon található geometriai elemek jelenlegi állapotát el lehet menteni és vissza lehet tölteni.
@@ -218,7 +222,7 @@
 - A formátum specifikációja:
   - Szöveges formátum.
   - Minden sor egy elem deklarációjával feleltethető meg.
-  - S sorok szóközzel tagolva értelmezendőek.
+  - A sorok szóközzel tagolva értelmezendőek.
   - A sorok `p`, `l` vagy `c` karakterrel kezdődnek, az elem típusát meghatározva.
   - Utána következik egy egész szám mint azonosító
     - Az azonosítónak csak a saját típusán belül kell egyedinek lennie.
@@ -230,7 +234,7 @@
     - A pontos al-típusonkénti leírás nagyon hosszú lenne, csak a lényeget írtam le.
   - Ha több adat van egy sorban, mint ami kell az elem definícióhoz, akkor a extra adatokkal nem foglalkozik a program.
 - A fenti formátum potenciálisan még változhat a fejlesztés során.
-  - A felhasználónak úgysem kell tudnia a program nélkül módosítania a file tartalmát.
+  - A felhasználónak úgysem kell tudnia a program nélkül módosítania a fájl tartalmát.
     - Ezért szerintem nem is lenne nagy probléma, ha nem lenne specifikálva a formátum.
     - De azért a biztonság kedvéért leírtam a jelenlegi állapotot.
 
@@ -248,21 +252,23 @@
   - A különféle mentési funkciók változtatnak ezen az állapoton, a következő részben erről olvashatunk.
 
 ### Funkciók
+- "Open" / Megnyitás (Ctrl+O)
+  - Megnyílik egy fájl-párbeszédablak, ahol ki kell választani, hogy melyik fájlból törénjen a betöltés.
+    - Ha nem lett fájl választva, akkor nem történik semmi.
+    - Ha ki lett választva egy fájl, a program rákérdez, hogy felül akarod-e írni a jelenlegi állapotot.
+      - Ha nem, akkor nem lesz semmi sem felülírva.
+      - Ha igen, akkor megpróbálja betölteni a fájlból az adatokat.
+        - Ha sikeres a betöltés, akkor úgy veszi, hogy a betöltött fájlba mentett utoljára.
+        - Ha hiba történik, akkor a hiba jelezve lesz egy felugró ablakban.
 - "Save as" / Mentés másként (Ctrl+Shift+S)
   - Megnyílik egy fájl-párbeszédablak, ahol meg kell adni, hogy melyik fájlba történjen a mentés.
-    - Ha sikeres a betöltés, akkor úgy veszi, hogy a betöltött fájlba mentett utoljára.
     - Ha hiba történik, akkor a hiba jelezve lesz egy felugró ablakban.
+    - Ha sikeres a mentés, akkor úgy veszi, hogy abba a fájlba mentett utoljára, amibe az utób mentett.
+      - 🤯🤯🤯
 - "Save" / Mentés (Ctrl+S)
   - Ha még nem volt mentés, akkor a "Save as" logika fusson le.
   - Ha már történt mentés, akkor abba a fájlba ment, ahova a utoljára mentett.
     - Ha hiba történik, akkor a hiba jelezve lesz egy felugró ablakban.
-- "Open" / Megnyitás (Ctrl+O)
-  - Megnyílik egy fájl-párbeszédablak, ahol ki kell választani, hogy melyik fájlból törénjen a betöltés.
-    - Ha nem lett fájl választva, nem történik semmi
-    - Ha ki lett választva egy fájl, a program rákérdez, hogy felül akarod-e írni a jelenlegi állapotot.
-      - Ha nem, akkor nem lesz semmi sem felülírva.
-      - Ha igen, akkor megpróbálja betölteni a fájlból az adatokat.
-        - Ha hiba történik, akkor a hiba jelezve lesz egy felugró ablakban.
 - "New" / Új (Ctrl+N)
   - A program rákérdez, hogy felül akarod-e írni a jelenlegi állapotot.
     - Ha nem, akkor nem lesz semmi sem felülírva.
