@@ -22,7 +22,7 @@
 - A megjelenített szövegek angol nyelvűek.
 - A program grafikus megjelnítést használ.
 - Indítás után megjelenik egy grafikus felület, amit nevezzünk vászonnak.
-- A végtelen sík egy felhasználó által állítható része van megjelenítve meg a vásznon, nevezzül ezt a fókuszált területnek.
+- A végtelen sík egy felhasználó által állítható része van megjelenítve meg a vásznon, nevezzük ezt a fókuszált területnek.
 - A végtelen sík tartalmazza majd a geometriai elemeket.
 - A végtelen sík kezdő állapotában nem tartalmaz egy elemet sem.
   - Kivéve, ha van megadva argumentum, bővebben kifejtve a "Mentés/Betöltés" szekcióban.
@@ -38,8 +38,8 @@
   - Az egyenes-szerű elemek alatt értsük az egyenest, a félegyenest és a szakaszt .
 - Az elemek egymással függőségi viszonyban vannak.
 - A függőségi viszonyok egy irányított körmentes gráfot alkotnak (DAG).
-- Az egyetlen elemtípus ami nem függ semmitől a pont "literál".
-- Ha frissül egy elem elhelyezkedse, a többi, tőle függő elemnek is kell, hogy frissüljön.
+- A "literál" típusú pont az egyetlen elemtípus, ami nem függ más elemtől.
+- Ha frissül egy elem elhelyezkedése, a többi, tőle függő elemnek is frissülnie kell.
 - "Érvénytelen" állapotú elemek is jöhetnek létre.
   - Ez tipikusan akkor történik meg, ha egy metszéspont nem létezik.
   - De akkor is, ha egy elem függ egy olyan másik elemtől, ami "érvénytelen" állapotban van.
@@ -59,7 +59,7 @@
     - Egy egyenes-szerű elemtől függ.
     - Csak az egyenes mentén csúsztatható el.
       - Ha csúszkát olyan helyre akarnánk húzni, ami nem az egyenesen-szerű elemen van,
-        akkor az csúszka pozíciója legyen egyenes-szerű elem a kurzorhoz leközelebb eső pontja.
+        akkor az csúszka pozíciója az egyenes-szerű elemnek a kurzorhoz leközelebb eső pontja lesz.
     - A csúszka állapota egy szabad `prog` paraméterben van tárolva.
       - A pont pozíciója megkapható a `(1-prog)*S + prog*E` képlet által,
         ahol az `S` és `E` az egyenes-szerű elem segédpontjai. (Erről később bővebben.)
@@ -75,10 +75,10 @@
     - Egy körtől függ.
     - Csak a kör mentén csúsztatható el.
       - Ha a csúszkát olyan helyre akarnánk húzni, ami nem a körön van,
-        akkor a csúszka pozíciója legyen kör a kurzorhoz legközelebb eső pontja.
+        akkor a csúszka pozíciója a körnek a kurzorhoz legközelebb eső pontja lesz.
     - A csúszka állapota egy szabad `prog` paraméterben van tárolva.
       - A pont pozíciója megkapható a `C + r*(cos(2pi*prog),sin(2pi*prog))` képlet által,
-        ahol `C` a kör középpontja és `r` a sugara.
+        ahol `C` a kör középpontja és `r` a kör sugara.
         - `prog` `[0;1)` intervallumban
   - "Egyenes és kör metszéspontja"
     - Egy egyenes-szerű elemtől és egy körtől függ.
@@ -95,7 +95,7 @@
   - "Pontból pontba"
     - Két ponttól függ.
       - Az első pont számít az `S` "start" segédpontnak.
-      - a másik pont számít az `E` "end" segédpontnak.
+      - A másik pont számít az `E` "end" segédpontnak.
     - Választható, hogy szakaszként, félegyenesként vagy egyenesként legyen értelmezve az elem.
       - Ha szakaszként értelmezzük, akkor az `S` és `E` pontot összekötő szakaszról beszélünk.
       - Ha félegyenesként értelmezzük, akkor az `S` pontból induló, az `E` ponton keresztülmenő félegyenesről beszélünk.
@@ -138,16 +138,16 @@
     - "Circle" (C)
     - "Circle by length"
 - A módok kategória szerint vannak megjelenítve a vásznon valahol.
-  - A módokat nevükkel és/vagy a módokat reprezentáló ikonokkal jelenítsük meg
-  - A jelenlegi mód legyen kiemelve másik színnel.
+  - A módok a nevükkel és/vagy a módokat reprezentáló ikonokkal vannak megjelenítve.
+  - A jelenlegi mód ki van emelve másik színnel.
 - Egy kategóriát kiválasztani a fenti listában a kategória neve mellett zárójelbe írt billentyű megnyomásával lehet.
   - Ekkor a kategórián belül legutóbb használt módba fog lépni a program.
-  - A program indításakor mindig az összes kategóriának az első módja számít utolsónak használtnak.
+  - A program indításakor mindig az összes kategóriának az első módja számít legutóbb használtnak.
 - Fontosabb módoknak van külön gyorsbillentyűje, szintén zárójelbe írva.
 - A kiválasztott kategória módjai között a Tab billentyű megnyomásával lehet váltani.
   - Tab megnyomásával jelenlegi mód alatti módba lépünk át.
   - Ha nincs alatta mód, akkor visszatérünk a legfelső módhoz.
-  - Ha a Shift billentyű nyomása közben nyomjuk meg a Tab-ot, akkor ez másik irányba történik meg.
+  - Ha a Shift billentyű nyomása közben nyomjuk meg a Tab-ot, akkor ez az ellentétes irányba történik meg.
     - Azaz felfele lépünk a módok között, és a legfelső után a legalsóhoz ugrunk.
 - Módok:
   - "Move" (M)
@@ -159,11 +159,11 @@
   - "Delete" (D)
     - Elemek kaszkádosított törlése.
     - A kurzor alatti elem és az összes tőle függő elem törlésre kerül kattintásra.
-    - Ha a kurzort az egyik elem fölé visszük, akkor az maga az elem és a tőle függő elemek
+    - Ha a kurzort az egyik elem fölé visszük, akkor maga az elem és a tőle függő elemek
       más színnel (esetleg piros színnel) lesznek rajzolva, hogy lássuk, hogy mi fog törlésre kerülni.
   - "Point" (P)
     - Pont létrehozása.
-    - Kattintásra az alábbiak közül a fentről lefele sorrendben a legkorábban bekövetkező kapjon prioritást:
+    - Kattintásra az alábbiak közül a fentről lefele sorrendben a legkorábban bekövetkező eset alapján jön létre pont:
       - Ha egy már létező pontra kattintunk, nem jön létre semmi.
       - Ha két egyenes-szerű elemre kattintunk rá egyszerre, azaz mindkét elem a kurzor alatt van,
         akkor "egyenesek metszéspontja" típusú pont jön létre.
@@ -172,7 +172,7 @@
       - Ha két körre kattintunk rá egyszerre, akkor "körök metszéspontja" típusú pont jön létre.
       - Ha egy egyenes-szerű elemre kattintunk, "csúszka egyenesen" típusú pont jön létre.
       - Ha egy körre kattintunk, "csúszka körön" típusú pont jön létre.
-      - Ha üres területre kattintunk "literál" típusú pont pont jön létre.
+      - Ha üres területre kattintunk, "literál" típusú pont pont jön létre.
     - A kurzor mozgatása során kattintás nélkül is előnézetben látjuk, hogy hova fog létrejönni az új pont.
   - TOVÁBBIAKBAN FONTOS:
     - A további módokban, amikor arról van szó, hogy egy pontra kattintunk,
@@ -187,13 +187,14 @@
       között "Felezőpont" típusú pont jön létre.
   - "Segment" (S), "Line" (L), "Ray" (R)
     - Egyenes-szerű elem létrehozása.
-    - Mindhárom mód szinte ugyanúgy viselkedik, ezért nincs külön leírás mindegyiknek.
+    - Mindhárom mód szinte ugyanúgy viselkedik, ezért nincs külön leírás mindegyikhez.
     - Kattintással kiválasztunk egy pontot, ez meg lesz jegyezve mint `S` segédpont.
     - Ha már van megjegyzett `S` pont, akkor kattintásra a megjegyzett `S` pont és a kurzor alatti potenciális `E` pont
       között létrejön az egyenes-szerű elem.
       - Értelemszerűen a módtól függ, hogy melyik típusú egyenes-szerű elem jön létre.
-  - "Parallel/Perpendicular"
+  - "Parallel", "Perpendicular"
     - Ponton keresztülmenő párhuzamos/merőleges létrehozása.
+    - Itt is mindkét mód nagyon hasonló egymáshoz, ezért nincs külön leírás hozzájuk.
     - Kattintással kiválasztunk egy egyenes-szerű elemet, ez meg lesz jegyezve.
     - Ha már van megjegyzett egyenes-szerű elem, akkor kattintásra a kurzor alatti potenciális ponton keresztülmenő,
       a megjegyzett egyenes-szerű elemmel párhuzamos/merőleges egyenes jön létre.
@@ -211,15 +212,15 @@
 - Amikor sikeresen létrejön egy új elem, akkor a program elfelejti a megjegyzett elemet.
 - Esc billentyű megnyomásakor, ha van megjegyezve elem, akkor azt elfelejti.
   - Ha megjegyzett elem kattintás előtt nem létezett, akkor nem kell kitörölni
-- Akkor is felejtse el a megjegyzett elemet, ha módváltás történik.
-  - Akkor is történjen meg ez, ha ugyanabba a módba történik a váltás amiben eddig is volt a program.
+- Akkor is elfelejti a megjegyzett elemet, ha módváltás történik.
+  - Akkor is megtörténik ez, ha ugyanabba a módba történik a váltás amiben eddig is volt a program.
 
 ## Mentés / Betöltés
 - A síkon található geometriai elemek jelenlegi állapotát el lehet menteni és vissza lehet tölteni.
 - Az mentett elemek adatait a program egy fájlban fogja tárolni.
 
 ### Mentési fájlformátum
-- A mentési fájl kiterjesztése `.geom` legyen.
+- A mentési fájl kiterjesztése `.geom`.
   - A kiterjesztést a fájlnév végére tenni nem feltétlenül kötelező, de ajánlott.
 - A formátum specifikációja:
   - Szöveges formátum.
@@ -228,13 +229,14 @@
   - A sorok `p`, `l` vagy `c` karakterrel kezdődnek, az elem típusát meghatározva.
   - Utána következik egy egész szám mint azonosító
     - Az azonosítónak csak a saját típusán belül kell egyedinek lennie.
-  - Ha a sor `l` kezdetű, jön egy egész szám (enum), ami eldönti, hogy szakasz/egyenes/félegyenes.
+  - Ha a sor `l` kezdetű, következik egy egész szám (enum), ami eldönti, hogy szakasz/egyenes/félegyenes.
   - Utána következik egy egész szám (enum), ami az elem al-típusát határozza meg.
   - Utána al-típustól függően tizedestört vagy egész számok sora következik.
     - Az egész számok tipikusan azonosítot vagy enum-ot jelölnek.
     - A tizedestört számok tipikusan szabad paramétert jelölnek.
     - A pontos al-típusonkénti leírás nagyon hosszú lenne, csak a lényeget írtam le.
   - Ha több adat van egy sorban, mint ami kell az elem definícióhoz, akkor a extra adatokkal nem foglalkozik a program.
+    - Bár maga a program sosem ír feleslegesen hosszabb sorokat a kelleténél mentés során.
 - A fenti formátum potenciálisan még változhat a fejlesztés során.
   - A felhasználónak úgysem kell tudnia a program nélkül módosítania a fájl tartalmát.
     - Ezért szerintem nem is lenne nagy probléma, ha nem lenne specifikálva a formátum.
@@ -249,7 +251,7 @@
 
 ### Mentési állapot
 - A program számon tartja, hogy mentett-e már a felhasználó, és ha igen milyen fájlba mentett utoljára.
-  - Ezt az adat a vásznon valahol meg van jelenítve
+  - Ez az adat a vásznon valahol meg van jelenítve
   - Alapból a program indításakor úgy veszi a program, hogy még nem volt mentés.
   - A különféle mentési funkciók változtatnak ezen az állapoton, a következő részben erről olvashatunk.
 
@@ -265,8 +267,7 @@
 - "Save as" / Mentés másként (Ctrl+Shift+S)
   - Megnyílik egy fájl-párbeszédablak, ahol meg kell adni, hogy melyik fájlba történjen a mentés.
     - Ha hiba történik, akkor a hiba jelezve lesz egy felugró ablakban.
-    - Ha sikeres a mentés, akkor úgy veszi, hogy abba a fájlba mentett utoljára, amibe az utób mentett.
-      - 🤯🤯🤯
+    - Ha sikeres a mentés, akkor úgy veszi, hogy abba a fájlba mentett utoljára, amibe az épp most mentett.
 - "Save" / Mentés (Ctrl+S)
   - Ha még nem volt mentés, akkor a "Save as" logika fusson le.
   - Ha már történt mentés, akkor abba a fájlba ment, ahova a utoljára mentett.
@@ -274,11 +275,12 @@
 - "New" / Új (Ctrl+N)
   - A program rákérdez, hogy felül akarod-e írni a jelenlegi állapotot.
     - Ha nem, akkor nem lesz semmi sem felülírva.
-    - Ha igen, akkor az össszes elem törtlésre kerül és a program úgy veszi, hogy még nem történt mentés.
+    - Ha igen, akkor az össszes elem törtlésre kerül, és a program úgy veszi, hogy még nem történt mentés.
 - "Quit" / Bezárás (Ctrl+W)
   - A program rákérdez, hogy biztosan be akarod-e zárni a programot.
-    - Ha igen, akkor bezár a program.
+    - Ha igen, akkor bezáródik a program.
     - Ha nem, akkor fut tovább a program.
 
 ### Bezárás
-Ha a programot megpróbáljuk bezárni, akkor a fenti "Quit" funkció logikája fusson le.
+- Ha a programot megpróbáljuk bezárni az operációs rendszer által biztosított módon,
+  akkor a fenti "Quit" funkció logikája fusson le.
