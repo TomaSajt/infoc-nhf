@@ -37,7 +37,7 @@
 - A függőségi viszonyok egy irányított körmentes gráfot alkotnak (DAG).
 - Az egyetlen elemtípus ami nem függ semmitől a pont "literál".
 - Ha frissül egy elem elhelyezkedse, a többi, tőle függő elemnek is kell, hogy frissüljön.
-- "Érvénytelen" állapotú elemek is jöhetnek létre
+- "Érvénytelen" állapotú elemek is jöhetnek létre.
   - Ez tipikusan akkor történik meg, ha egy metszéspont nem létezik.
   - De akkor is, ha egy elem függ egy olyan másik elemtől, ami "érvénytelen" állapotban van.
   - Az érvénytelen állapotban lévő elemek nincsenek megjelenítve.
@@ -111,9 +111,9 @@
     - A kör középpontja a megadott középpont.
     - A kör sugara akkora, hogy a kör keresztülmenjen a külső ponton.
   - "Szakaszhossz sugárral, pont körül"
-    - Egy ponttól és egy szakasztól függ.
-    - A kör középpontja a pontnál található.
+    - Egy szakasztól és egy ponttól függ.
     - A kör sugara pontosan a szakasz hosszával egyenlő.
+    - A kör középpontja a pontnál található.
 
 ## Kategóriák és módok
 - A programban különböző módok közül lehet választani.
@@ -187,9 +187,9 @@
       között létrejön az egyenes-szerű elem.
       - Értelemszerűen a módtól függ, hogy melyik típusú egyenes-szerű elem jön létre.
   - "Parallel/Perpendicular"
-    - Ponton keresztül haladó párhuzamos/merőleges létrehozása.
+    - Ponton keresztülmenő párhuzamos/merőleges létrehozása.
     - Kattintással kiválasztunk egy egyenes-szerű elemet, ez meg lesz jegyezve.
-    - Ha már van megjegyzett pont, akkor kattintásra a kurzor alatti potenciális ponton keresztülhaladó,
+    - Ha már van megjegyzett pont, akkor kattintásra a kurzor alatti potenciális ponton keresztülmenő,
       a megjegyzett egyenes-szerű elemmel párhuzamos/merőleges egyenes jön létre.
       - Értelemszerűen a módtól függ, hogy melyik párhuzamos vagy merőleges egyenes jön létre.
   - "Circle" (C)
