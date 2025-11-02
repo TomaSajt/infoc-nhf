@@ -17,6 +17,8 @@
   - A programban az egérrel való kattintás csak a bal egérgombnál csinál bármit is,
     tehát a specifikáció szövegezésében az "egérgomb" = "bal egérgomb", "kattintás" = "bal klikkelés".
   - A specifikáció nem tartalmazza a felhasználói felület pontos színeit és pontos elrendezését.
+- A program Linuxon kell, hogy elfusson.
+  - Opcionálisan más operációs rendszert is támogathat a program.
 - A megjelenített szövegek angol nyelvűek.
 - A program grafikus megjelnítést használ.
 - Indítás után megjelenik egy grafikus felület, amit nevezzünk vászonnak.
