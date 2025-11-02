@@ -240,8 +240,8 @@
 
 ### Futási argumentumok
 - Alapvetően, ha elindítjuk a programot, akkor egy üres síkkal fogunk kezdeni.
-- Ha a programnak argumentumként megadunk egy fájlt, akkor miután elindul a program,
-  megpróbálja azt argumentumként megadott fájlt megnyitni.
+- Ha a programnak argumentumként megadunk egy fájlnevet, akkor miután elindul a program,
+  megpróbálja az fájlnév által mutatott fájlt megnyitni.
   - Lásd az "Open" funkció leírását lentebb.
 - Ha valamiért több argumentumot adunk a programnak, akkor is csak az elsővel foglalkozik.
 
