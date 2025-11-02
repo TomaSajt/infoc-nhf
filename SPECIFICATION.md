@@ -47,76 +47,92 @@
 
 ### Elemtípusok
 - Pont
-  - "Literál"
-    - Nem függ más elemektől.
-    - Szabadon mozgatható.
-  - "Felezőpont"
-    - Két másik ponttól függ.
-    - Félúton található a másik két pont között.
-      - Lényegében a két pont közötti szakasz felezőpontja,
-        bár nem szükséges, hogy tényleg legyen köztük szakasz.
-  - "Csúszka egyenesen"
-    - Egy egyenes-szerű elemtől függ.
-    - Csak az egyenes mentén csúsztatható el.
-      - Ha csúszkát olyan helyre akarnánk húzni, ami nem az egyenesen-szerű elemen van,
-        akkor az csúszka pozíciója az egyenes-szerű elemnek a kurzorhoz leközelebb eső pontja lesz.
-    - A csúszka állapota egy szabad `prog` paraméterben van tárolva.
-      - A pont pozíciója megkapható a `(1-prog)*S + prog*E` képlet által,
-        ahol az `S` és `E` az egyenes-szerű elem segédpontjai. (Erről később bővebben.)
-        - `prog` `[0;1]` intervallumban, ha a csúszka szakasztól függ.
-        - `prog` `[0;inf)` intervallumban, ha a csúszka félegyenestől függ.
-        - `prog` `(-inf;inf)` intervallumban, ha a csúszka egyenestől függ.
-  - "Egyenesek metszéspontja"
-    - Két egyenes-szerű elemtől függ.
-    - Az egyenes-szerű elemek mindig teljes egyenesként értelmezendőek metszéspontszámításnál.
-    - A pont pozíciója mindig megegyezik a két egyenes metszéspontjával.
-    - Ha a két egyenes párhuzamos, akkor "érvénytelen" állapotú a pont.
-  - "Csúszka körön"
-    - Egy körtől függ.
-    - Csak a kör mentén csúsztatható el.
-      - Ha a csúszkát olyan helyre akarnánk húzni, ami nem a körön van,
-        akkor a csúszka pozíciója a körnek a kurzorhoz legközelebb eső pontja lesz.
-    - A csúszka állapota egy szabad `prog` paraméterben van tárolva.
-      - A pont pozíciója megkapható a `C + r*(cos(2pi*prog),sin(2pi*prog))` képlet által,
-        ahol `C` a kör középpontja és `r` a kör sugara.
-        - `prog` `[0;1)` intervallumban
-  - "Egyenes és kör metszéspontja"
-    - Egy egyenes-szerű elemtől és egy körtől függ.
-    - Az egyenes-szerű elem mindig teljes egyenesként értelmezendő metszéspontszámításnál.
-    - A pont pozíciója mindig megegyezik az egyenes és a kör egyik metszéspontjával.
-    - Egy extra paraméter tárolja, hogy melyik metszéspontról beszélünk a kettő közül.
-    - Ha nincs metszéspont, akkor "érvénytelen" állapotú a pont.
-  - "Körök metszéspontja"
-    - Két körtől függ.
-    - A pont pozíciója mindig megegyezik a két kör egyik metszéspontjával.
-    - Egy extra paraméter tárolja, hogy melyik metszéspontról beszélünk a kettő közül.
-    - Ha nincs metszéspont, akkor "érvénytelen" állapotú a pont.
+  - Megjelenés:
+    - Egy kis sugarú körként reprezentálva a vásznon.
+    - A kör sugara nem változik a "zoomolás" mértékétől, mindig ugyanannyi pixelnyi.
+    - Ha egy pont köre alatt halad át más típusú elem, akkor a pont eltakarja azt.
+    - A szabadsági fokkal rendelkező köröknek van egy kicsit nagyobb sugarú, félig átlátszó, kör alakú burka,
+      ami azt a területet jelenti, ahol meg lehet fogni a pontot "Move" módban (erről lentebb).
+  - Al-típusai:
+    - "Literál"
+      - Nem függ más elemektől.
+      - Szabadon mozgatható.
+    - "Felezőpont"
+      - Két másik ponttól függ.
+      - Félúton található a másik két pont között.
+        - Lényegében a két pont közötti szakasz felezőpontja,
+          bár nem szükséges, hogy tényleg legyen köztük szakasz.
+    - "Csúszka egyenesen"
+      - Egy egyenes-szerű elemtől függ.
+      - Csak az egyenes mentén csúsztatható el.
+        - Ha csúszkát olyan helyre akarnánk húzni, ami nem az egyenesen-szerű elemen van,
+          akkor az csúszka pozíciója az egyenes-szerű elemnek a kurzorhoz leközelebb eső pontja lesz.
+      - A csúszka állapota egy szabad `prog` paraméterben van tárolva.
+        - A pont pozíciója megkapható a `(1-prog)*S + prog*E` képlet által,
+          ahol az `S` és `E` az egyenes-szerű elem segédpontjai. (Erről később bővebben.)
+          - `prog` `[0;1]` intervallumban, ha a csúszka szakasztól függ.
+          - `prog` `[0;inf)` intervallumban, ha a csúszka félegyenestől függ.
+          - `prog` `(-inf;inf)` intervallumban, ha a csúszka egyenestől függ.
+    - "Egyenesek metszéspontja"
+      - Két egyenes-szerű elemtől függ.
+      - Az egyenes-szerű elemek mindig teljes egyenesként értelmezendőek metszéspontszámításnál.
+      - A pont pozíciója mindig megegyezik a két egyenes metszéspontjával.
+      - Ha a két egyenes párhuzamos, akkor "érvénytelen" állapotú a pont.
+    - "Csúszka körön"
+      - Egy körtől függ.
+      - Csak a kör mentén csúsztatható el.
+        - Ha a csúszkát olyan helyre akarnánk húzni, ami nem a körön van,
+          akkor a csúszka pozíciója a körnek a kurzorhoz legközelebb eső pontja lesz.
+      - A csúszka állapota egy szabad `prog` paraméterben van tárolva.
+        - A pont pozíciója megkapható a `C + r*(cos(2pi*prog),sin(2pi*prog))` képlet által,
+          ahol `C` a kör középpontja és `r` a kör sugara.
+          - `prog` `[0;1)` intervallumban
+    - "Egyenes és kör metszéspontja"
+      - Egy egyenes-szerű elemtől és egy körtől függ.
+      - Az egyenes-szerű elem mindig teljes egyenesként értelmezendő metszéspontszámításnál.
+      - A pont pozíciója mindig megegyezik az egyenes és a kör egyik metszéspontjával.
+      - Egy extra paraméter tárolja, hogy melyik metszéspontról beszélünk a kettő közül.
+      - Ha nincs metszéspont, akkor "érvénytelen" állapotú a pont.
+    - "Körök metszéspontja"
+      - Két körtől függ.
+      - A pont pozíciója mindig megegyezik a két kör egyik metszéspontjával.
+      - Egy extra paraméter tárolja, hogy melyik metszéspontról beszélünk a kettő közül.
+      - Ha nincs metszéspont, akkor "érvénytelen" állapotú a pont.
 - Egyenes-szerű elem
-  - "Pontból pontba"
-    - Két ponttól függ.
-      - Az első pont számít az `S` "start" segédpontnak.
-      - A másik pont számít az `E` "end" segédpontnak.
-    - Választható, hogy szakaszként, félegyenesként vagy egyenesként legyen értelmezve az elem.
-      - Ha szakaszként értelmezzük, akkor az `S` és `E` pontot összekötő szakaszról beszélünk.
-      - Ha félegyenesként értelmezzük, akkor az `S` pontból induló, az `E` ponton keresztülmenő félegyenesről beszélünk.
-      - Ha egyenesként értelmezzük, akkor az `S` és `E` pontokon keresztülmenő egyenesről beszélünk.
-  - "Párhuzamos"
-    - Egy egyenes-szerű elemtől és egy ponttól függ.
-    - Maga az elem csak egyenes típusú lehet.
-    - Az egyenes keresztülmegy a ponton és párhuzamos az egyenes-szerű elemmel.
-  - "Merőleges"
-    - Egy egyenes-szerű elemtől és egy ponttól függ.
-    - Maga az elem csak egyenes típusú lehet.
-    - Az egyenes keresztülmegy a ponton és merőleges az egyenes-szerű elemre.
+  - Megjelenés:
+    - Egy vékony egyenes szakasz a vásznon.
+    - Akkor is látható, ha a segédpontjai nincsenek a fókuszált területen.
+    - Más színnel van megjelenítve, mint a pontok.
+  - Al-típusai:
+    - "Pontból pontba"
+      - Két ponttól függ.
+        - Az első pont számít az `S` "start" segédpontnak.
+        - A másik pont számít az `E` "end" segédpontnak.
+      - Választható, hogy szakaszként, félegyenesként vagy egyenesként legyen értelmezve az elem.
+        - Ha szakaszként értelmezzük, akkor az `S` és `E` pontot összekötő szakaszról beszélünk.
+        - Ha félegyenesként értelmezzük, akkor az `S` pontból induló, az `E` ponton keresztülmenő félegyenesről beszélünk.
+        - Ha egyenesként értelmezzük, akkor az `S` és `E` pontokon keresztülmenő egyenesről beszélünk.
+    - "Párhuzamos"
+      - Egy egyenes-szerű elemtől és egy ponttól függ.
+      - Maga az elem csak egyenes típusú lehet.
+      - Az egyenes keresztülmegy a ponton és párhuzamos az egyenes-szerű elemmel.
+    - "Merőleges"
+      - Egy egyenes-szerű elemtől és egy ponttól függ.
+      - Maga az elem csak egyenes típusú lehet.
+      - Az egyenes keresztülmegy a ponton és merőleges az egyenes-szerű elemre.
 - Kör
-  - "Pont körül, ponton keresztül"
-    - Két ponttól függ: a középponttól és egy külső ponttól.
-    - A kör középpontja a megadott középpont.
-    - A kör sugara akkora, hogy a kör keresztülmenjen a külső ponton.
-  - "Szakaszhossz sugárral, pont körül"
-    - Egy szakasztól és egy ponttól függ.
-    - A kör sugara pontosan a szakasz hosszával egyenlő.
-    - A kör középpontja a pontnál található.
+  - Megjelenés:
+    - Egy vékony vonallal rajzolt kör a vásznon.
+    - Azonos színnel rajzolva, mint az egyenes-szerű elemek.
+  - Al-típusai:
+    - "Pont körül, ponton keresztül"
+      - Két ponttól függ: a középponttól és egy külső ponttól.
+      - A kör középpontja a megadott középpont.
+      - A kör sugara akkora, hogy a kör keresztülmenjen a külső ponton.
+    - "Szakaszhossz sugárral, pont körül"
+      - Egy szakasztól és egy ponttól függ.
+      - A kör sugara pontosan a szakasz hosszával egyenlő.
+      - A kör középpontja a pontnál található.
 
 ## Kategóriák és módok
 - A programban különböző módok közül lehet választani.
