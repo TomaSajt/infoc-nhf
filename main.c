@@ -1,9 +1,10 @@
 #include "draw.h"
-#include "geom/defs.h"
-#include "geom/state.h"
 #include "hover.h"
 #include "savedata.h"
 #include "state.h"
+
+#include "geom/defs.h"
+#include "geom/state.h"
 
 #include "mode/circle.h"
 #include "mode/delete.h"
@@ -136,13 +137,19 @@ SDL_AppResult on_mouse_motion(AppState *as, SDL_MouseMotionEvent *motion) {
   Pos2D w_mouse_pos =
       pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
 
+  bool (*mode__on_mouse_move)(AppState *as, Pos2D const *w_mouse_pos);
   switch (as->es.mode) {
   case EM_MOVE:
-    move__on_mouse_motion(as, w_mouse_pos);
+    mode__on_mouse_move = move__on_mouse_move;
     break;
   default:
+    mode__on_mouse_move = NULL;
     break;
   }
+
+  if (mode__on_mouse_move != NULL && !mode__on_mouse_move(as, &w_mouse_pos))
+    return SDL_APP_FAILURE;
+
   return SDL_APP_CONTINUE;
 }
 
@@ -154,37 +161,53 @@ SDL_AppResult on_mouse_button_down(AppState *as, SDL_MouseButtonEvent *event) {
   Pos2D w_mouse_pos =
       pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
 
+  bool (*mode__on_mouse_down)(AppState *as, Pos2D const *w_mouse_pos);
   switch (as->es.mode) {
   case EM_MOVE:
-    move__on_click(as, w_mouse_pos);
-    return SDL_APP_CONTINUE;
+    mode__on_mouse_down = move__on_mouse_down;
+    break;
   case EM_DELETE:
-    delete__on_click(as, w_mouse_pos);
-    return SDL_APP_CONTINUE;
+    mode__on_mouse_down = delete__on_mouse_down;
+    break;
   case EM_POINT:
-    return point__on_click(as, w_mouse_pos);
+    mode__on_mouse_down = point__on_mouse_down;
+    break;
   case EM_MIDPOINT:
-    return midpoint__on_click(as, w_mouse_pos);
+    mode__on_mouse_down = midpoint__on_mouse_down;
+    break;
   case EM_LINE:
-    return line__on_click(as, w_mouse_pos);
+    mode__on_mouse_down = line__on_mouse_down;
+    break;
   case EM_CIRCLE:
-    return circle__on_click(as, w_mouse_pos);
+    mode__on_mouse_down = circle__on_mouse_down;
+    break;
   default:
-    return SDL_APP_CONTINUE;
+    mode__on_mouse_down = NULL;
+    break;
   }
+
+  if (mode__on_mouse_down != NULL && !mode__on_mouse_down(as, &w_mouse_pos))
+    return SDL_APP_FAILURE;
+
+  return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult on_mouse_button_up(AppState *as, SDL_MouseButtonEvent *event) {
   if (event->button != 1)
     return SDL_APP_CONTINUE;
 
+  bool (*mode__on_mouse_up)(AppState *as);
   switch (as->es.mode) {
   case EM_MOVE:
-    move__on_click_release(as);
-    return SDL_APP_CONTINUE;
+    mode__on_mouse_up = move__on_mouse_up;
+    break;
   default:
-    return SDL_APP_CONTINUE;
+    mode__on_mouse_up = NULL;
   }
+  if (mode__on_mouse_up != NULL && !mode__on_mouse_up(as))
+    return SDL_APP_FAILURE;
+
+  return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult on_mouse_wheel(AppState *as, SDL_MouseWheelEvent *event) {
@@ -276,30 +299,30 @@ SDL_AppResult on_render(AppState *as) {
         pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
   }
 
-  PointDef *hovered_point = get_hovered_point(as, w_mouse_pos);
-  LineDef *hovered_line = get_hovered_line(as, w_mouse_pos);
-  CircleDef *hovered_circle = get_hovered_circle(as, w_mouse_pos);
-
+  bool (*mode__on_render)(AppState *as, Pos2D const *w_mouse_pos) = NULL;
   switch (as->es.mode) {
-  case EM_MOVE:
-    break;
-  case EM_DELETE:
-    break;
   case EM_POINT:
-    point__on_render(as, w_mouse_pos);
+    mode__on_render = point__on_render;
     break;
   case EM_MIDPOINT:
-    midpoint__on_render(as, w_mouse_pos);
+    mode__on_render = midpoint__on_render;
     break;
   case EM_LINE:
-    line__on_render(as, w_mouse_pos);
+    mode__on_render = line__on_render;
     break;
   case EM_CIRCLE:
-    circle__on_render(as, w_mouse_pos);
+    mode__on_render = circle__on_render;
     break;
-  case EM_CIRCLE_BY_LEN:
+  default:
+    mode__on_render = NULL;
     break;
   }
+  if (mode__on_render != NULL && !mode__on_render(as, &w_mouse_pos))
+    return SDL_APP_FAILURE;
+
+  PointDef *hovered_point = get_hovered_point(as, &w_mouse_pos);
+  LineDef *hovered_line = get_hovered_line(as, &w_mouse_pos);
+  CircleDef *hovered_circle = get_hovered_circle(as, &w_mouse_pos);
 
   for (int i = 0; i < as->gs.p_n; i++) {
     PointDef *pd = as->gs.point_defs[i];

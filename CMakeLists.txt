@@ -39,6 +39,7 @@ add_executable(infoc-nhf WIN32
     geom/state.c
     geom/util.c
 
+    mode/category_defs.c
     mode/circle.c
     mode/delete.c
     mode/line.c

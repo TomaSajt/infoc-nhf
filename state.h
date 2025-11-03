@@ -16,7 +16,11 @@ typedef enum {
   EM_DELETE,
   EM_POINT,
   EM_MIDPOINT,
+  EM_SEGMENT,
   EM_LINE,
+  EM_RAY,
+  EM_PARALLEL,
+  EM_PERPENDICULAR,
   EM_CIRCLE,
   EM_CIRCLE_BY_LEN,
 } EditorMode;

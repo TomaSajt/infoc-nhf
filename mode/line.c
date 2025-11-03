@@ -8,32 +8,31 @@ void enter_line_mode(EditorState *es) {
   es->elem_type = FE_NONE;
 }
 
-SDL_AppResult line__on_click(AppState *as, Pos2D w_mouse_pos) {
+bool line__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {
   if (as->es.elem_type == FE_POINT) {
-
     PointDef pot;
     PointDef *hov = get_hovered_or_make_potential_point(as, w_mouse_pos, &pot);
     PointDef *actual = hov == NULL ? alloc_and_reg_point(&as->gs, pot) : hov;
     if (actual == NULL)
-      return SDL_APP_FAILURE;
+      return false;
     LineDef *ld = alloc_and_reg_line(
         &as->gs, make_line_point_to_point(L_EXT_SEGMENT, as->es.p, actual));
     if (ld == NULL)
-      return SDL_APP_FAILURE;
+      return false;
     as->es.elem_type = FE_NONE;
   } else {
     PointDef *hovered = get_hovered_point(as, w_mouse_pos);
     if (hovered == NULL)
-      return SDL_APP_CONTINUE;
+      return true;
     as->es.elem_type = FE_POINT;
     as->es.p = hovered;
   }
-  return SDL_APP_CONTINUE;
+  return true;
 }
 
-void line__on_render(AppState *as, Pos2D w_mouse_pos) {
+bool line__on_render(AppState *as, Pos2D const *w_mouse_pos) {
   if (as->es.elem_type != FE_POINT)
-    return;
+    return true;
 
   PointDef pot;
   PointDef *hov = get_hovered_or_make_potential_point(as, w_mouse_pos, &pot);
@@ -43,4 +42,6 @@ void line__on_render(AppState *as, Pos2D w_mouse_pos) {
       make_line_point_to_point(L_EXT_SEGMENT, as->es.p, to_draw);
 
   draw_line(as, &cursor_line, CYAN);
+
+  return true;
 }

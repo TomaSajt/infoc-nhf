@@ -2,14 +2,13 @@
 
 #include "../draw.h"
 #include "../hover.h"
-#include <stdio.h>
 
 void enter_midpoint_mode(EditorState *es) {
   es->mode = EM_MIDPOINT;
   es->elem_type = FE_NONE;
 }
 
-LineDef *get_hovered_seg(AppState *as, Pos2D w_mouse_pos) {
+LineDef *get_hovered_seg(AppState *as, Pos2D const *w_mouse_pos) {
   LineDef *hovered_line = get_hovered_line(as, w_mouse_pos);
   if (hovered_line == NULL)
     return NULL;
@@ -20,14 +19,14 @@ LineDef *get_hovered_seg(AppState *as, Pos2D w_mouse_pos) {
   return hovered_line;
 }
 
-SDL_AppResult midpoint__on_click(AppState *as, Pos2D w_mouse_pos) {
+bool midpoint__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {
   PointDef *hovered_p = get_hovered_point(as, w_mouse_pos);
   if (hovered_p != NULL) {
     if (as->es.elem_type == FE_POINT) {
       PointDef *pd = alloc_and_reg_point(
           &as->gs, make_point_midpoint(as->es.p, hovered_p));
       if (pd == NULL)
-        return SDL_APP_FAILURE;
+        return false;
       as->es.elem_type = FE_NONE;
     } else {
       as->es.elem_type = FE_POINT;
@@ -41,17 +40,20 @@ SDL_AppResult midpoint__on_click(AppState *as, Pos2D w_mouse_pos) {
             &as->gs, make_point_midpoint(hovered_seg->point_to_point.p1,
                                          hovered_seg->point_to_point.p2));
         if (pd == NULL)
-          return SDL_APP_FAILURE;
+          return false;
       }
     }
   }
-  return SDL_APP_CONTINUE;
+  return true;
 }
 
-void midpoint__on_render(AppState *as, Pos2D w_mouse_pos) {
-  if (as->es.elem_type == FE_POINT) {
-    PointDef cursor_point = make_point_literal(w_mouse_pos);
-    PointDef midpoint = make_point_midpoint(as->es.p, &cursor_point);
-    draw_point(as, &midpoint, CYAN);
-  }
+bool midpoint__on_render(AppState *as, Pos2D const *w_mouse_pos) {
+  if (as->es.elem_type != FE_POINT)
+    return true;
+
+  PointDef cursor_point = make_point_literal(*w_mouse_pos);
+  PointDef midpoint = make_point_midpoint(as->es.p, &cursor_point);
+  draw_point(as, &midpoint, CYAN);
+
+  return true;
 }
