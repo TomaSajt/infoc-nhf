@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GEOM_STATE_H
+#define GEOM_STATE_H
 
 #include "defs.h"
 
@@ -26,3 +27,5 @@ void mark_everyting_dirty(GeometryState *gs);
 void delete_point(GeometryState *gs, PointDef *pd);
 void delete_line(GeometryState *gs, LineDef *ld);
 void delete_circle(GeometryState *gs, CircleDef *cd);
+
+#endif

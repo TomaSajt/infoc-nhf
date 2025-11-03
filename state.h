@@ -1,4 +1,5 @@
-#pragma once
+#ifndef STATE_H
+#define STATE_H
 
 #include "geom/state.h"
 
@@ -45,3 +46,5 @@ typedef struct {
   GeometryState gs;
   EditorState es;
 } AppState;
+
+#endif

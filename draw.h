@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DRAW_H
+#define DRAW_H
 
 #include "state.h"
 
@@ -34,3 +35,5 @@ static const SDL_Color BLUE = {.r = 0x00, .g = 0x00, .b = 0xff, .a = 0xff};
 static const SDL_Color MAGENTA = {.r = 0xff, .g = 0x00, .b = 0xff, .a = 0xff};
 static const SDL_Color CYAN = {.r = 0x00, .g = 0xff, .b = 0xff, .a = 0xff};
 static const SDL_Color WHITE = {.r = 0xff, .g = 0xff, .b = 0xff, .a = 0xff};
+
+#endif

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GEOM_DEFS_H
+#define GEOM_DEFS_H
 
 #include <stdbool.h>
 
@@ -199,3 +200,5 @@ CircleDef make_circle_center_point_outer_point(PointDef *center,
                                                PointDef *outer);
 CircleDef make_circle_center_point_radius_seg(PointDef *center,
                                               LineDef *rad_seg);
+
+#endif

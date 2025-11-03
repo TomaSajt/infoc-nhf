@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GEOM_UTIL_H
+#define GEOM_UTIL_H
 
 #include "defs.h"
 
@@ -20,3 +21,5 @@ double dist_from_pos(Pos2D const *pos1, Pos2D const *pos2);
 double dist_from_line(Pos2D const *pos, Pos2D const *start, Pos2D const *end,
                       LineExtMode ext_mode);
 double dist_from_circle(Pos2D const *pos, Pos2D const *center, double radius);
+
+#endif
