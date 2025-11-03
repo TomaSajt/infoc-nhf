@@ -8,6 +8,15 @@
 
 #define LINE_HITBOX_RADIUS 8.0
 
+extern SDL_Color const BLACK;
+extern SDL_Color const RED;
+extern SDL_Color const GREEN;
+extern SDL_Color const YELLOW;
+extern SDL_Color const BLUE;
+extern SDL_Color const MAGENTA;
+extern SDL_Color const CYAN;
+extern SDL_Color const WHITE;
+
 Pos2D pos_world_to_view(ViewInfo const *view_info, Pos2D pos);
 Pos2D pos_view_to_world(ViewInfo const *view_info, Pos2D pos);
 Pos2D pos_view_to_screen(SDL_Renderer *renderer, Pos2D pos);
@@ -26,14 +35,5 @@ SDL_Texture *make_text_texture(AppState const *as, char *text, SDL_Color color);
 bool draw_texture_to(SDL_Renderer *renderer, SDL_Texture *texture, float x,
                      float y);
 bool draw_text_to(AppState *as, char *text, SDL_Color color, float x, float y);
-
-static const SDL_Color BLACK = {.r = 0x00, .g = 0x00, .b = 0x00, .a = 0xff};
-static const SDL_Color RED = {.r = 0xff, .g = 0x00, .b = 0x00, .a = 0xff};
-static const SDL_Color GREEN = {.r = 0x00, .g = 0xff, .b = 0x00, .a = 0xff};
-static const SDL_Color YELLOW = {.r = 0xff, .g = 0xff, .b = 0x00, .a = 0xff};
-static const SDL_Color BLUE = {.r = 0x00, .g = 0x00, .b = 0xff, .a = 0xff};
-static const SDL_Color MAGENTA = {.r = 0xff, .g = 0x00, .b = 0xff, .a = 0xff};
-static const SDL_Color CYAN = {.r = 0x00, .g = 0xff, .b = 0xff, .a = 0xff};
-static const SDL_Color WHITE = {.r = 0xff, .g = 0xff, .b = 0xff, .a = 0xff};
 
 #endif

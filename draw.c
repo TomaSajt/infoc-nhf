@@ -4,6 +4,15 @@
 
 #include <SDL3_gfxPrimitives.h>
 
+SDL_Color const BLACK = {.r = 0x00, .g = 0x00, .b = 0x00, .a = 0xff};
+SDL_Color const RED = {.r = 0xff, .g = 0x00, .b = 0x00, .a = 0xff};
+SDL_Color const GREEN = {.r = 0x00, .g = 0xff, .b = 0x00, .a = 0xff};
+SDL_Color const YELLOW = {.r = 0xff, .g = 0xff, .b = 0x00, .a = 0xff};
+SDL_Color const BLUE = {.r = 0x00, .g = 0x00, .b = 0xff, .a = 0xff};
+SDL_Color const MAGENTA = {.r = 0xff, .g = 0x00, .b = 0xff, .a = 0xff};
+SDL_Color const CYAN = {.r = 0x00, .g = 0xff, .b = 0xff, .a = 0xff};
+SDL_Color const WHITE = {.r = 0xff, .g = 0xff, .b = 0xff, .a = 0xff};
+
 bool is_point_movable(PointDef const *pd) {
   return pd->type == PD_LITERAL || pd->type == PD_GLIDER_ON_LINE ||
          pd->type == PD_GLIDER_ON_CIRCLE;
