@@ -8,13 +8,6 @@
 #include "geom/defs.h"
 #include "geom/state.h"
 
-#include "mode/circle.h"
-#include "mode/delete.h"
-#include "mode/line.h"
-#include "mode/midpoint.h"
-#include "mode/move.h"
-#include "mode/point.h"
-
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
@@ -195,23 +188,17 @@ SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
   return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult on_mouse_motion(AppState *as, SDL_MouseMotionEvent *motion) {
+SDL_AppResult on_mouse_move(AppState *as, SDL_MouseMotionEvent *motion) {
   Pos2D s_mouse_pos = (Pos2D){.x = motion->x, .y = motion->y};
   Pos2D w_mouse_pos =
       pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
 
-  bool (*mode__on_mouse_move)(AppState *as, Pos2D const *w_mouse_pos);
-  switch (as->es.mode) {
-  case EM_MOVE:
-    mode__on_mouse_move = move__on_mouse_move;
-    break;
-  default:
-    mode__on_mouse_move = NULL;
-    break;
-  }
+  bool (*mode__on_mouse_move)(AppState *as, Pos2D const *w_mouse_pos) =
+      as->nes.mode_info->on_mouse_move;
 
-  if (mode__on_mouse_move != NULL && !mode__on_mouse_move(as, &w_mouse_pos))
-    return SDL_APP_FAILURE;
+  if (mode__on_mouse_move != NULL)
+    if (!mode__on_mouse_move(as, &w_mouse_pos))
+      return SDL_APP_FAILURE;
 
   return SDL_APP_CONTINUE;
 }
@@ -224,33 +211,12 @@ SDL_AppResult on_mouse_button_down(AppState *as, SDL_MouseButtonEvent *event) {
   Pos2D w_mouse_pos =
       pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
 
-  bool (*mode__on_mouse_down)(AppState *as, Pos2D const *w_mouse_pos);
-  switch (as->es.mode) {
-  case EM_MOVE:
-    mode__on_mouse_down = move__on_mouse_down;
-    break;
-  case EM_DELETE:
-    mode__on_mouse_down = delete__on_mouse_down;
-    break;
-  case EM_POINT:
-    mode__on_mouse_down = point__on_mouse_down;
-    break;
-  case EM_MIDPOINT:
-    mode__on_mouse_down = midpoint__on_mouse_down;
-    break;
-  case EM_LINE:
-    mode__on_mouse_down = line__on_mouse_down;
-    break;
-  case EM_CIRCLE:
-    mode__on_mouse_down = circle__on_mouse_down;
-    break;
-  default:
-    mode__on_mouse_down = NULL;
-    break;
-  }
+  bool (*mode__on_mouse_down)(AppState *as, Pos2D const *w_mouse_pos) =
+      as->nes.mode_info->on_mouse_down;
 
-  if (mode__on_mouse_down != NULL && !mode__on_mouse_down(as, &w_mouse_pos))
-    return SDL_APP_FAILURE;
+  if (mode__on_mouse_down != NULL)
+    if (!mode__on_mouse_down(as, &w_mouse_pos))
+      return SDL_APP_FAILURE;
 
   return SDL_APP_CONTINUE;
 }
@@ -259,16 +225,10 @@ SDL_AppResult on_mouse_button_up(AppState *as, SDL_MouseButtonEvent *event) {
   if (event->button != 1)
     return SDL_APP_CONTINUE;
 
-  bool (*mode__on_mouse_up)(AppState *as);
-  switch (as->es.mode) {
-  case EM_MOVE:
-    mode__on_mouse_up = move__on_mouse_up;
-    break;
-  default:
-    mode__on_mouse_up = NULL;
-  }
-  if (mode__on_mouse_up != NULL && !mode__on_mouse_up(as))
-    return SDL_APP_FAILURE;
+  bool (*mode__on_mouse_up)(AppState *as) = as->nes.mode_info->on_mouse_up;
+  if (mode__on_mouse_up != NULL)
+    if (!mode__on_mouse_up(as))
+      return SDL_APP_FAILURE;
 
   return SDL_APP_CONTINUE;
 }
@@ -295,7 +255,7 @@ SDL_AppResult on_event(AppState *as, SDL_Event *event) {
   case SDL_EVENT_MOUSE_WHEEL:
     return on_mouse_wheel(as, &event->wheel);
   case SDL_EVENT_MOUSE_MOTION:
-    return on_mouse_motion(as, &event->motion);
+    return on_mouse_move(as, &event->motion);
   }
   return SDL_APP_CONTINUE;
 }
@@ -337,26 +297,12 @@ SDL_AppResult on_render(AppState *as) {
         pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
   }
 
-  bool (*mode__on_render)(AppState *as, Pos2D const *w_mouse_pos) = NULL;
-  switch (as->es.mode) {
-  case EM_POINT:
-    mode__on_render = point__on_render;
-    break;
-  case EM_MIDPOINT:
-    mode__on_render = midpoint__on_render;
-    break;
-  case EM_LINE:
-    mode__on_render = line__on_render;
-    break;
-  case EM_CIRCLE:
-    mode__on_render = circle__on_render;
-    break;
-  default:
-    mode__on_render = NULL;
-    break;
-  }
-  if (mode__on_render != NULL && !mode__on_render(as, &w_mouse_pos))
-    return SDL_APP_FAILURE;
+  bool (*mode__on_render)(AppState *as, Pos2D const *w_mouse_pos) =
+      as->nes.mode_info->on_render;
+
+  if (mode__on_render != NULL)
+    if (!mode__on_render(as, &w_mouse_pos))
+      return SDL_APP_FAILURE;
 
   PointDef *hovered_point = get_hovered_point(as, &w_mouse_pos);
   LineDef *hovered_line = get_hovered_line(as, &w_mouse_pos);
