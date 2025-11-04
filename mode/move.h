@@ -2,8 +2,11 @@
 #define MODE_MOVE_H
 
 #include "../state.h"
+#include "defs.h"
 
 void enter_move_mode(EditorState *es);
+
+void move__init_data(EditorStateData *data);
 
 bool move__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos);
 

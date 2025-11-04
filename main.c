@@ -1,5 +1,6 @@
 #include "draw.h"
 #include "hover.h"
+#include "mode/defs.h"
 #include "savedata.h"
 #include "state.h"
 
@@ -18,6 +19,7 @@
 
 #include <SDL3_ttf/SDL_ttf.h>
 
+#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -405,6 +407,27 @@ void deinit_appstate(AppState *as) {
   clear_geometry_state(&as->gs);
 }
 
+ModeInfo const *get_mode(NewEditorState const *es) {
+  CategoryState const *cs = &es->category_states[es->sel_cat_ind];
+  return &cs->cat_info->modes[cs->sel_mode_ind];
+}
+
+void make_default_editor_state(NewEditorState *es) {
+  assert(editor_info.num_cats == 4);
+
+  for (int i = 0; i < editor_info.num_cats; i++) {
+    es->category_states[i] = (CategoryState){
+        .cat_info = &editor_info.cats[i],
+        .sel_mode_ind = 0,
+    };
+  }
+  es->sel_cat_ind = 0;
+  ModeInfo const *info = get_mode(es);
+
+  if (info->init_data != NULL)
+    info->init_data(&es->data);
+}
+
 int main(void) {
   // TODO: maybe put appstate onto heap?
   AppState appstate = {
@@ -430,6 +453,7 @@ int main(void) {
               .elem_type = FE_NONE,
           },
   };
+  make_default_editor_state(&appstate.nes);
 
   SDL_AppResult rc = init_app(&appstate);
 

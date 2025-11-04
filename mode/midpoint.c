@@ -3,6 +3,8 @@
 #include "../draw.h"
 #include "../hover.h"
 
+void midpoint__init_data(EditorStateData *data) { data->midpoint.saved = NULL; }
+
 void enter_midpoint_mode(EditorState *es) {
   es->mode = EM_MIDPOINT;
   es->elem_type = FE_NONE;

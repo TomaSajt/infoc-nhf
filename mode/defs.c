@@ -1,4 +1,4 @@
-#include "category_defs.h"
+#include "defs.h"
 #include "circle.h"
 #include "delete.h"
 #include "line.h"
@@ -8,15 +8,14 @@
 
 ModeInfo const manage_category_modes[] = {
     {
-        .mode = EM_MOVE,
         .name = "Move (M)",
         .keycode = SDLK_M,
+        .init_data = move__init_data,
         .on_mouse_down = move__on_mouse_down,
         .on_mouse_move = move__on_mouse_move,
         .on_mouse_up = move__on_mouse_up,
     },
     {
-        .mode = EM_DELETE,
         .name = "Delete (D)",
         .keycode = SDLK_D,
         .on_mouse_down = delete__on_mouse_down,
@@ -25,16 +24,15 @@ ModeInfo const manage_category_modes[] = {
 
 ModeInfo const points_category_modes[] = {
     {
-        .mode = EM_POINT,
         .name = "Point (P)",
         .keycode = SDLK_P,
         .on_mouse_down = point__on_mouse_down,
         .on_render = point__on_render,
     },
     {
-        .mode = EM_MIDPOINT,
         .name = "Midpoint",
         .keycode = SDLK_UNKNOWN,
+        .init_data = midpoint__init_data,
         .on_mouse_down = midpoint__on_mouse_down,
         .on_render = midpoint__on_render,
     },
@@ -42,56 +40,56 @@ ModeInfo const points_category_modes[] = {
 
 ModeInfo const lines_category_modes[] = {
     {
-        .mode = EM_SEGMENT,
         .name = "Segment (S)",
         .keycode = SDLK_S,
-        .on_mouse_down = line__on_mouse_down,
-        .on_render = line__on_render,
+        .init_data = linelike__init_data,
+        .on_mouse_down = segment__on_mouse_down,
+        .on_render = segment__on_render,
     },
     {
-        .mode = EM_LINE,
         .name = "Line (L)",
         .keycode = SDLK_L,
+        .init_data = linelike__init_data,
         .on_mouse_down = line__on_mouse_down,
         .on_render = line__on_render,
     },
     {
-        .mode = EM_RAY,
         .name = "Ray (R)",
         .keycode = SDLK_R,
-        .on_mouse_down = line__on_mouse_down,
-        .on_render = line__on_render,
+        .init_data = linelike__init_data,
+        .on_mouse_down = ray__on_mouse_down,
+        .on_render = ray__on_render,
     },
     {
-        .mode = EM_PARALLEL,
         .name = "Parallel",
         .keycode = SDLK_UNKNOWN,
+        .init_data = NULL,     // TODO
         .on_mouse_down = NULL, // TODO
-        .on_render = NULL, // TODO
+        .on_render = NULL,     // TODO
     },
     {
-        .mode = EM_PERPENDICULAR,
         .name = "Perpendicular",
         .keycode = SDLK_UNKNOWN,
+        .init_data = NULL,     // TODO
         .on_mouse_down = NULL, // TODO
-        .on_render = NULL, // TODO
+        .on_render = NULL,     // TODO
     },
 };
 
 ModeInfo const circles_category_modes[] = {
     {
-        .mode = EM_CIRCLE,
         .name = "Circle (C)",
         .keycode = SDLK_C,
+        .init_data = circle__init_data,
         .on_mouse_down = circle__on_mouse_down,
         .on_render = circle__on_render,
     },
     {
-        .mode = EM_CIRCLE_BY_LEN,
         .name = "Circle by len",
         .keycode = SDLK_UNKNOWN,
+        .init_data = NULL,     // TODO
         .on_mouse_down = NULL, // TODO
-        .on_render = NULL, // TODO
+        .on_render = NULL,     // TODO
     },
 };
 

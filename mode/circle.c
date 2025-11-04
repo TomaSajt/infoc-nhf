@@ -8,6 +8,8 @@ void enter_circle_mode(EditorState *es) {
   es->elem_type = FE_NONE;
 }
 
+void circle__init_data(EditorStateData *data) { data->circle.saved = NULL; }
+
 bool circle__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {
   PointDef *hovered = get_hovered_point(as, w_mouse_pos);
   if (hovered == NULL)

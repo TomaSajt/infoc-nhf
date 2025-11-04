@@ -30,6 +30,8 @@ void try_move_point_to_pos(PointDef *pd, Pos2D const *pos) {
   }
 }
 
+void move__init_data(EditorStateData *data) { data->move.grabbed = NULL; }
+
 void enter_move_mode(EditorState *es) {
   es->elem_type = FE_NONE;
   es->mode = EM_MOVE;
