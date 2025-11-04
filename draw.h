@@ -31,9 +31,11 @@ void draw_point(AppState const *as, PointDef *pd, SDL_Color color);
 void draw_line(AppState const *as, LineDef *ld, SDL_Color color);
 void draw_circle(AppState const *as, CircleDef *cd, SDL_Color color);
 
-SDL_Texture *make_text_texture(AppState const *as, char *text, SDL_Color color);
+SDL_Texture *make_text_texture(AppState const *as, char const *text,
+                               SDL_Color color);
 bool draw_texture_to(SDL_Renderer *renderer, SDL_Texture *texture, float x,
                      float y);
-bool draw_text_to(AppState *as, char *text, SDL_Color color, float x, float y);
+bool draw_text_to(AppState *as, char const *text, SDL_Color color, float x,
+                  float y);
 
 #endif

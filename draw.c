@@ -107,7 +107,7 @@ void draw_circle(AppState const *as, CircleDef *cd, SDL_Color color) {
              color.r, color.g, color.b, color.a);
 }
 
-SDL_Texture *make_text_texture(AppState const *as, char *text,
+SDL_Texture *make_text_texture(AppState const *as, char const *text,
                                SDL_Color color) {
   SDL_Surface *text_surf = TTF_RenderText_Blended(as->font, text, 0, color);
   if (text_surf == NULL)
@@ -123,7 +123,8 @@ bool draw_texture_to(SDL_Renderer *renderer, SDL_Texture *texture, float x,
   return SDL_RenderTexture(renderer, texture, NULL, &rect);
 }
 
-bool draw_text_to(AppState *as, char *text, SDL_Color color, float x, float y) {
+bool draw_text_to(AppState *as, char const *text, SDL_Color color, float x,
+                  float y) {
   SDL_Texture *texture = make_text_texture(as, text, color);
   if (texture == NULL)
     return false;

@@ -1,3 +1,4 @@
+#include "SDL3/SDL_scancode.h"
 #include "draw.h"
 #include "hover.h"
 #include "mode/defs.h"
@@ -26,6 +27,33 @@
 
 #define SDL_WINDOW_WIDTH 1000
 #define SDL_WINDOW_HEIGHT 600
+
+ModeInfo const *calc_mode_from_inds(NewEditorState const *es) {
+  CategoryState const *cs = &es->category_states[es->sel_cat_ind];
+  return &cs->cat_info->modes[cs->sel_mode_ind];
+}
+
+void incr_curr_cat_mode_ind(NewEditorState *es) {
+  CategoryState *cs = &es->category_states[es->sel_cat_ind];
+  cs->sel_mode_ind++;
+  int n = cs->cat_info->num_modes;
+  if (cs->sel_mode_ind >= n)
+    cs->sel_mode_ind -= n;
+}
+
+void decr_curr_cat_mode_ind(NewEditorState *es) {
+  CategoryState *cs = &es->category_states[es->sel_cat_ind];
+  cs->sel_mode_ind--;
+  int n = cs->cat_info->num_modes;
+  if (cs->sel_mode_ind < 0)
+    cs->sel_mode_ind += n;
+}
+
+void select_mode_from_inds(NewEditorState *es) {
+  es->mode_info = calc_mode_from_inds(es);
+  if (es->mode_info->init_data != NULL)
+    es->mode_info->init_data(&es->data);
+}
 
 void zoom(ViewInfo *view_info, Pos2D fp, double mul) {
   *view_info = (ViewInfo){
@@ -70,32 +98,65 @@ void do_load(GeometryState *gs) {
 
 SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
   switch (key_code) {
-  case SDL_SCANCODE_ESCAPE:
-  case SDL_SCANCODE_Q:
+  case SDL_SCANCODE_W:
     return SDL_APP_SUCCESS;
-  case SDL_SCANCODE_0:
-  case SDL_SCANCODE_GRAVE:
-  case SDL_SCANCODE_M:
-    enter_move_mode(&as->es);
+  case SDL_SCANCODE_ESCAPE:
+    select_mode_from_inds(&as->nes);
+    break;
+  case SDL_SCANCODE_TAB:
+    incr_curr_cat_mode_ind(&as->nes);
+    select_mode_from_inds(&as->nes);
     break;
   case SDL_SCANCODE_1:
-  case SDL_SCANCODE_D:
-    enter_delete_mode(&as->es);
+    as->nes.sel_cat_ind = 0;
+    select_mode_from_inds(&as->nes);
     break;
   case SDL_SCANCODE_2:
-  case SDL_SCANCODE_P:
-    if (as->es.mode != EM_POINT)
-      enter_point_mode(&as->es);
-    else
-      enter_midpoint_mode(&as->es);
+    as->nes.sel_cat_ind = 1;
+    select_mode_from_inds(&as->nes);
     break;
   case SDL_SCANCODE_3:
-  case SDL_SCANCODE_L:
-    enter_line_mode(&as->es);
+    as->nes.sel_cat_ind = 2;
+    select_mode_from_inds(&as->nes);
     break;
   case SDL_SCANCODE_4:
+    as->nes.sel_cat_ind = 3;
+    select_mode_from_inds(&as->nes);
+    break;
+  case SDL_SCANCODE_M:
+    as->nes.sel_cat_ind = 0;
+    as->nes.category_states[0].sel_mode_ind = 0;
+    select_mode_from_inds(&as->nes);
+    break;
+  case SDL_SCANCODE_D:
+    as->nes.sel_cat_ind = 0;
+    as->nes.category_states[0].sel_mode_ind = 1;
+    select_mode_from_inds(&as->nes);
+    break;
+  case SDL_SCANCODE_P:
+    as->nes.sel_cat_ind = 1;
+    as->nes.category_states[0].sel_mode_ind = 0;
+    select_mode_from_inds(&as->nes);
+    break;
+  case SDL_SCANCODE_S:
+    as->nes.sel_cat_ind = 2;
+    as->nes.category_states[0].sel_mode_ind = 0;
+    select_mode_from_inds(&as->nes);
+    break;
+  case SDL_SCANCODE_L:
+    as->nes.sel_cat_ind = 2;
+    as->nes.category_states[0].sel_mode_ind = 1;
+    select_mode_from_inds(&as->nes);
+    break;
+  case SDL_SCANCODE_R:
+    as->nes.sel_cat_ind = 2;
+    as->nes.category_states[0].sel_mode_ind = 2;
+    select_mode_from_inds(&as->nes);
+    break;
   case SDL_SCANCODE_C:
-    enter_circle_mode(&as->es);
+    as->nes.sel_cat_ind = 3;
+    as->nes.category_states[0].sel_mode_ind = 0;
+    select_mode_from_inds(&as->nes);
     break;
   case SDL_SCANCODE_I: {
     PointDef *pd = alloc_and_reg_point(
@@ -114,11 +175,11 @@ SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
       return SDL_APP_FAILURE;
     break;
   }
-  case SDL_SCANCODE_S: {
+  case SDL_SCANCODE_8: {
     do_save(&as->gs);
     break;
   }
-  case SDL_SCANCODE_R: {
+  case SDL_SCANCODE_9: {
     do_load(&as->gs);
     break;
   }
@@ -240,32 +301,7 @@ SDL_AppResult on_event(AppState *as, SDL_Event *event) {
 }
 
 void render_mode_info(AppState *as) {
-  switch (as->es.mode) {
-  case EM_MOVE:
-    draw_text_to(as, "Move", WHITE, 10, 10);
-    break;
-  case EM_DELETE:
-    draw_text_to(as, "Delete", WHITE, 10, 10);
-    break;
-  case EM_POINT:
-    draw_text_to(as, "Point", WHITE, 10, 10);
-    break;
-  case EM_MIDPOINT:
-    draw_text_to(as, "Midpoint", WHITE, 10, 10);
-    break;
-  case EM_LINE:
-    draw_text_to(as, "Line", WHITE, 10, 10);
-    break;
-  case EM_CIRCLE:
-    draw_text_to(as, "Circle", WHITE, 10, 10);
-    break;
-  case EM_CIRCLE_BY_LEN:
-    draw_text_to(as, "Circle by length", WHITE, 10, 10);
-    break;
-  default:
-    draw_text_to(as, "Unknown", WHITE, 10, 10);
-    break;
-  }
+  draw_text_to(as, as->nes.mode_info->name, WHITE, 10, 10);
 }
 
 void clear_screen(AppState *as, SDL_Color color) {
@@ -407,14 +443,10 @@ void deinit_appstate(AppState *as) {
   clear_geometry_state(&as->gs);
 }
 
-ModeInfo const *get_mode(NewEditorState const *es) {
-  CategoryState const *cs = &es->category_states[es->sel_cat_ind];
-  return &cs->cat_info->modes[cs->sel_mode_ind];
-}
-
 void make_default_editor_state(NewEditorState *es) {
-  assert(editor_info.num_cats == 4);
+  assert(editor_info.num_cats <= 4);
 
+  es->num_cats = editor_info.num_cats;
   for (int i = 0; i < editor_info.num_cats; i++) {
     es->category_states[i] = (CategoryState){
         .cat_info = &editor_info.cats[i],
@@ -422,10 +454,7 @@ void make_default_editor_state(NewEditorState *es) {
     };
   }
   es->sel_cat_ind = 0;
-  ModeInfo const *info = get_mode(es);
-
-  if (info->init_data != NULL)
-    info->init_data(&es->data);
+  select_mode_from_inds(es);
 }
 
 int main(void) {

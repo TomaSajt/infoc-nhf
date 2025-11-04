@@ -62,6 +62,8 @@ typedef struct {
 typedef struct NewEditorState {
   CategoryState category_states[4]; // TODO: don't hardcode, somehow
   int sel_cat_ind;
+  int num_cats;
+  ModeInfo const *mode_info;
   EditorStateData data;
 } NewEditorState;
 
