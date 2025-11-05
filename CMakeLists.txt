@@ -29,6 +29,7 @@ add_compile_options(
     -Werror
     -include ${CMAKE_SOURCE_DIR}/debugmalloc.h
 )
+
 add_executable(infoc-nhf WIN32
     draw.c
     hover.c
