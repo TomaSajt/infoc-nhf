@@ -7,34 +7,39 @@ void circle__init_data(EditorStateData *data) { data->circle.saved = NULL; }
 bool circle__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {
   CircleModeData *data = &as->es.data.circle;
 
-  PointDef *hovered = get_hovered_point(as, w_mouse_pos);
-  if (hovered == NULL)
-    return true;
+  PointDef *pd = maybe_alloc_reg_potential_point(as, w_mouse_pos);
+  if (pd == NULL)
+    return false;
 
-  if (as->es.data.circle.saved != NULL) {
-    CircleDef *cd = alloc_and_reg_circle(
-        &as->gs, make_circle_center_point_outer_point(data->saved, hovered));
-    if (cd == NULL)
-      return false;
-    data->saved = NULL;
-  } else {
-    data->saved = hovered;
+  if (data->saved == NULL) {
+    data->saved = pd;
+    return true;
   }
 
+  CircleDef *cd = alloc_and_reg_circle(
+      &as->gs, make_circle_center_point_outer_point(data->saved, pd));
+  if (cd == NULL)
+    return false;
+
+  data->saved = NULL;
   return true;
 }
 
 bool circle__on_render(AppState *as, Pos2D const *w_mouse_pos) {
   CircleModeData *data = &as->es.data.circle;
 
-  if (data->saved == NULL)
-    return true;
+  PointDef pot;
+  PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);
 
-  PointDef cursor_point = make_point_literal(*w_mouse_pos);
-  CircleDef cursor_circle =
-      make_circle_center_point_outer_point(data->saved, &cursor_point);
+  if (data->saved != NULL) {
+    CircleDef cursor_circle =
+        make_circle_center_point_outer_point(data->saved, &pot);
+    draw_circle(as, &cursor_circle, CYAN);
+  }
 
-  draw_circle(as, &cursor_circle, CYAN);
+  if (pd == NULL) {
+    draw_point(as, &pot, CYAN);
+  }
 
   return true;
 }
