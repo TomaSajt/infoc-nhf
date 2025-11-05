@@ -46,6 +46,7 @@ add_executable(infoc-nhf WIN32
     mode/linelike.c
     mode/midpoint.c
     mode/move.c
+    mode/par_per.c
     mode/point.c
 )
 

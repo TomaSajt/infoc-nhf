@@ -32,9 +32,9 @@ bool circle__on_render(AppState *as, Pos2D const *w_mouse_pos) {
   PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);
 
   if (data->saved != NULL) {
-    CircleDef cursor_circle =
+    CircleDef pot_circle =
         make_circle_center_point_outer_point(data->saved, &pot);
-    draw_circle(as, &cursor_circle, CYAN);
+    draw_circle(as, &pot_circle, CYAN);
   }
 
   if (pd == NULL) {

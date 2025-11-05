@@ -8,19 +8,14 @@ bool linelike__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos,
                              LineExtMode ext_mode) {
   LinelikeModeData *data = &as->es.data.linelike;
 
-  if (data->saved == NULL) {
-    PointDef *pd = maybe_alloc_reg_potential_point(as, w_mouse_pos);
-    if (pd == NULL)
-      return false;
-
-    data->saved = pd;
-
-    return true;
-  }
-
   PointDef *pd = maybe_alloc_reg_potential_point(as, w_mouse_pos);
   if (pd == NULL)
     return false;
+
+  if (data->saved == NULL) {
+    data->saved = pd;
+    return true;
+  }
 
   LineDef *ld = alloc_and_reg_line(
       &as->gs, make_line_point_to_point(ext_mode, data->saved, pd));
@@ -28,7 +23,6 @@ bool linelike__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos,
     return false;
 
   data->saved = NULL;
-
   return true;
 }
 
@@ -40,8 +34,8 @@ bool linelike__on_render(AppState *as, Pos2D const *w_mouse_pos,
   PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);
 
   if (data->saved != NULL) {
-    LineDef cursor_line = make_line_point_to_point(ext_mode, data->saved, &pot);
-    draw_line(as, &cursor_line, CYAN);
+    LineDef pot_line = make_line_point_to_point(ext_mode, data->saved, &pot);
+    draw_line(as, &pot_line, CYAN);
   }
 
   // don't redraw already existing point

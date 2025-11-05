@@ -36,8 +36,8 @@ bool midpoint__on_render(AppState *as, Pos2D const *w_mouse_pos) {
   }
 
   if (data->saved != NULL) {
-    PointDef midpoint = make_point_midpoint(data->saved, &pot);
-    draw_point(as, &midpoint, CYAN);
+    PointDef pot_midpoint = make_point_midpoint(data->saved, &pot);
+    draw_point(as, &pot_midpoint, CYAN);
   }
 
   return true;

@@ -4,6 +4,7 @@
 #include "linelike.h"
 #include "midpoint.h"
 #include "move.h"
+#include "par_per.h"
 #include "point.h"
 
 ModeInfo const manage_category_modes[] = {
@@ -63,16 +64,16 @@ ModeInfo const lines_category_modes[] = {
     {
         .name = "Parallel",
         .keycode = SDLK_UNKNOWN,
-        .init_data = NULL,     // TODO
-        .on_mouse_down = NULL, // TODO
-        .on_render = NULL,     // TODO
+        .init_data = par_per__init_data,
+        .on_mouse_down = parallel__on_mouse_down,
+        .on_render = parallel__on_render,
     },
     {
         .name = "Perpendicular",
         .keycode = SDLK_UNKNOWN,
-        .init_data = NULL,     // TODO
-        .on_mouse_down = NULL, // TODO
-        .on_render = NULL,     // TODO
+        .init_data = par_per__init_data,
+        .on_mouse_down = perpendicular__on_mouse_down,
+        .on_render = perpendicular__on_render,
     },
 };
 

@@ -219,7 +219,7 @@ void eval_line(LineDef *ld) {
       ld->val.start = p->val.pos;
       ld->val.end = (Pos2D){
           .x = p->val.pos.x + (l->val.end.x - l->val.start.x),
-          .y = p->val.pos.y + (l->val.end.y - l->val.end.y),
+          .y = p->val.pos.y + (l->val.end.y - l->val.start.y),
       };
     }
     break;
@@ -234,7 +234,7 @@ void eval_line(LineDef *ld) {
     if (!ld->val.invalid) {
       ld->val.start = p->val.pos;
       ld->val.end = (Pos2D){
-          .x = p->val.pos.x + (l->val.end.y - l->val.end.y),
+          .x = p->val.pos.x + (l->val.end.y - l->val.start.y),
           .y = p->val.pos.y - (l->val.end.x - l->val.start.x),
       };
     }
