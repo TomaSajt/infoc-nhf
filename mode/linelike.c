@@ -10,12 +10,14 @@ bool linelike__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos,
 
   if (data->saved != NULL) {
     PointDef pot;
-    PointDef *hov = get_hovered_or_make_potential_point(as, w_mouse_pos, &pot);
-    PointDef *actual = hov == NULL ? alloc_and_reg_point(&as->gs, pot) : hov;
-    if (actual == NULL)
+    PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);
+    if (pd == NULL)
+      pd = alloc_and_reg_point(&as->gs, pot);
+    if (pd == NULL)
       return false;
+
     LineDef *ld = alloc_and_reg_line(
-        &as->gs, make_line_point_to_point(ext_mode, data->saved, actual));
+        &as->gs, make_line_point_to_point(ext_mode, data->saved, pd));
     if (ld == NULL)
       return false;
     data->saved = NULL;
@@ -36,11 +38,9 @@ bool linelike__on_render(AppState *as, Pos2D const *w_mouse_pos,
     return true;
 
   PointDef pot;
-  PointDef *hov = get_hovered_or_make_potential_point(as, w_mouse_pos, &pot);
-  PointDef *to_draw = hov == NULL ? &pot : hov;
-  draw_point(as, to_draw, CYAN);
-  LineDef cursor_line =
-      make_line_point_to_point(ext_mode, data->saved, to_draw);
+  get_potential_point(as, w_mouse_pos, &pot);
+  draw_point(as, &pot, CYAN);
+  LineDef cursor_line = make_line_point_to_point(ext_mode, data->saved, &pot);
 
   draw_line(as, &cursor_line, CYAN);
 

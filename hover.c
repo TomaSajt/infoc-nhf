@@ -70,12 +70,20 @@ CircleDef *get_hovered_circle(AppState const *as, Pos2D const *w_mouse_pos) {
   return best;
 }
 
-PointDef *get_hovered_or_make_potential_point(AppState const *as,
-                                              Pos2D const *w_mouse_pos,
-                                              PointDef *pot_out) {
+// Case 1: the potential point is a hovered, already existing point
+//   - return pointer to the already allocated hovered point
+//   - copy the hovered point's value *pot_out
+// Case 2: the potential point doesn't already exist
+//   - return NULL
+//   - set *pot_out to the potential point's value
+PointDef *get_potential_point(AppState const *as, Pos2D const *w_mouse_pos,
+                              PointDef *pot_out) {
   PointDef *hovered_point = get_hovered_point(as, w_mouse_pos);
-  if (hovered_point != NULL)
+  if (hovered_point != NULL) {
+    *pot_out = *hovered_point;
     return hovered_point;
+  }
+
   // TODO: implement get_hovered_lines and get_hovered_circles
   //       for line-line and circle-circle intersections
   LineDef *hovered_line = get_hovered_line(as, w_mouse_pos);
@@ -88,26 +96,31 @@ PointDef *get_hovered_or_make_potential_point(AppState const *as,
           hovered_line, hovered_circle, ILC_PROG_HIGHER);
       eval_point(&pot1);
       eval_point(&pot2);
-      double d1 = dist_from_pos(w_mouse_pos, &pot1.val.pos);
-      double d2 = dist_from_pos(w_mouse_pos, &pot2.val.pos);
-      *pot_out = d1 < d2 ? pot1 : pot2;
-      return NULL;
-    } else {
-      double prog = line_closest_prog_from_pos(
-          w_mouse_pos, &hovered_line->val.start, &hovered_line->val.end,
-          hovered_line->ext_mode);
-      *pot_out = make_point_glider_on_line(hovered_line, prog);
-      return NULL;
+      // it is not guaranteed that if we are hovering both they are actually
+      // intersecting
+      if (!pot1.val.invalid && !pot2.val.invalid) {
+
+        double d1 = dist_from_pos(w_mouse_pos, &pot1.val.pos);
+        double d2 = dist_from_pos(w_mouse_pos, &pot2.val.pos);
+        *pot_out = d1 < d2 ? pot1 : pot2;
+        return NULL;
+      }
     }
-  } else {
-    if (hovered_circle != NULL) {
-      double prog = circle_closest_prog_from_pos(w_mouse_pos,
-                                                 &hovered_circle->val.center);
-      *pot_out = make_point_glider_on_circle(hovered_circle, prog);
-      return NULL;
-    } else {
-      *pot_out = make_point_literal(*w_mouse_pos);
-      return NULL;
-    }
+
+    double prog = line_closest_prog_from_pos(
+        w_mouse_pos, &hovered_line->val.start, &hovered_line->val.end,
+        hovered_line->ext_mode);
+    *pot_out = make_point_glider_on_line(hovered_line, prog);
+    return NULL;
   }
+
+  if (hovered_circle != NULL) {
+    double prog =
+        circle_closest_prog_from_pos(w_mouse_pos, &hovered_circle->val.center);
+    *pot_out = make_point_glider_on_circle(hovered_circle, prog);
+    return NULL;
+  }
+
+  *pot_out = make_point_literal(*w_mouse_pos);
+  return NULL;
 }
