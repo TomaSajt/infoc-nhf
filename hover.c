@@ -1,10 +1,7 @@
 #include "hover.h"
-
-#include "geom/util.h"
-
-// TODO: this is only here for the hitbox radius
-#include "draw.h"
+#include "draw.h" // TODO: this is only here for the hitbox radius
 #include "geom/defs.h"
+#include "geom/util.h"
 
 PointDef *get_hovered_point(AppState const *as, Pos2D const *w_mouse_pos) {
   PointDef *best = NULL;

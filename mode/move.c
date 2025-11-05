@@ -1,7 +1,7 @@
 #include "move.h"
-
 #include "../geom/util.h"
 #include "../hover.h"
+
 #include <stdio.h>
 
 void try_move_point_to_pos(PointDef *pd, Pos2D const *pos) {

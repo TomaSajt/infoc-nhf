@@ -1,5 +1,4 @@
 #include "delete.h"
-
 #include "../hover.h"
 
 bool delete__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {

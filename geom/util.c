@@ -1,5 +1,4 @@
 #include "util.h"
-
 #include "defs.h"
 
 #include <math.h>

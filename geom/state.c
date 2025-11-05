@@ -1,7 +1,6 @@
 #include "state.h"
-
-#include "util.h"
 #include "defs.h"
+#include "util.h"
 
 #include <stdlib.h>
 

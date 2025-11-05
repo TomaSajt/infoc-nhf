@@ -1,5 +1,4 @@
 #include "point.h"
-
 #include "../draw.h"
 #include "../hover.h"
 

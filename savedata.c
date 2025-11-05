@@ -1,5 +1,4 @@
 #include "savedata.h"
-
 #include "geom/defs.h"
 
 #include <stdio.h>

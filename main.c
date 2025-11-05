@@ -1,18 +1,13 @@
-#include "SDL3/SDL_scancode.h"
 #include "draw.h"
-#include "hover.h"
+#include "geom/defs.h"
+#include "geom/state.h"
 #include "mode/defs.h"
 #include "savedata.h"
 #include "state.h"
 
-#include "geom/defs.h"
-#include "geom/state.h"
-
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-
 #include <SDL3_ttf/SDL_ttf.h>
-
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>

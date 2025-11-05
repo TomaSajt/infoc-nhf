@@ -1,9 +1,9 @@
 #ifndef MODE_CATEGORY_DEFS_H
 #define MODE_CATEGORY_DEFS_H
 
-#include <SDL3/SDL_keycode.h>
-
 #include "../geom/defs.h"
+
+#include <SDL3/SDL_keycode.h>
 
 // TODO: is there anything better to avoid circular imports?
 typedef struct AppState AppState;

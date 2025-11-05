@@ -1,7 +1,7 @@
 #include "defs.h"
 #include "circle.h"
 #include "delete.h"
-#include "line.h"
+#include "linelike.h"
 #include "midpoint.h"
 #include "move.h"
 #include "point.h"

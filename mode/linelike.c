@@ -1,8 +1,6 @@
-#include "line.h"
-
+#include "linelike.h"
 #include "../draw.h"
 #include "../hover.h"
-#include "defs.h"
 
 void linelike__init_data(EditorStateData *data) { data->linelike.saved = NULL; }
 

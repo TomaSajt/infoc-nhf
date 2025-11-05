@@ -1,5 +1,4 @@
 #include "midpoint.h"
-
 #include "../draw.h"
 #include "../hover.h"
 

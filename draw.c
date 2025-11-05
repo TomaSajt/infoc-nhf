@@ -1,5 +1,4 @@
 #include "draw.h"
-
 #include "geom/util.h"
 
 #include <SDL3_gfxPrimitives.h>
