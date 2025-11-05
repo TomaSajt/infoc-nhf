@@ -124,3 +124,14 @@ PointDef *get_potential_point(AppState const *as, Pos2D const *w_mouse_pos,
   *pot_out = make_point_literal(*w_mouse_pos);
   return NULL;
 }
+
+PointDef *maybe_alloc_reg_potential_point(AppState *as,
+                                          Pos2D const *w_mouse_pos) {
+  PointDef pot;
+  PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);
+  if (pd != NULL)
+    return pd;
+
+  // maybe returns NULL
+  return alloc_and_reg_point(&as->gs, pot);
+}

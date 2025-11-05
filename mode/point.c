@@ -3,14 +3,7 @@
 #include "../hover.h"
 
 bool point__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {
-  PointDef pot;
-  PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);
-
-  // don't do anything if the potential point already exists
-  if (pd != NULL)
-    return true;
-
-  pd = alloc_and_reg_point(&as->gs, pot);
+  PointDef *pd = maybe_alloc_reg_potential_point(as, w_mouse_pos);
   if (pd == NULL)
     return false;
 

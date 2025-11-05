@@ -9,10 +9,7 @@ bool linelike__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos,
   LinelikeModeData *data = &as->es.data.linelike;
 
   if (data->saved == NULL) {
-    PointDef pot;
-    PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);
-    if (pd == NULL)
-      pd = alloc_and_reg_point(&as->gs, pot);
+    PointDef *pd = maybe_alloc_reg_potential_point(as, w_mouse_pos);
     if (pd == NULL)
       return false;
 
@@ -21,10 +18,7 @@ bool linelike__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos,
     return true;
   }
 
-  PointDef pot;
-  PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);
-  if (pd == NULL)
-    pd = alloc_and_reg_point(&as->gs, pot);
+  PointDef *pd = maybe_alloc_reg_potential_point(as, w_mouse_pos);
   if (pd == NULL)
     return false;
 

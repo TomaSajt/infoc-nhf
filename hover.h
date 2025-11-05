@@ -10,4 +10,6 @@ CircleDef *get_hovered_circle(AppState const *as, Pos2D const *w_mouse_pos);
 PointDef *get_potential_point(AppState const *as, Pos2D const *w_mouse_pos,
                               PointDef *pot_out);
 
+PointDef *maybe_alloc_reg_potential_point(AppState *as,
+                                          Pos2D const *w_mouse_pos);
 #endif
