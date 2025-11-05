@@ -27,23 +27,6 @@ typedef enum {
   EM_CIRCLE_BY_LEN,
 } EditorMode;
 
-typedef enum {
-  FE_NONE = 0,
-  FE_POINT = 1,
-  FE_LINE = 2,
-  FE_CIRCLE = 3,
-} FocusedElemType;
-
-typedef struct {
-  EditorMode mode;
-  FocusedElemType elem_type;
-  union {
-    PointDef *p;
-    LineDef *l;
-    CircleDef *c;
-  };
-} EditorState;
-
 typedef struct AppState {
   SDL_Window *window;
   SDL_Renderer *renderer;
@@ -51,7 +34,6 @@ typedef struct AppState {
   ViewInfo view_info;
   GeometryState gs;
   EditorState es;
-  NewEditorState nes;
 } AppState;
 
 #endif

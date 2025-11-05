@@ -21,12 +21,12 @@
 #define SDL_WINDOW_WIDTH 1000
 #define SDL_WINDOW_HEIGHT 600
 
-ModeInfo const *calc_mode_from_inds(NewEditorState const *es) {
+ModeInfo const *calc_mode_from_inds(EditorState const *es) {
   CategoryState const *cs = &es->category_states[es->sel_cat_ind];
   return &cs->cat_info->modes[cs->sel_mode_ind];
 }
 
-void incr_curr_cat_mode_ind(NewEditorState *es) {
+void incr_curr_cat_mode_ind(EditorState *es) {
   CategoryState *cs = &es->category_states[es->sel_cat_ind];
   cs->sel_mode_ind++;
   int n = cs->cat_info->num_modes;
@@ -34,7 +34,7 @@ void incr_curr_cat_mode_ind(NewEditorState *es) {
     cs->sel_mode_ind -= n;
 }
 
-void decr_curr_cat_mode_ind(NewEditorState *es) {
+void decr_curr_cat_mode_ind(EditorState *es) {
   CategoryState *cs = &es->category_states[es->sel_cat_ind];
   cs->sel_mode_ind--;
   int n = cs->cat_info->num_modes;
@@ -42,7 +42,7 @@ void decr_curr_cat_mode_ind(NewEditorState *es) {
     cs->sel_mode_ind += n;
 }
 
-void select_mode_from_inds(NewEditorState *es) {
+void select_mode_from_inds(EditorState *es) {
   es->mode_info = calc_mode_from_inds(es);
   if (es->mode_info->init_data != NULL)
     es->mode_info->init_data(&es->data);
@@ -94,62 +94,62 @@ SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
   case SDL_SCANCODE_W:
     return SDL_APP_SUCCESS;
   case SDL_SCANCODE_ESCAPE:
-    select_mode_from_inds(&as->nes);
+    select_mode_from_inds(&as->es);
     break;
   case SDL_SCANCODE_TAB:
-    incr_curr_cat_mode_ind(&as->nes);
-    select_mode_from_inds(&as->nes);
+    incr_curr_cat_mode_ind(&as->es);
+    select_mode_from_inds(&as->es);
     break;
   case SDL_SCANCODE_1:
-    as->nes.sel_cat_ind = 0;
-    select_mode_from_inds(&as->nes);
+    as->es.sel_cat_ind = 0;
+    select_mode_from_inds(&as->es);
     break;
   case SDL_SCANCODE_2:
-    as->nes.sel_cat_ind = 1;
-    select_mode_from_inds(&as->nes);
+    as->es.sel_cat_ind = 1;
+    select_mode_from_inds(&as->es);
     break;
   case SDL_SCANCODE_3:
-    as->nes.sel_cat_ind = 2;
-    select_mode_from_inds(&as->nes);
+    as->es.sel_cat_ind = 2;
+    select_mode_from_inds(&as->es);
     break;
   case SDL_SCANCODE_4:
-    as->nes.sel_cat_ind = 3;
-    select_mode_from_inds(&as->nes);
+    as->es.sel_cat_ind = 3;
+    select_mode_from_inds(&as->es);
     break;
   case SDL_SCANCODE_M:
-    as->nes.sel_cat_ind = 0;
-    as->nes.category_states[0].sel_mode_ind = 0;
-    select_mode_from_inds(&as->nes);
+    as->es.sel_cat_ind = 0;
+    as->es.category_states[0].sel_mode_ind = 0;
+    select_mode_from_inds(&as->es);
     break;
   case SDL_SCANCODE_D:
-    as->nes.sel_cat_ind = 0;
-    as->nes.category_states[0].sel_mode_ind = 1;
-    select_mode_from_inds(&as->nes);
+    as->es.sel_cat_ind = 0;
+    as->es.category_states[0].sel_mode_ind = 1;
+    select_mode_from_inds(&as->es);
     break;
   case SDL_SCANCODE_P:
-    as->nes.sel_cat_ind = 1;
-    as->nes.category_states[0].sel_mode_ind = 0;
-    select_mode_from_inds(&as->nes);
+    as->es.sel_cat_ind = 1;
+    as->es.category_states[0].sel_mode_ind = 0;
+    select_mode_from_inds(&as->es);
     break;
   case SDL_SCANCODE_S:
-    as->nes.sel_cat_ind = 2;
-    as->nes.category_states[0].sel_mode_ind = 0;
-    select_mode_from_inds(&as->nes);
+    as->es.sel_cat_ind = 2;
+    as->es.category_states[0].sel_mode_ind = 0;
+    select_mode_from_inds(&as->es);
     break;
   case SDL_SCANCODE_L:
-    as->nes.sel_cat_ind = 2;
-    as->nes.category_states[0].sel_mode_ind = 1;
-    select_mode_from_inds(&as->nes);
+    as->es.sel_cat_ind = 2;
+    as->es.category_states[0].sel_mode_ind = 1;
+    select_mode_from_inds(&as->es);
     break;
   case SDL_SCANCODE_R:
-    as->nes.sel_cat_ind = 2;
-    as->nes.category_states[0].sel_mode_ind = 2;
-    select_mode_from_inds(&as->nes);
+    as->es.sel_cat_ind = 2;
+    as->es.category_states[0].sel_mode_ind = 2;
+    select_mode_from_inds(&as->es);
     break;
   case SDL_SCANCODE_C:
-    as->nes.sel_cat_ind = 3;
-    as->nes.category_states[0].sel_mode_ind = 0;
-    select_mode_from_inds(&as->nes);
+    as->es.sel_cat_ind = 3;
+    as->es.category_states[0].sel_mode_ind = 0;
+    select_mode_from_inds(&as->es);
     break;
   case SDL_SCANCODE_I: {
     PointDef *pd = alloc_and_reg_point(
@@ -194,7 +194,7 @@ SDL_AppResult on_mouse_move(AppState *as, SDL_MouseMotionEvent *motion) {
       pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
 
   bool (*mode__on_mouse_move)(AppState *as, Pos2D const *w_mouse_pos) =
-      as->nes.mode_info->on_mouse_move;
+      as->es.mode_info->on_mouse_move;
 
   if (mode__on_mouse_move != NULL)
     if (!mode__on_mouse_move(as, &w_mouse_pos))
@@ -212,7 +212,7 @@ SDL_AppResult on_mouse_button_down(AppState *as, SDL_MouseButtonEvent *event) {
       pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
 
   bool (*mode__on_mouse_down)(AppState *as, Pos2D const *w_mouse_pos) =
-      as->nes.mode_info->on_mouse_down;
+      as->es.mode_info->on_mouse_down;
 
   if (mode__on_mouse_down != NULL)
     if (!mode__on_mouse_down(as, &w_mouse_pos))
@@ -225,7 +225,7 @@ SDL_AppResult on_mouse_button_up(AppState *as, SDL_MouseButtonEvent *event) {
   if (event->button != 1)
     return SDL_APP_CONTINUE;
 
-  bool (*mode__on_mouse_up)(AppState *as) = as->nes.mode_info->on_mouse_up;
+  bool (*mode__on_mouse_up)(AppState *as) = as->es.mode_info->on_mouse_up;
   if (mode__on_mouse_up != NULL)
     if (!mode__on_mouse_up(as))
       return SDL_APP_FAILURE;
@@ -261,7 +261,7 @@ SDL_AppResult on_event(AppState *as, SDL_Event *event) {
 }
 
 void render_mode_info(AppState *as) {
-  draw_text_to(as, as->nes.mode_info->name, WHITE, 10, 10);
+  draw_text_to(as, as->es.mode_info->name, WHITE, 10, 10);
 }
 
 void clear_screen(AppState *as, SDL_Color color) {
@@ -298,44 +298,25 @@ SDL_AppResult on_render(AppState *as) {
   }
 
   bool (*mode__on_render)(AppState *as, Pos2D const *w_mouse_pos) =
-      as->nes.mode_info->on_render;
+      as->es.mode_info->on_render;
 
   if (mode__on_render != NULL)
     if (!mode__on_render(as, &w_mouse_pos))
       return SDL_APP_FAILURE;
 
-  PointDef *hovered_point = get_hovered_point(as, &w_mouse_pos);
-  LineDef *hovered_line = get_hovered_line(as, &w_mouse_pos);
-  CircleDef *hovered_circle = get_hovered_circle(as, &w_mouse_pos);
-
   for (int i = 0; i < as->gs.p_n; i++) {
     PointDef *pd = as->gs.point_defs[i];
-    if (pd != hovered_point) {
-      draw_point(as, pd, WHITE);
-    }
-  }
-  if (hovered_point != NULL) {
-    draw_point(as, hovered_point, RED);
+    draw_point(as, pd, WHITE);
   }
 
   for (int i = 0; i < as->gs.l_n; i++) {
     LineDef *ld = as->gs.line_defs[i];
-    if (ld != hovered_line) {
-      draw_line(as, ld, WHITE);
-    }
-  }
-  if (hovered_line != NULL) {
-    draw_line(as, hovered_line, RED);
+    draw_line(as, ld, WHITE);
   }
 
   for (int i = 0; i < as->gs.c_n; i++) {
     CircleDef *cd = as->gs.circle_defs[i];
-    if (cd != hovered_circle) {
-      draw_circle(as, cd, WHITE);
-    }
-  }
-  if (hovered_circle != NULL) {
-    draw_circle(as, hovered_circle, RED);
+    draw_circle(as, cd, WHITE);
   }
 
   SDL_RenderPresent(as->renderer);
@@ -389,7 +370,7 @@ void deinit_appstate(AppState *as) {
   clear_geometry_state(&as->gs);
 }
 
-void make_default_editor_state(NewEditorState *es) {
+void make_default_editor_state(EditorState *es) {
   assert(editor_info.num_cats <= 4);
 
   es->num_cats = editor_info.num_cats;
@@ -422,13 +403,8 @@ int main(void) {
               .circle_defs = {0},
               .c_n = 0,
           },
-      .es =
-          {
-              .mode = EM_MOVE,
-              .elem_type = FE_NONE,
-          },
   };
-  make_default_editor_state(&appstate.nes);
+  make_default_editor_state(&appstate.es);
 
   SDL_AppResult rc = init_app(&appstate);
 

@@ -7,27 +7,39 @@
 
 // TODO: is there anything better to avoid circular imports?
 typedef struct AppState AppState;
-typedef struct NewEditorState NewEditorState;
+typedef struct EditorState EditorState;
+
+typedef struct MoveModeData {
+  PointDef *grabbed;
+} MoveModeData;
+
+typedef struct MidpointModeData {
+  PointDef *saved;
+} MidpointModeData;
+
+typedef struct LinelikeModeData {
+  PointDef *saved;
+} LinelikeModeData;
+
+typedef struct ParPerModeData {
+  LineDef *saved;
+} ParPerModeData;
+
+typedef struct CircleModeData {
+  PointDef *saved;
+} CircleModeData;
+
+typedef struct CircleByLenModeData {
+  LineDef *saved;
+} CircleByLenModeData;
 
 typedef union {
-  struct {
-    PointDef *grabbed;
-  } move;
-  struct {
-    PointDef *saved;
-  } midpoint;
-  struct {
-    PointDef *saved;
-  } line;
-  struct {
-    LineDef *saved;
-  } par_per;
-  struct {
-    PointDef *saved;
-  } circle;
-  struct {
-    LineDef *saved;
-  } circle_by_len;
+  MoveModeData move;
+  MidpointModeData midpoint;
+  LinelikeModeData linelike;
+  ParPerModeData par_per;
+  CircleModeData circle;
+  CircleByLenModeData circle_by_len;
 } EditorStateData;
 
 typedef struct {
@@ -59,12 +71,12 @@ typedef struct {
   int sel_mode_ind;
 } CategoryState;
 
-typedef struct NewEditorState {
+typedef struct EditorState {
   CategoryState category_states[4]; // TODO: don't hardcode, somehow
   int sel_cat_ind;
   int num_cats;
   ModeInfo const *mode_info;
   EditorStateData data;
-} NewEditorState;
+} EditorState2;
 
 #endif

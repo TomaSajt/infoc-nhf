@@ -3,8 +3,6 @@
 #include "../draw.h"
 #include "../hover.h"
 
-void enter_point_mode(EditorState *es) { es->mode = EM_POINT; }
-
 bool point__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {
   PointDef pot;
   PointDef *hov = get_hovered_or_make_potential_point(as, w_mouse_pos, &pot);
@@ -25,5 +23,6 @@ bool point__on_render(AppState *as, Pos2D const *w_mouse_pos) {
     return true;
 
   draw_point(as, &pot, CYAN);
+
   return true;
 }

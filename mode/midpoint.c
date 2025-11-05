@@ -5,56 +5,38 @@
 
 void midpoint__init_data(EditorStateData *data) { data->midpoint.saved = NULL; }
 
-void enter_midpoint_mode(EditorState *es) {
-  es->mode = EM_MIDPOINT;
-  es->elem_type = FE_NONE;
-}
-
-LineDef *get_hovered_seg(AppState *as, Pos2D const *w_mouse_pos) {
-  LineDef *hovered_line = get_hovered_line(as, w_mouse_pos);
-  if (hovered_line == NULL)
-    return NULL;
-
-  if (hovered_line->ext_mode != L_EXT_SEGMENT)
-    return NULL;
-
-  return hovered_line;
-}
-
 bool midpoint__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {
+  MidpointModeData *data = &as->es.data.midpoint;
+
+  // TODO: use potential point
   PointDef *hovered_p = get_hovered_point(as, w_mouse_pos);
-  if (hovered_p != NULL) {
-    if (as->es.elem_type == FE_POINT) {
-      PointDef *pd = alloc_and_reg_point(
-          &as->gs, make_point_midpoint(as->es.p, hovered_p));
-      if (pd == NULL)
-        return false;
-      as->es.elem_type = FE_NONE;
-    } else {
-      as->es.elem_type = FE_POINT;
-      as->es.p = hovered_p;
-    }
-  } else {
-    if (as->es.elem_type == FE_NONE) {
-      LineDef *hovered_seg = get_hovered_seg(as, w_mouse_pos);
-      if (hovered_seg != NULL) {
-        PointDef *pd = alloc_and_reg_point(
-            &as->gs, make_point_midpoint(hovered_seg->point_to_point.p1,
-                                         hovered_seg->point_to_point.p2));
-        if (pd == NULL)
-          return false;
-      }
-    }
+  if (hovered_p == NULL)
+    return true;
+
+  if (data->saved == NULL) {
+    data->saved = hovered_p;
+    return true;
   }
+
+  PointDef *pd =
+      alloc_and_reg_point(&as->gs, make_point_midpoint(data->saved, hovered_p));
+  if (pd == NULL)
+    return false;
+
+  data->saved = NULL;
+
   return true;
 }
 
 bool midpoint__on_render(AppState *as, Pos2D const *w_mouse_pos) {
-  if (as->es.elem_type != FE_POINT)
+  MidpointModeData *data = &as->es.data.midpoint;
+
+  if (data->saved == NULL)
     return true;
 
+  // TODO: use potential point
   PointDef cursor_point = make_point_literal(*w_mouse_pos);
-  PointDef midpoint = make_point_midpoint(as->es.p, &cursor_point);
+  PointDef midpoint = make_point_midpoint(data->saved, &cursor_point);
   draw_point(as, &midpoint, CYAN);
 
   return true;

@@ -3,8 +3,6 @@
 
 #include "../state.h"
 
-void enter_line_mode(EditorState *es);
-
 void linelike__init_data(EditorStateData *data);
 
 bool segment__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos);

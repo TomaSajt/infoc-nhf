@@ -32,13 +32,10 @@ void try_move_point_to_pos(PointDef *pd, Pos2D const *pos) {
 
 void move__init_data(EditorStateData *data) { data->move.grabbed = NULL; }
 
-void enter_move_mode(EditorState *es) {
-  es->elem_type = FE_NONE;
-  es->mode = EM_MOVE;
-}
-
 bool move__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {
-  if (as->es.elem_type != FE_NONE) {
+  MoveModeData *data = &as->es.data.move;
+
+  if (data->grabbed != NULL) {
     printf("Got mousedown even though an element was already grabbed");
     return true;
   }
@@ -48,28 +45,26 @@ bool move__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {
   if (hovered_point == NULL)
     return true;
 
-  as->es.elem_type = FE_POINT;
-  as->es.p = hovered_point;
+  data->grabbed = hovered_point;
 
   return true;
 }
 
 bool move__on_mouse_move(AppState *as, Pos2D const *w_mouse_pos) {
-  if (as->es.elem_type == FE_NONE)
+
+  MoveModeData *data = &as->es.data.move;
+
+  if (data->grabbed == NULL)
     return true;
 
-  if (as->es.elem_type != FE_POINT) {
-    // TODO: maybe implement
-    printf("Moving is only implemented for points!\n");
-    return true;
-  }
-  try_move_point_to_pos(as->es.p, w_mouse_pos);
+  try_move_point_to_pos(data->grabbed, w_mouse_pos);
   mark_everyting_dirty(&as->gs);
 
   return true;
 }
 
 bool move__on_mouse_up(AppState *as) {
-  as->es.elem_type = FE_NONE;
+  MoveModeData *data = &as->es.data.move;
+  data->grabbed = NULL;
   return true;
 }
