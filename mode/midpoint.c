@@ -7,36 +7,38 @@ void midpoint__init_data(EditorStateData *data) { data->midpoint.saved = NULL; }
 bool midpoint__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {
   MidpointModeData *data = &as->es.data.midpoint;
 
-  // TODO: use potential point
-  PointDef *hovered_p = get_hovered_point(as, w_mouse_pos);
-  if (hovered_p == NULL)
-    return true;
-
-  if (data->saved == NULL) {
-    data->saved = hovered_p;
-    return true;
-  }
-
-  PointDef *pd =
-      alloc_and_reg_point(&as->gs, make_point_midpoint(data->saved, hovered_p));
+  PointDef *pd = maybe_alloc_reg_potential_point(as, w_mouse_pos);
   if (pd == NULL)
     return false;
 
-  data->saved = NULL;
+  if (data->saved == NULL) {
+    data->saved = pd;
+    return true;
+  }
 
+  PointDef *mid_pd =
+      alloc_and_reg_point(&as->gs, make_point_midpoint(data->saved, pd));
+  if (mid_pd == NULL)
+    return false;
+
+  data->saved = NULL;
   return true;
 }
 
 bool midpoint__on_render(AppState *as, Pos2D const *w_mouse_pos) {
   MidpointModeData *data = &as->es.data.midpoint;
 
-  if (data->saved == NULL)
-    return true;
+  PointDef pot;
+  PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);
 
-  // TODO: use potential point
-  PointDef cursor_point = make_point_literal(*w_mouse_pos);
-  PointDef midpoint = make_point_midpoint(data->saved, &cursor_point);
-  draw_point(as, &midpoint, CYAN);
+  if (pd == NULL) {
+    draw_point(as, &pot, CYAN);
+  }
+
+  if (data->saved != NULL) {
+    PointDef midpoint = make_point_midpoint(data->saved, &pot);
+    draw_point(as, &midpoint, CYAN);
+  }
 
   return true;
 }

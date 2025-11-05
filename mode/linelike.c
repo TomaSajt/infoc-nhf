@@ -45,10 +45,9 @@ bool linelike__on_render(AppState *as, Pos2D const *w_mouse_pos,
   }
 
   // don't redraw already existing point
-  if (pd != NULL)
-    return true;
-
-  draw_point(as, &pot, CYAN);
+  if (pd == NULL) {
+    draw_point(as, &pot, CYAN);
+  }
 
   return true;
 }
