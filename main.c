@@ -226,12 +226,14 @@ void render_mode_info(AppState *as) {
   for (int i = 0; i < as->es.num_cats; i++) {
     CategoryState *cat_state = &as->es.category_states[i];
     bool is_cat_sel = i == as->es.sel_cat_ind;
+    draw_text_to(as, cat_state->cat_info->name, is_cat_sel ? GREEN : CYAN,
+                 10 + 150 * i, 10);
     for (int j = 0; j < cat_state->cat_info->num_modes; j++) {
       ModeInfo const *mode_info = &cat_state->cat_info->modes[j];
       bool is_mode_sel_in_cat = j == cat_state->sel_mode_ind;
       SDL_Color color = is_cat_sel ? (is_mode_sel_in_cat ? GREEN : YELLOW)
                                    : (is_mode_sel_in_cat ? CYAN : BLUE);
-      draw_text_to(as, mode_info->name, color, 10 + 150 * i, 10 + 30 * j);
+      draw_text_to(as, mode_info->name, color, 10 + 150 * i, 10 + 30 * (j + 1));
     }
   }
 }
