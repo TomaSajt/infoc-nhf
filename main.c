@@ -223,7 +223,17 @@ SDL_AppResult on_event(AppState *as, SDL_Event *event) {
 }
 
 void render_mode_info(AppState *as) {
-  draw_text_to(as, as->es.mode_info->name, WHITE, 10, 10);
+  for (int i = 0; i < as->es.num_cats; i++) {
+    CategoryState *cat_state = &as->es.category_states[i];
+    bool is_cat_sel = i == as->es.sel_cat_ind;
+    for (int j = 0; j < cat_state->cat_info->num_modes; j++) {
+      ModeInfo const *mode_info = &cat_state->cat_info->modes[j];
+      bool is_mode_sel_in_cat = j == cat_state->sel_mode_ind;
+      SDL_Color color = is_cat_sel ? (is_mode_sel_in_cat ? GREEN : YELLOW)
+                                   : (is_mode_sel_in_cat ? CYAN : BLUE);
+      draw_text_to(as, mode_info->name, color, 10 + 150 * i, 10 + 30 * j);
+    }
+  }
 }
 
 void clear_screen(AppState *as, SDL_Color color) {
@@ -304,7 +314,7 @@ SDL_AppResult init_app(AppState *as) {
     return SDL_APP_FAILURE;
   }
 
-  as->font = TTF_OpenFont("./fonts/liberation/LiberationSerif-Regular.ttf", 32);
+  as->font = TTF_OpenFont("./fonts/liberation/LiberationSerif-Regular.ttf", 24);
   if (as->font == NULL) {
     printf("Font not found!\n");
     return SDL_APP_FAILURE;
