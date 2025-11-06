@@ -1,5 +1,6 @@
 #include "defs.h"
 #include "circle.h"
+#include "circle_by_len.h"
 #include "delete.h"
 #include "linelike.h"
 #include "midpoint.h"
@@ -88,9 +89,9 @@ ModeInfo const circles_category_modes[] = {
     {
         .name = "Circle by len",
         .keycode = SDLK_UNKNOWN,
-        .init_data = NULL,     // TODO
-        .on_mouse_down = NULL, // TODO
-        .on_render = NULL,     // TODO
+        .init_data = circle_by_len__init_data,
+        .on_mouse_down = circle_by_len__on_mouse_down,
+        .on_render = circle_by_len__on_render,
     },
 };
 

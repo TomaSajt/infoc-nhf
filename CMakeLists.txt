@@ -42,6 +42,7 @@ add_executable(infoc-nhf WIN32
 
     mode/defs.c
     mode/circle.c
+    mode/circle_by_len.c
     mode/delete.c
     mode/linelike.c
     mode/midpoint.c
