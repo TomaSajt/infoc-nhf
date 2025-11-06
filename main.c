@@ -1,4 +1,3 @@
-#include "SDL3/SDL_init.h"
 #include "draw.h"
 #include "geom/defs.h"
 #include "geom/state.h"
@@ -12,10 +11,6 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
-
-#define SDL_WINDOW_WIDTH 1000
-#define SDL_WINDOW_HEIGHT 600
 
 ModeInfo const *calc_mode_from_inds(EditorState const *es) {
   CategoryState const *cs = &es->category_states[es->sel_cat_ind];
@@ -91,6 +86,10 @@ void do_load(AppState *as) {
 }
 
 SDL_AppResult on_key_down(AppState *as, SDL_Keycode key_code) {
+  // we use SDLK_UNKNOWN as the "No keybind" marker for a mode,
+  // so even if we somehow got this keycode, we shouldn't actually do anything
+  if (key_code == SDLK_UNKNOWN)
+    return SDL_APP_CONTINUE;
 
   for (int i = 0; i < as->es.num_cats; i++) {
     CategoryInfo const *cat_info = as->es.category_states[i].cat_info;
@@ -160,12 +159,10 @@ SDL_AppResult on_mouse_move(AppState *as, SDL_MouseMotionEvent *motion) {
   Pos2D w_mouse_pos =
       pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
 
-  bool (*mode__on_mouse_move)(AppState *as, Pos2D const *w_mouse_pos) =
-      as->es.mode_info->on_mouse_move;
-
-  if (mode__on_mouse_move != NULL)
-    if (!mode__on_mouse_move(as, &w_mouse_pos))
+  if (as->es.mode_info->on_mouse_move != NULL) {
+    if (!as->es.mode_info->on_mouse_move(as, &w_mouse_pos))
       return SDL_APP_FAILURE;
+  }
 
   return SDL_APP_CONTINUE;
 }
@@ -178,12 +175,10 @@ SDL_AppResult on_mouse_button_down(AppState *as, SDL_MouseButtonEvent *event) {
   Pos2D w_mouse_pos =
       pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
 
-  bool (*mode__on_mouse_down)(AppState *as, Pos2D const *w_mouse_pos) =
-      as->es.mode_info->on_mouse_down;
-
-  if (mode__on_mouse_down != NULL)
-    if (!mode__on_mouse_down(as, &w_mouse_pos))
+  if (as->es.mode_info->on_mouse_down != NULL) {
+    if (!as->es.mode_info->on_mouse_down(as, &w_mouse_pos))
       return SDL_APP_FAILURE;
+  }
 
   return SDL_APP_CONTINUE;
 }
@@ -192,10 +187,10 @@ SDL_AppResult on_mouse_button_up(AppState *as, SDL_MouseButtonEvent *event) {
   if (event->button != 1)
     return SDL_APP_CONTINUE;
 
-  bool (*mode__on_mouse_up)(AppState *as) = as->es.mode_info->on_mouse_up;
-  if (mode__on_mouse_up != NULL)
-    if (!mode__on_mouse_up(as))
+  if (as->es.mode_info->on_mouse_up != NULL) {
+    if (!as->es.mode_info->on_mouse_up(as))
       return SDL_APP_FAILURE;
+  }
 
   return SDL_APP_CONTINUE;
 }
@@ -264,12 +259,10 @@ SDL_AppResult on_render(AppState *as) {
         pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
   }
 
-  bool (*mode__on_render)(AppState *as, Pos2D const *w_mouse_pos) =
-      as->es.mode_info->on_render;
-
-  if (mode__on_render != NULL)
-    if (!mode__on_render(as, &w_mouse_pos))
+  if (as->es.mode_info->on_render != NULL) {
+    if (!as->es.mode_info->on_render(as, &w_mouse_pos))
       return SDL_APP_FAILURE;
+  }
 
   for (int i = 0; i < as->gs.p_n; i++) {
     PointDef *pd = as->gs.point_defs[i];
@@ -302,15 +295,15 @@ SDL_AppResult init_app(AppState *as) {
 
   const int window_flags = SDL_WINDOW_RESIZABLE;
 
-  if (!SDL_CreateWindowAndRenderer("Geometry", SDL_WINDOW_WIDTH,
-                                   SDL_WINDOW_HEIGHT, window_flags, &as->window,
-                                   &as->renderer)) {
+  if (!SDL_CreateWindowAndRenderer("NHF Geometry", 1000, 600, window_flags,
+                                   &as->window, &as->renderer)) {
     return SDL_APP_FAILURE;
   }
 
   if (!TTF_Init()) {
     return SDL_APP_FAILURE;
   }
+
   as->font = TTF_OpenFont("./fonts/liberation/LiberationSerif-Regular.ttf", 32);
   if (as->font == NULL) {
     printf("Font not found!\n");
