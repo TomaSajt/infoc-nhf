@@ -1,3 +1,4 @@
+#include "SDL3/SDL_init.h"
 #include "draw.h"
 #include "geom/defs.h"
 #include "geom/state.h"
@@ -37,10 +38,14 @@ void decr_curr_cat_mode_ind(EditorState *es) {
     cs->sel_mode_ind += n;
 }
 
-void select_mode_from_inds(EditorState *es) {
-  es->mode_info = calc_mode_from_inds(es);
+void reset_mode_data(EditorState *es) {
   if (es->mode_info->init_data != NULL)
     es->mode_info->init_data(&es->data);
+}
+
+void select_mode_from_inds(EditorState *es) {
+  es->mode_info = calc_mode_from_inds(es);
+  reset_mode_data(es);
 }
 
 void zoom(ViewInfo *view_info, Pos2D fp, double mul) {
@@ -65,15 +70,16 @@ void do_save(GeometryState const *gs) {
   }
 }
 
-void do_load(GeometryState *gs) {
+void do_load(AppState *as) {
   SDL_Log("Loading...\n");
   FILE *handle = fopen("save.dat", "r");
   if (handle != NULL) {
     GeometryState new_gs;
     bool res = load_from_file(handle, &new_gs);
     if (res) {
-      clear_geometry_state(gs);
-      *gs = new_gs;
+      clear_geometry_state(&as->gs);
+      as->gs = new_gs;
+      reset_mode_data(&as->es);
       printf("Load successful\n");
     } else {
       printf("Load failed\n");
@@ -84,69 +90,35 @@ void do_load(GeometryState *gs) {
   }
 }
 
-SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
+SDL_AppResult on_key_down(AppState *as, SDL_Keycode key_code) {
+
+  for (int i = 0; i < as->es.num_cats; i++) {
+    CategoryInfo const *cat_info = as->es.category_states[i].cat_info;
+    if (cat_info->keycode == key_code) {
+      as->es.sel_cat_ind = i;
+      select_mode_from_inds(&as->es);
+      return SDL_APP_CONTINUE;
+    }
+    for (int j = 0; j < cat_info->num_modes; j++) {
+      ModeInfo const *mode_info = &cat_info->modes[i];
+      if (mode_info->keycode == key_code) {
+        as->es.sel_cat_ind = i;
+        as->es.category_states[i].sel_mode_ind = j;
+        return SDL_APP_CONTINUE;
+      }
+    }
+  }
   switch (key_code) {
-  case SDL_SCANCODE_W:
+  case SDLK_W:
     return SDL_APP_SUCCESS;
-  case SDL_SCANCODE_ESCAPE:
-    select_mode_from_inds(&as->es);
+  case SDLK_ESCAPE:
+    reset_mode_data(&as->es);
     break;
-  case SDL_SCANCODE_TAB:
+  case SDLK_TAB:
     incr_curr_cat_mode_ind(&as->es);
     select_mode_from_inds(&as->es);
     break;
-  case SDL_SCANCODE_1:
-    as->es.sel_cat_ind = 0;
-    select_mode_from_inds(&as->es);
-    break;
-  case SDL_SCANCODE_2:
-    as->es.sel_cat_ind = 1;
-    select_mode_from_inds(&as->es);
-    break;
-  case SDL_SCANCODE_3:
-    as->es.sel_cat_ind = 2;
-    select_mode_from_inds(&as->es);
-    break;
-  case SDL_SCANCODE_4:
-    as->es.sel_cat_ind = 3;
-    select_mode_from_inds(&as->es);
-    break;
-  case SDL_SCANCODE_M:
-    as->es.sel_cat_ind = 0;
-    as->es.category_states[0].sel_mode_ind = 0;
-    select_mode_from_inds(&as->es);
-    break;
-  case SDL_SCANCODE_D:
-    as->es.sel_cat_ind = 0;
-    as->es.category_states[0].sel_mode_ind = 1;
-    select_mode_from_inds(&as->es);
-    break;
-  case SDL_SCANCODE_P:
-    as->es.sel_cat_ind = 1;
-    as->es.category_states[0].sel_mode_ind = 0;
-    select_mode_from_inds(&as->es);
-    break;
-  case SDL_SCANCODE_S:
-    as->es.sel_cat_ind = 2;
-    as->es.category_states[0].sel_mode_ind = 0;
-    select_mode_from_inds(&as->es);
-    break;
-  case SDL_SCANCODE_L:
-    as->es.sel_cat_ind = 2;
-    as->es.category_states[0].sel_mode_ind = 1;
-    select_mode_from_inds(&as->es);
-    break;
-  case SDL_SCANCODE_R:
-    as->es.sel_cat_ind = 2;
-    as->es.category_states[0].sel_mode_ind = 2;
-    select_mode_from_inds(&as->es);
-    break;
-  case SDL_SCANCODE_C:
-    as->es.sel_cat_ind = 3;
-    as->es.category_states[0].sel_mode_ind = 0;
-    select_mode_from_inds(&as->es);
-    break;
-  case SDL_SCANCODE_I: {
+  case SDLK_I: {
     PointDef *pd = alloc_and_reg_point(
         &as->gs, make_point_intsec_line_line(as->gs.line_defs[as->gs.l_n - 2],
                                              as->gs.line_defs[as->gs.l_n - 1]));
@@ -154,7 +126,7 @@ SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
       return SDL_APP_FAILURE;
     break;
   }
-  case SDL_SCANCODE_K: {
+  case SDLK_K: {
     PointDef *pd = alloc_and_reg_point(
         &as->gs, make_point_intsec_circle_circle(
                      as->gs.circle_defs[as->gs.c_n - 2],
@@ -163,15 +135,15 @@ SDL_AppResult on_key_down(AppState *as, SDL_Scancode key_code) {
       return SDL_APP_FAILURE;
     break;
   }
-  case SDL_SCANCODE_8: {
+  case SDLK_8: {
     do_save(&as->gs);
     break;
   }
-  case SDL_SCANCODE_9: {
-    do_load(&as->gs);
+  case SDLK_9: {
+    do_load(as);
     break;
   }
-  case SDL_SCANCODE_N: {
+  case SDLK_N: {
     SDL_Log("Creating new canvas...\n");
     clear_geometry_state(&as->gs);
     break;
@@ -242,7 +214,7 @@ SDL_AppResult on_event(AppState *as, SDL_Event *event) {
   case SDL_EVENT_QUIT:
     return SDL_APP_SUCCESS;
   case SDL_EVENT_KEY_DOWN:
-    return on_key_down(as, event->key.scancode);
+    return on_key_down(as, event->key.key);
   case SDL_EVENT_MOUSE_BUTTON_DOWN:
     return on_mouse_button_down(as, &event->button);
   case SDL_EVENT_MOUSE_BUTTON_UP:
@@ -379,9 +351,8 @@ void make_default_editor_state(EditorState *es) {
   select_mode_from_inds(es);
 }
 
-int main(void) {
-  // TODO: maybe put appstate onto heap?
-  AppState appstate = {
+void make_default_appstate(AppState *as) {
+  *as = (AppState){
       .window = NULL,
       .renderer = NULL,
       .view_info =
@@ -399,7 +370,13 @@ int main(void) {
               .c_n = 0,
           },
   };
-  make_default_editor_state(&appstate.es);
+  make_default_editor_state(&as->es);
+}
+
+int main(void) {
+  // TODO: maybe put appstate onto heap?
+  AppState appstate;
+  make_default_appstate(&appstate);
 
   SDL_AppResult rc = init_app(&appstate);
 
