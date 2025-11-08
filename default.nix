@@ -1,1 +1,4 @@
-(import <nixpkgs> { }).callPackage ./pacakge.nix { }
+let
+  pkgs = import <nixpkgs> { };
+in
+pkgs.callPackage ./package.nix { }
