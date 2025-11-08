@@ -12,6 +12,11 @@
 #include <math.h>
 #include <stdio.h>
 
+const SDL_DialogFileFilter file_filters[] = {
+    {"Geom savefiles", "geom"},
+    {"All files", "*"},
+};
+
 ModeInfo const *calc_mode_from_inds(EditorState const *es) {
   CategoryState const *cs = &es->category_states[es->sel_cat_ind];
   return &cs->cat_info->modes[cs->sel_mode_ind];
@@ -54,20 +59,27 @@ void zoom(ViewInfo *view_info, Pos2D fp, double mul) {
   };
 }
 
-void do_save(GeometryState const *gs) {
-  SDL_Log("Saving...\n");
-  FILE *handle = fopen("save.dat", "w");
-  if (handle != NULL) {
-    save_to_file(handle, gs);
-    fclose(handle);
-  } else {
-    printf("Failed to open file\n");
-  }
-}
+void open__on_file_selected(void *userdata, char const *const *filelist,
+                            int filter) {
+  AppState *as = userdata;
+  (void)filter; // unused parameter
 
-void do_load(AppState *as) {
-  SDL_Log("Loading...\n");
-  FILE *handle = fopen("save.dat", "r");
+  if (filelist == NULL) {
+    SDL_Log("An error occurred: %s\n", SDL_GetError());
+    return;
+  }
+  char const *file_path = filelist[0];
+  if (file_path == NULL) {
+    SDL_Log("No files selected!\n");
+    return;
+  }
+
+  if (filelist[1] != NULL) {
+    printf("Multiple files were selected, only using the first!\n");
+  }
+
+  SDL_Log("Loading file %s\n", file_path);
+  FILE *handle = fopen(file_path, "r");
   if (handle != NULL) {
     GeometryState new_gs;
     bool res = load_from_file(handle, &new_gs);
@@ -85,36 +97,79 @@ void do_load(AppState *as) {
   }
 }
 
-SDL_AppResult on_key_down(AppState *as, SDL_Keycode key_code) {
+void do_save(GeometryState const *gs) {
+  SDL_Log("Saving...\n");
+  FILE *handle = fopen("save.geom", "w");
+  if (handle != NULL) {
+    save_to_file(handle, gs);
+    fclose(handle);
+  } else {
+    printf("Failed to open file\n");
+  }
+}
+
+void do_load(AppState *as) {
+  SDL_Log("Loading...\n");
+  FILE *handle = fopen("save.geom", "r");
+  if (handle != NULL) {
+    GeometryState new_gs;
+    bool res = load_from_file(handle, &new_gs);
+    if (res) {
+      clear_geometry_state(&as->gs);
+      as->gs = new_gs;
+      reset_mode_data(&as->es);
+      printf("Load successful\n");
+    } else {
+      printf("Load failed\n");
+    }
+    fclose(handle);
+  } else {
+    printf("Failed to open file\n");
+  }
+}
+
+SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
+  SDL_Keycode key_code = event->key;
   // we use SDLK_UNKNOWN as the "No keybind" marker for a mode,
   // so even if we somehow got this keycode, we shouldn't actually do anything
   if (key_code == SDLK_UNKNOWN)
     return SDL_APP_CONTINUE;
 
-  for (int i = 0; i < as->es.num_cats; i++) {
-    CategoryInfo const *cat_info = as->es.category_states[i].cat_info;
-    if (cat_info->keycode == key_code) {
-      as->es.sel_cat_ind = i;
-      select_mode_from_inds(&as->es);
-      return SDL_APP_CONTINUE;
-    }
-    for (int j = 0; j < cat_info->num_modes; j++) {
-      ModeInfo const *mode_info = &cat_info->modes[i];
-      if (mode_info->keycode == key_code) {
+  bool shift_held = (event->mod & SDL_KMOD_SHIFT) != 0;
+  bool ctrl_held = (event->mod & SDL_KMOD_CTRL) != 0;
+
+  if (!ctrl_held && !shift_held) {
+    for (int i = 0; i < as->es.num_cats; i++) {
+      CategoryInfo const *cat_info = as->es.category_states[i].cat_info;
+      if (cat_info->keycode == key_code) {
         as->es.sel_cat_ind = i;
-        as->es.category_states[i].sel_mode_ind = j;
+        select_mode_from_inds(&as->es);
         return SDL_APP_CONTINUE;
+      }
+      for (int j = 0; j < cat_info->num_modes; j++) {
+        ModeInfo const *mode_info = &cat_info->modes[i];
+        if (mode_info->keycode == key_code) {
+          as->es.sel_cat_ind = i;
+          as->es.category_states[i].sel_mode_ind = j;
+          return SDL_APP_CONTINUE;
+        }
       }
     }
   }
   switch (key_code) {
   case SDLK_W:
-    return SDL_APP_SUCCESS;
+    if (ctrl_held) {
+      return SDL_APP_SUCCESS;
+    }
+    break;
   case SDLK_ESCAPE:
     reset_mode_data(&as->es);
     break;
   case SDLK_TAB:
-    incr_curr_cat_mode_ind(&as->es);
+    if (shift_held)
+      decr_curr_cat_mode_ind(&as->es);
+    else
+      incr_curr_cat_mode_ind(&as->es);
     select_mode_from_inds(&as->es);
     break;
   case SDLK_I: {
@@ -134,22 +189,29 @@ SDL_AppResult on_key_down(AppState *as, SDL_Keycode key_code) {
       return SDL_APP_FAILURE;
     break;
   }
-  case SDLK_8: {
-    do_save(&as->gs);
+  case SDLK_S:
+    if (ctrl_held) {
+      do_save(&as->gs);
+    }
     break;
-  }
-  case SDLK_9: {
-    do_load(as);
+
+  case SDLK_O:
+    if (ctrl_held) {
+      SDL_ShowOpenFileDialog(
+          open__on_file_selected, as, as->window, file_filters,
+          sizeof(file_filters) / sizeof(SDL_DialogFileFilter), NULL, false);
+      // do_load(as);
+    }
     break;
-  }
-  case SDLK_N: {
-    SDL_Log("Creating new canvas...\n");
-    clear_geometry_state(&as->gs);
+
+  case SDLK_N:
+    if (ctrl_held) {
+      SDL_Log("Creating new canvas...\n");
+      clear_geometry_state(&as->gs);
+    }
     break;
-  }
-  default: {
+  default:
     break;
-  }
   }
   return SDL_APP_CONTINUE;
 }
@@ -209,7 +271,7 @@ SDL_AppResult on_event(AppState *as, SDL_Event *event) {
   case SDL_EVENT_QUIT:
     return SDL_APP_SUCCESS;
   case SDL_EVENT_KEY_DOWN:
-    return on_key_down(as, event->key.key);
+    return on_key_down(as, &event->key);
   case SDL_EVENT_MOUSE_BUTTON_DOWN:
     return on_mouse_button_down(as, &event->button);
   case SDL_EVENT_MOUSE_BUTTON_UP:
