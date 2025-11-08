@@ -1,3 +1,4 @@
+#include "SDL3/SDL_dialog.h"
 #include "draw.h"
 #include "geom/defs.h"
 #include "geom/state.h"
@@ -97,35 +98,49 @@ void open__on_file_selected(void *userdata, char const *const *filelist,
   }
 }
 
-void do_save(GeometryState const *gs) {
+void show_open_prompt(AppState *as) {
+  char *cwd = SDL_GetCurrentDirectory();
+  SDL_ShowOpenFileDialog(open__on_file_selected, as, as->window, file_filters,
+                         sizeof(file_filters) / sizeof(SDL_DialogFileFilter),
+                         cwd, false);
+  SDL_free(cwd);
+}
+
+void save__on_file_selected(void *userdata, char const *const *filelist,
+                            int filter) {
+  AppState *as = userdata;
+  (void)filter; // unused parameter
+
+  if (filelist == NULL) {
+    SDL_Log("An error occurred: %s\n", SDL_GetError());
+    return;
+  }
+  char const *file_path = filelist[0];
+  if (file_path == NULL) {
+    SDL_Log("No files selected!\n");
+    return;
+  }
+
+  if (filelist[1] != NULL) {
+    printf("Multiple files were selected, only using the first!\n");
+  }
+
   SDL_Log("Saving...\n");
-  FILE *handle = fopen("save.geom", "w");
+  FILE *handle = fopen(file_path, "w");
   if (handle != NULL) {
-    save_to_file(handle, gs);
+    save_to_file(handle, &as->gs);
     fclose(handle);
   } else {
     printf("Failed to open file\n");
   }
 }
 
-void do_load(AppState *as) {
-  SDL_Log("Loading...\n");
-  FILE *handle = fopen("save.geom", "r");
-  if (handle != NULL) {
-    GeometryState new_gs;
-    bool res = load_from_file(handle, &new_gs);
-    if (res) {
-      clear_geometry_state(&as->gs);
-      as->gs = new_gs;
-      reset_mode_data(&as->es);
-      printf("Load successful\n");
-    } else {
-      printf("Load failed\n");
-    }
-    fclose(handle);
-  } else {
-    printf("Failed to open file\n");
-  }
+void show_save_as_prompt(AppState *as) {
+  char *cwd = SDL_GetCurrentDirectory();
+  SDL_ShowSaveFileDialog(save__on_file_selected, as, as->window, file_filters,
+                         sizeof(file_filters) / sizeof(SDL_DialogFileFilter),
+                         cwd);
+  SDL_free(cwd);
 }
 
 SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
@@ -191,16 +206,13 @@ SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
   }
   case SDLK_S:
     if (ctrl_held) {
-      do_save(&as->gs);
+      show_save_as_prompt(as);
     }
     break;
 
   case SDLK_O:
     if (ctrl_held) {
-      SDL_ShowOpenFileDialog(
-          open__on_file_selected, as, as->window, file_filters,
-          sizeof(file_filters) / sizeof(SDL_DialogFileFilter), NULL, false);
-      // do_load(as);
+      show_open_prompt(as);
     }
     break;
 
