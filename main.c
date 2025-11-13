@@ -161,10 +161,11 @@ SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
         return SDL_APP_CONTINUE;
       }
       for (int j = 0; j < cat_info->num_modes; j++) {
-        ModeInfo const *mode_info = &cat_info->modes[i];
+        ModeInfo const *mode_info = &cat_info->modes[j];
         if (mode_info->keycode == key_code) {
           as->es.sel_cat_ind = i;
           as->es.category_states[i].sel_mode_ind = j;
+          select_mode_from_inds(&as->es);
           return SDL_APP_CONTINUE;
         }
       }
