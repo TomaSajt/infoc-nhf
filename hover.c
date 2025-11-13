@@ -2,6 +2,7 @@
 #include "draw.h" // TODO: this is only here for the hitbox radius
 #include "geom/defs.h"
 #include "geom/util.h"
+#include "mode/defs.h"
 
 PointDef *get_hovered_point(AppState const *as, Pos2D const *w_mouse_pos) {
   PointDef *best = NULL;
@@ -25,9 +26,27 @@ PointDef *get_hovered_point(AppState const *as, Pos2D const *w_mouse_pos) {
   return best;
 }
 
-LineDef *get_hovered_line(AppState const *as, Pos2D const *w_mouse_pos) {
-  LineDef *best = NULL;
-  double best_dist = 0;
+typedef struct {
+  union {
+    LineDef *ld;
+    CircleDef *cd;
+  };
+  double dist;
+} SortData;
+
+void swap_for_minmax(SortData *a, SortData *b) {
+  if (a->dist >= b->dist) {
+    SortData temp = *a;
+    *a = *b;
+    *b = temp;
+  }
+}
+
+LineDef *get_hovered_lines(AppState const *as, Pos2D const *w_mouse_pos,
+                           LineDef **other_out) {
+  SortData bad = {.ld = NULL, .dist = 1e10};
+  SortData arr[3] = {bad, bad, bad};
+
   for (int i = 0; i < as->gs.l_n; i++) {
     LineDef *ld = as->gs.line_defs[i];
     eval_line(ld);
@@ -39,18 +58,27 @@ LineDef *get_hovered_line(AppState const *as, Pos2D const *w_mouse_pos) {
     if (d * as->view_info.scale > LINE_HITBOX_RADIUS)
       continue;
 
-    if (best == NULL || best_dist > d) {
-      best_dist = d;
-      best = ld;
-    }
+    // tiny insertion sort
+    arr[2] = (SortData){.ld = ld, .dist = d};
+    swap_for_minmax(&arr[1], &arr[2]);
+    swap_for_minmax(&arr[0], &arr[1]);
   }
 
-  return best;
+  if (other_out != NULL) {
+    *other_out = arr[1].ld;
+  }
+  return arr[0].ld;
 }
 
-CircleDef *get_hovered_circle(AppState const *as, Pos2D const *w_mouse_pos) {
-  CircleDef *best = NULL;
-  double best_dist = 0;
+LineDef *get_hovered_line(AppState const *as, Pos2D const *w_mouse_pos) {
+  return get_hovered_lines(as, w_mouse_pos, NULL);
+}
+
+CircleDef *get_hovered_circles(AppState const *as, Pos2D const *w_mouse_pos,
+                               CircleDef **other_out) {
+  SortData bad = {.cd = NULL, .dist = 1e10};
+  SortData arr[3] = {bad, bad, bad};
+
   for (int i = 0; i < as->gs.c_n; i++) {
     CircleDef *cd = as->gs.circle_defs[i];
     eval_circle(cd);
@@ -61,13 +89,20 @@ CircleDef *get_hovered_circle(AppState const *as, Pos2D const *w_mouse_pos) {
     if (d * as->view_info.scale > LINE_HITBOX_RADIUS)
       continue;
 
-    if (best == NULL || best_dist > d) {
-      best_dist = d;
-      best = cd;
-    }
+    // tiny insertion sort
+    arr[2] = (SortData){.cd = cd, .dist = d};
+    swap_for_minmax(&arr[1], &arr[2]);
+    swap_for_minmax(&arr[0], &arr[1]);
   }
 
-  return best;
+  if (other_out != NULL) {
+    *other_out = arr[1].cd;
+  }
+  return arr[0].cd;
+}
+
+CircleDef *get_hovered_circle(AppState const *as, Pos2D const *w_mouse_pos) {
+  return get_hovered_circles(as, w_mouse_pos, NULL);
 }
 
 // Case 1: the potential point is a hovered, already existing point
@@ -83,12 +118,23 @@ PointDef *get_potential_point(AppState const *as, Pos2D const *w_mouse_pos,
     *pot_out = *hovered_point;
     return hovered_point;
   }
+  LineDef *hovered_line_2;
+  LineDef *hovered_line = get_hovered_lines(as, w_mouse_pos, &hovered_line_2);
 
-  // TODO: implement get_hovered_lines and get_hovered_circles
-  //       for line-line and circle-circle intersections
-  LineDef *hovered_line = get_hovered_line(as, w_mouse_pos);
-  CircleDef *hovered_circle = get_hovered_circle(as, w_mouse_pos);
+  CircleDef *hovered_circle_2;
+  CircleDef *hovered_circle =
+      get_hovered_circles(as, w_mouse_pos, &hovered_circle_2);
+
   if (hovered_line != NULL) {
+    if (hovered_line_2 != NULL) {
+      PointDef pot = make_point_intsec_line_line(hovered_line, hovered_line_2);
+      eval_point(&pot);
+      if (!pot.val.invalid) {
+        *pot_out = pot;
+        return NULL;
+      }
+    }
+
     if (hovered_circle != NULL) {
       PointDef pot1 = make_point_intsec_line_circle(
           hovered_line, hovered_circle, ILC_PROG_LOWER);
@@ -115,6 +161,22 @@ PointDef *get_potential_point(AppState const *as, Pos2D const *w_mouse_pos,
   }
 
   if (hovered_circle != NULL) {
+    if (hovered_circle_2 != NULL) {
+      PointDef pot1 = make_point_intsec_circle_circle(
+          hovered_circle, hovered_circle_2, ICC_LEFT);
+      PointDef pot2 = make_point_intsec_circle_circle(
+          hovered_circle, hovered_circle_2, ICC_RIGHT);
+      eval_point(&pot1);
+      eval_point(&pot2);
+      // it is not guaranteed that if we are hovering both they are actually
+      // intersecting
+      if (!pot1.val.invalid && !pot2.val.invalid) {
+        double d1 = dist_from_pos(w_mouse_pos, &pot1.val.pos);
+        double d2 = dist_from_pos(w_mouse_pos, &pot2.val.pos);
+        *pot_out = d1 < d2 ? pot1 : pot2;
+        return NULL;
+      }
+    }
     double prog =
         circle_closest_prog_from_pos(w_mouse_pos, &hovered_circle->val.center);
     *pot_out = make_point_glider_on_circle(hovered_circle, prog);
