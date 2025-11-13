@@ -76,6 +76,8 @@ void draw_point(AppState const *as, PointDef *pd, SDL_Color color) {
                    POINT_RENDER_RADIUS, color.r, color.g, color.b, color.a);
 }
 
+double max(double a, double b) { return a >= b ? a : b; }
+
 void draw_line(AppState const *as, LineDef *ld, SDL_Color color) {
   eval_line(ld);
   if (ld->val.invalid)
@@ -92,18 +94,28 @@ void draw_line(AppState const *as, LineDef *ld, SDL_Color color) {
   double vx = screen_end.x - screen_start.x;
   double vy = screen_end.y - screen_start.y;
   // bool use_x_bounds = fabs(vy / vx) < fabs((double)wh / ww);
-  bool use_x_bounds = fabs(vy * ww) < fabs(vx * wh);
   double prog_s, prog_e;
-  if (use_x_bounds) {
-    double prog_x0 = ((0 + 0) - screen_start.x) / vx;
-    double prog_xw = ((ww - 0) - screen_start.x) / vx;
-    prog_s = prog_x0;
-    prog_e = prog_xw;
+
+  if (ld->ext_mode == L_EXT_SEGMENT) {
+    prog_s = 0;
+    prog_e = 1;
   } else {
-    double prog_y0 = ((0 + 0) - screen_start.y) / vy;
-    double prog_yh = ((wh - 0) - screen_start.y) / vy;
-    prog_s = prog_y0;
-    prog_e = prog_yh;
+    bool use_x_bounds = fabs(vy * ww) < fabs(vx * wh);
+    if (use_x_bounds) {
+      double prog_x0 = ((0 + 0) - screen_start.x) / vx;
+      double prog_xw = ((ww - 0) - screen_start.x) / vx;
+      prog_s = prog_x0;
+      prog_e = prog_xw;
+    } else {
+      double prog_y0 = ((0 + 0) - screen_start.y) / vy;
+      double prog_yh = ((wh - 0) - screen_start.y) / vy;
+      prog_s = prog_y0;
+      prog_e = prog_yh;
+    }
+    if (ld->ext_mode == L_EXT_RAY) {
+      prog_e = max(max(prog_s, prog_e), 0);
+      prog_s = 0;
+    }
   }
 
   double sx = screen_start.x + vx * prog_s;
