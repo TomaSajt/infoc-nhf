@@ -85,8 +85,38 @@ void draw_line(AppState const *as, LineDef *ld, SDL_Color color) {
       pos_world_to_screen(as->renderer, &as->view_info, ld->val.start);
   Pos2D screen_end =
       pos_world_to_screen(as->renderer, &as->view_info, ld->val.end);
-  lineRGBA(as->renderer, screen_start.x, screen_start.y, screen_end.x,
-           screen_end.y, color.r, color.g, color.b, color.a);
+
+  int ww, wh;
+  SDL_GetRenderOutputSize(as->renderer, &ww, &wh);
+
+  double vx = screen_end.x - screen_start.x;
+  double vy = screen_end.y - screen_start.y;
+  // bool use_x_bounds = fabs(vy / vx) < fabs((double)wh / ww);
+  bool use_x_bounds = fabs(vy * ww) < fabs(vx * wh);
+  double prog_s, prog_e;
+  if (use_x_bounds) {
+    double prog_x0 = ((0 + 0) - screen_start.x) / vx;
+    double prog_xw = ((ww - 0) - screen_start.x) / vx;
+    prog_s = prog_x0;
+    prog_e = prog_xw;
+  } else {
+    double prog_y0 = ((0 + 0) - screen_start.y) / vy;
+    double prog_yh = ((wh - 0) - screen_start.y) / vy;
+    prog_s = prog_y0;
+    prog_e = prog_yh;
+  }
+
+  double sx = screen_start.x + vx * prog_s;
+  double sy = screen_start.y + vy * prog_s;
+  double ex = screen_start.x + vx * prog_e;
+  double ey = screen_start.y + vy * prog_e;
+
+  filledCircleRGBA(as->renderer, sx, sy, POINT_RENDER_RADIUS, RED.r, RED.g,
+                   RED.b, RED.a);
+  filledCircleRGBA(as->renderer, ex, ey, POINT_RENDER_RADIUS, GREEN.r, GREEN.g,
+                   GREEN.b, GREEN.a);
+
+  lineRGBA(as->renderer, sx, sy, ex, ey, color.r, color.g, color.b, color.a);
 }
 
 void draw_circle(AppState const *as, CircleDef *cd, SDL_Color color) {
