@@ -1,5 +1,5 @@
-#ifndef MODE_PAR_PER_H
-#define MODE_PAR_PER_H
+#ifndef MODE_PAR_PER_H_
+#define MODE_PAR_PER_H_
 
 #include "../state.h"
 

@@ -1,5 +1,5 @@
-#ifndef GEOM_DEFS_H
-#define GEOM_DEFS_H
+#ifndef GEOM_DEFS_H_
+#define GEOM_DEFS_H_
 
 #include <stdbool.h>
 

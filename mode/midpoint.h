@@ -1,5 +1,5 @@
-#ifndef MODE_MIDPOINT_H
-#define MODE_MIDPOINT_H
+#ifndef MODE_MIDPOINT_H_
+#define MODE_MIDPOINT_H_
 
 #include "../state.h"
 

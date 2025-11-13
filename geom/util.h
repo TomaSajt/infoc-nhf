@@ -1,5 +1,5 @@
-#ifndef GEOM_UTIL_H
-#define GEOM_UTIL_H
+#ifndef GEOM_UTIL_H_
+#define GEOM_UTIL_H_
 
 #include "defs.h"
 

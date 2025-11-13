@@ -1,5 +1,5 @@
-#ifndef MODE_MOVE_H
-#define MODE_MOVE_H
+#ifndef MODE_MOVE_H_
+#define MODE_MOVE_H_
 
 #include "../state.h"
 #include "defs.h"

@@ -1,5 +1,5 @@
-#ifndef MODE_POINT_H
-#define MODE_POINT_H
+#ifndef MODE_POINT_H_
+#define MODE_POINT_H_
 
 #include "../state.h"
 

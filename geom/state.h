@@ -1,5 +1,5 @@
-#ifndef GEOM_STATE_H
-#define GEOM_STATE_H
+#ifndef GEOM_STATE_H_
+#define GEOM_STATE_H_
 
 #include "defs.h"
 

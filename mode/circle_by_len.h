@@ -1,5 +1,5 @@
-#ifndef MODE_CIRCLE_BY_LEN_H
-#define MODE_CIRCLE_BY_LEN_H
+#ifndef MODE_CIRCLE_BY_LEN_H_
+#define MODE_CIRCLE_BY_LEN_H_
 
 #include "../state.h"
 #include "defs.h"

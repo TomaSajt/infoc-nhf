@@ -1,5 +1,5 @@
-#ifndef MODE_CATEGORY_DEFS_H
-#define MODE_CATEGORY_DEFS_H
+#ifndef MODE_CATEGORY_DEFS_H_
+#define MODE_CATEGORY_DEFS_H_
 
 #include "../geom/defs.h"
 

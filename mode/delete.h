@@ -1,5 +1,5 @@
-#ifndef MODE_DELETE_H
-#define MODE_DELETE_H
+#ifndef MODE_DELETE_H_
+#define MODE_DELETE_H_
 
 #include "../state.h"
 

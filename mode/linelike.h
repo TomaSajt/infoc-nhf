@@ -1,5 +1,5 @@
-#ifndef MODE_LINE_H
-#define MODE_LINE_H
+#ifndef MODE_LINE_H_
+#define MODE_LINE_H_
 
 #include "../state.h"
 
