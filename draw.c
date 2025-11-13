@@ -1,4 +1,5 @@
 #include "draw.h"
+#include "geom/defs.h"
 #include "geom/util.h"
 
 #include <SDL3_gfxPrimitives.h>
@@ -32,20 +33,20 @@ Pos2D pos_view_to_world(ViewInfo const *view_info, Pos2D pos) {
 }
 
 Pos2D pos_view_to_screen(SDL_Renderer *renderer, Pos2D pos) {
-  int ww, wh;
-  SDL_GetRenderOutputSize(renderer, &ww, &wh);
+  int sc_w, sc_h;
+  SDL_GetRenderOutputSize(renderer, &sc_w, &sc_h);
   return (Pos2D){
-      .x = ww * 0.5 + pos.x,
-      .y = wh * 0.5 - pos.y,
+      .x = sc_w * 0.5 + pos.x,
+      .y = sc_h * 0.5 - pos.y,
   };
 }
 
 Pos2D pos_screen_to_view(SDL_Renderer *renderer, Pos2D pos) {
-  int ww, wh;
-  SDL_GetRenderOutputSize(renderer, &ww, &wh);
+  int sc_w, sc_h;
+  SDL_GetRenderOutputSize(renderer, &sc_w, &sc_h);
   return (Pos2D){
-      .x = pos.x - ww * 0.5,
-      .y = wh * 0.5 - pos.y,
+      .x = pos.x - sc_w * 0.5,
+      .y = sc_h * 0.5 - pos.y,
   };
 }
 
@@ -76,7 +77,21 @@ void draw_point(AppState const *as, PointDef *pd, SDL_Color color) {
                    POINT_RENDER_RADIUS, color.r, color.g, color.b, color.a);
 }
 
-double max(double a, double b) { return a >= b ? a : b; }
+void clamp_line_ends_onto_screen(Pos2D const *s, Pos2D const *e, double sc_w,
+                                 double sc_h, double *prog_s_out,
+                                 double *prog_e_out) {
+  double vx = e->x - s->x;
+  double vy = e->y - s->y;
+  // bool use_x_bounds = fabs(vy) / fabs(vx) < (double)sc_h / sc_w;
+  bool use_x_bounds = fabs(vy) * sc_w < fabs(vx) * sc_h;
+  if (use_x_bounds) {
+    *prog_s_out = (0 - s->x) / vx;    // x == 0
+    *prog_e_out = (sc_w - s->x) / vx; // x == w
+  } else {
+    *prog_s_out = (0 - s->y) / vy;    // y == 0
+    *prog_e_out = (sc_h - s->y) / vy; // y == h
+  }
+}
 
 void draw_line(AppState const *as, LineDef *ld, SDL_Color color) {
   eval_line(ld);
@@ -88,47 +103,37 @@ void draw_line(AppState const *as, LineDef *ld, SDL_Color color) {
   Pos2D screen_end =
       pos_world_to_screen(as->renderer, &as->view_info, ld->val.end);
 
-  int ww, wh;
-  SDL_GetRenderOutputSize(as->renderer, &ww, &wh);
+  int sc_w, sc_h;
+  SDL_GetRenderOutputSize(as->renderer, &sc_w, &sc_h);
 
-  double vx = screen_end.x - screen_start.x;
-  double vy = screen_end.y - screen_start.y;
-  // bool use_x_bounds = fabs(vy / vx) < fabs((double)wh / ww);
   double prog_s, prog_e;
-
   if (ld->ext_mode == L_EXT_SEGMENT) {
     prog_s = 0;
     prog_e = 1;
   } else {
-    bool use_x_bounds = fabs(vy * ww) < fabs(vx * wh);
-    if (use_x_bounds) {
-      double prog_x0 = ((0 + 0) - screen_start.x) / vx;
-      double prog_xw = ((ww - 0) - screen_start.x) / vx;
-      prog_s = prog_x0;
-      prog_e = prog_xw;
-    } else {
-      double prog_y0 = ((0 + 0) - screen_start.y) / vy;
-      double prog_yh = ((wh - 0) - screen_start.y) / vy;
-      prog_s = prog_y0;
-      prog_e = prog_yh;
-    }
+    clamp_line_ends_onto_screen(&screen_start, &screen_end, sc_w, sc_h, &prog_s,
+                                &prog_e);
     if (ld->ext_mode == L_EXT_RAY) {
-      prog_e = max(max(prog_s, prog_e), 0);
+      prog_e = prog_s > prog_e ? prog_s : prog_e;
+      if (prog_e < 0)
+        return;
       prog_s = 0;
     }
   }
 
-  double sx = screen_start.x + vx * prog_s;
-  double sy = screen_start.y + vy * prog_s;
-  double ex = screen_start.x + vx * prog_e;
-  double ey = screen_start.y + vy * prog_e;
+  Pos2D s = lerp(&screen_start, &screen_end, prog_s);
+  Pos2D e = lerp(&screen_start, &screen_end, prog_e);
 
-  filledCircleRGBA(as->renderer, sx, sy, POINT_RENDER_RADIUS, RED.r, RED.g,
-                   RED.b, RED.a);
-  filledCircleRGBA(as->renderer, ex, ey, POINT_RENDER_RADIUS, GREEN.r, GREEN.g,
-                   GREEN.b, GREEN.a);
+  if (false) {
+    // TODO: add toggle
+    filledCircleRGBA(as->renderer, s.x, s.y, POINT_RENDER_RADIUS, RED.r, RED.g,
+                     RED.b, RED.a);
+    filledCircleRGBA(as->renderer, e.x, e.y, POINT_RENDER_RADIUS, GREEN.r,
+                     GREEN.g, GREEN.b, GREEN.a);
+  }
 
-  lineRGBA(as->renderer, sx, sy, ex, ey, color.r, color.g, color.b, color.a);
+  lineRGBA(as->renderer, s.x, s.y, e.x, e.y, color.r, color.g, color.b,
+           color.a);
 }
 
 void draw_circle(AppState const *as, CircleDef *cd, SDL_Color color) {

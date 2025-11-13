@@ -11,6 +11,8 @@ bool eval_point_del_flag(PointDef *pd);
 bool eval_line_del_flag(LineDef *ld);
 bool eval_circle_del_flag(CircleDef *cd);
 
+Pos2D lerp(Pos2D const *start, Pos2D const *end, double prog);
+
 double clamp_line_prog(double prog, LineExtMode ext_mode);
 
 double line_closest_prog_from_pos(Pos2D const *pos, Pos2D const *s,
