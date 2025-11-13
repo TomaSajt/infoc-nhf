@@ -59,6 +59,17 @@ void zoom(ViewInfo *view_info, Pos2D fp, double mul) {
   };
 }
 
+void set_save_path(AppState *as, char const *save_path) {
+  if (as->save_path != NULL) {
+    free(as->save_path);
+    as->save_path = NULL;
+  }
+  if (save_path != NULL) {
+    // TODO: maybe do error handling
+    as->save_path = strdup(save_path);
+  }
+}
+
 void open__on_file_selected(void *userdata, char const *const *filelist,
                             int filter) {
   AppState *as = userdata;
@@ -87,6 +98,7 @@ void open__on_file_selected(void *userdata, char const *const *filelist,
       clear_geometry_state(&as->gs);
       as->gs = new_gs;
       reset_mode_data(&as->es);
+      set_save_path(as, file_path);
       printf("Load successful\n");
     } else {
       printf("Load failed\n");
@@ -128,6 +140,7 @@ void save__on_file_selected(void *userdata, char const *const *filelist,
   FILE *handle = fopen(file_path, "w");
   if (handle != NULL) {
     save_to_file(handle, &as->gs);
+    set_save_path(as, file_path);
     fclose(handle);
   } else {
     printf("Failed to open file\n");
@@ -140,6 +153,12 @@ void show_save_as_prompt(AppState *as) {
                          sizeof(file_filters) / sizeof(SDL_DialogFileFilter),
                          cwd);
   SDL_free(cwd);
+}
+
+void make_new_canvas(AppState *as) {
+  SDL_Log("Creating new canvas...\n");
+  set_save_path(as, NULL);
+  clear_geometry_state(&as->gs);
 }
 
 SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
@@ -218,8 +237,7 @@ SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
 
   case SDLK_N:
     if (ctrl_held) {
-      SDL_Log("Creating new canvas...\n");
-      clear_geometry_state(&as->gs);
+      make_new_canvas(as);
     }
     break;
   default:
@@ -333,6 +351,18 @@ SDL_AppResult on_render(AppState *as) {
 
   render_mode_info(as);
 
+  char const *save_name = "Unsaved";
+  if (as->save_path != NULL) {
+    // Note: this might not work on windows
+    save_name = strrchr(as->save_path, '/');
+    if (save_name == NULL)
+      save_name = "Filename parsing failed!";
+    else {
+      save_name++;
+    }
+  }
+  draw_text_to(as, save_name, WHITE, 300, 300);
+
   {
     PointDef p1 = make_point_literal((Pos2D){0.0, 0.0});
     PointDef p2 = make_point_literal((Pos2D){10.0, 0.0});
@@ -421,6 +451,10 @@ void deinit_appstate(AppState *as) {
     TTF_CloseFont(as->font);
     as->font = NULL;
   }
+  if (as->save_path != NULL) {
+    free(as->save_path);
+    as->save_path = NULL;
+  }
 
   clear_geometry_state(&as->gs);
 }
@@ -457,6 +491,7 @@ void make_default_appstate(AppState *as) {
               .circle_defs = {0},
               .c_n = 0,
           },
+      .save_path = NULL,
   };
   make_default_editor_state(&as->es);
 }

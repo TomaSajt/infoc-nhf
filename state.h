@@ -34,6 +34,7 @@ typedef struct AppState {
   ViewInfo view_info;
   GeometryState gs;
   EditorState es;
+  char *save_path;
 } AppState;
 
 #endif
