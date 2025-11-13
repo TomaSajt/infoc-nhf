@@ -130,8 +130,10 @@ PointDef *get_potential_point(AppState const *as, Pos2D const *w_mouse_pos,
       PointDef pot = make_point_intsec_line_line(hovered_line, hovered_line_2);
       eval_point(&pot);
       if (!pot.val.invalid) {
-        *pot_out = pot;
-        return NULL;
+        if (dist_from_pos(w_mouse_pos, &pot.val.pos) <= POINT_HITBOX_RADIUS) {
+          *pot_out = pot;
+          return NULL;
+        }
       }
     }
 
@@ -148,8 +150,11 @@ PointDef *get_potential_point(AppState const *as, Pos2D const *w_mouse_pos,
 
         double d1 = dist_from_pos(w_mouse_pos, &pot1.val.pos);
         double d2 = dist_from_pos(w_mouse_pos, &pot2.val.pos);
-        *pot_out = d1 < d2 ? pot1 : pot2;
-        return NULL;
+        PointDef pot = d1 < d2 ? pot1 : pot2;
+        if (dist_from_pos(w_mouse_pos, &pot.val.pos) <= POINT_HITBOX_RADIUS) {
+          *pot_out = pot;
+          return NULL;
+        }
       }
     }
 
@@ -173,8 +178,11 @@ PointDef *get_potential_point(AppState const *as, Pos2D const *w_mouse_pos,
       if (!pot1.val.invalid && !pot2.val.invalid) {
         double d1 = dist_from_pos(w_mouse_pos, &pot1.val.pos);
         double d2 = dist_from_pos(w_mouse_pos, &pot2.val.pos);
-        *pot_out = d1 < d2 ? pot1 : pot2;
-        return NULL;
+        PointDef pot = d1 < d2 ? pot1 : pot2;
+        if (dist_from_pos(w_mouse_pos, &pot.val.pos) <= POINT_HITBOX_RADIUS) {
+          *pot_out = pot;
+          return NULL;
+        }
       }
     }
     double prog =
