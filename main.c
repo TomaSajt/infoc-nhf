@@ -60,13 +60,11 @@ void zoom(ViewInfo *view_info, Pos2D fp, double mul) {
 }
 
 void set_save_path(AppState *as, char const *save_path) {
-  if (as->save_path != NULL) {
-    free(as->save_path);
-    as->save_path = NULL;
-  }
-  if (save_path != NULL) {
-    // TODO: maybe do error handling
-    as->save_path = strdup(save_path);
+  char *old_save_path = as->save_path;
+  as->save_path = save_path == NULL ? NULL : strdup(save_path);
+
+  if (old_save_path != NULL) {
+    free(old_save_path);
   }
 }
 
@@ -109,7 +107,7 @@ void open__on_file_selected(void *userdata, char const *const *filelist,
   if (filelist[1] != NULL) {
     printf("Multiple files were selected, only using the first!\n");
   }
-  do_load_from_file(as, filelist[0]);
+  do_load_from_file(as, file_path);
 }
 
 void show_open_prompt(AppState *as) {
@@ -118,6 +116,18 @@ void show_open_prompt(AppState *as) {
                          sizeof(file_filters) / sizeof(SDL_DialogFileFilter),
                          cwd, false);
   SDL_free(cwd);
+}
+
+void do_save_to_file(AppState *as, char const *file_path) {
+  SDL_Log("Saving to %s...\n", file_path);
+  FILE *handle = fopen(file_path, "w");
+  if (handle != NULL) {
+    save_to_file(handle, &as->gs);
+    set_save_path(as, file_path);
+    fclose(handle);
+  } else {
+    printf("Failed to open file\n");
+  }
 }
 
 void save__on_file_selected(void *userdata, char const *const *filelist,
@@ -138,16 +148,7 @@ void save__on_file_selected(void *userdata, char const *const *filelist,
   if (filelist[1] != NULL) {
     printf("Multiple files were selected, only using the first!\n");
   }
-
-  SDL_Log("Saving...\n");
-  FILE *handle = fopen(file_path, "w");
-  if (handle != NULL) {
-    save_to_file(handle, &as->gs);
-    set_save_path(as, file_path);
-    fclose(handle);
-  } else {
-    printf("Failed to open file\n");
-  }
+  do_save_to_file(as, file_path);
 }
 
 void show_save_as_prompt(AppState *as) {
@@ -158,9 +159,18 @@ void show_save_as_prompt(AppState *as) {
   SDL_free(cwd);
 }
 
+void save_or_save_as(AppState *as) {
+  if (as->save_path == NULL) {
+    show_save_as_prompt(as);
+  } else {
+    do_save_to_file(as, as->save_path);
+  }
+}
+
 void make_new_canvas(AppState *as) {
   SDL_Log("Creating new canvas...\n");
   set_save_path(as, NULL);
+  reset_mode_data(&as->es);
   clear_geometry_state(&as->gs);
 }
 
@@ -228,7 +238,11 @@ SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
   }
   case SDLK_S:
     if (ctrl_held) {
-      show_save_as_prompt(as);
+      if (shift_held) {
+        show_save_as_prompt(as);
+      } else {
+        save_or_save_as(as);
+      }
     }
     break;
 
