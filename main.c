@@ -70,25 +70,7 @@ void set_save_path(AppState *as, char const *save_path) {
   }
 }
 
-void open__on_file_selected(void *userdata, char const *const *filelist,
-                            int filter) {
-  AppState *as = userdata;
-  (void)filter; // unused parameter
-
-  if (filelist == NULL) {
-    SDL_Log("An error occurred: %s\n", SDL_GetError());
-    return;
-  }
-  char const *file_path = filelist[0];
-  if (file_path == NULL) {
-    SDL_Log("No files selected!\n");
-    return;
-  }
-
-  if (filelist[1] != NULL) {
-    printf("Multiple files were selected, only using the first!\n");
-  }
-
+void do_load_from_file(AppState *as, char const *file_path) {
   SDL_Log("Loading file %s\n", file_path);
   FILE *handle = fopen(file_path, "r");
   if (handle != NULL) {
@@ -107,6 +89,27 @@ void open__on_file_selected(void *userdata, char const *const *filelist,
   } else {
     printf("Failed to open file\n");
   }
+}
+
+void open__on_file_selected(void *userdata, char const *const *filelist,
+                            int filter) {
+  AppState *as = userdata;
+  (void)filter; // unused parameter
+
+  if (filelist == NULL) {
+    SDL_Log("An error occurred: %s\n", SDL_GetError());
+    return;
+  }
+  char const *file_path = filelist[0];
+  if (file_path == NULL) {
+    SDL_Log("No files selected!\n");
+    return;
+  }
+
+  if (filelist[1] != NULL) {
+    printf("Multiple files were selected, only using the first!\n");
+  }
+  do_load_from_file(as, filelist[0]);
 }
 
 void show_open_prompt(AppState *as) {
@@ -354,12 +357,8 @@ SDL_AppResult on_render(AppState *as) {
   char const *save_name = "Unsaved";
   if (as->save_path != NULL) {
     // Note: this might not work on windows
-    save_name = strrchr(as->save_path, '/');
-    if (save_name == NULL)
-      save_name = "Filename parsing failed!";
-    else {
-      save_name++;
-    }
+    char const *pos = strrchr(as->save_path, '/');
+    save_name = pos == NULL ? as->save_path : pos + 1;
   }
   draw_text_to(as, save_name, WHITE, 300, 300);
 
@@ -496,12 +495,16 @@ void make_default_appstate(AppState *as) {
   make_default_editor_state(&as->es);
 }
 
-int main(void) {
+int main(int argc, char const **argv) {
   // TODO: maybe put appstate onto heap?
   AppState appstate;
   make_default_appstate(&appstate);
 
   SDL_AppResult rc = init_app(&appstate);
+
+  if (argc >= 2) {
+    do_load_from_file(&appstate, argv[1]);
+  }
 
   while (rc == SDL_APP_CONTINUE) {
     SDL_Event event;
