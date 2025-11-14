@@ -332,7 +332,7 @@ void render_mode_info(AppState *as) {
                              YELLOW.a);
       SDL_RenderFillRect(as->renderer, &rect);
     }
-    draw_text_to(as, cat_state->cat_info->name, BLUE, 10 + 150 * i, 10);
+    draw_text_to(as, cat_state->cat_info->name, MAGENTA, 10 + 150 * i, 10);
     for (int j = 0; j < cat_state->cat_info->num_modes; j++) {
       ModeInfo const *mode_info = &cat_state->cat_info->modes[j];
       bool is_mode_sel_in_cat = j == cat_state->sel_mode_ind;
@@ -360,7 +360,7 @@ SDL_AppResult on_render(AppState *as) {
     char const *pos = strrchr(as->save_path, '/');
     save_name = pos == NULL ? as->save_path : pos + 1;
   }
-  draw_text_to(as, save_name, WHITE, 300, 300);
+  draw_text_to(as, save_name, WHITE, 700, 10);
 
   {
     PointDef p1 = make_point_literal((Pos2D){0.0, 0.0});
