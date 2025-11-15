@@ -22,6 +22,8 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(SDL3_gfx)
 
+# TODO: maybe vendor used functions, or maybe just don't use them
+
 add_compile_options(
     -Wall
     -Wextra
@@ -56,4 +58,9 @@ target_link_libraries(infoc-nhf PRIVATE
     SDL3::SDL3
     SDL3_ttf::SDL3_ttf
     SDL3_gfx_Static
+)
+
+
+install(TARGETS infoc-nhf
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
