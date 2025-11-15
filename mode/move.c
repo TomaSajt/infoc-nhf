@@ -40,7 +40,6 @@ bool move__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {
     return true;
   }
 
-  // TODO: implement grabbing other elements
   PointDef *hovered_point = get_hovered_point(as, w_mouse_pos);
   if (hovered_point == NULL)
     return true;

@@ -4,6 +4,16 @@
 #include "geom/util.h"
 #include "mode/defs.h"
 
+/**
+ * Gets the closest PointDef that is considered to be hovered if the mouse is at
+ * w_mouse_pos
+ *
+ * \param as           a pointer to the current AppState.
+ * \param w_mouse_pos  the position of the mouse in world coordinates
+ *
+ * \returns a pointer to the PointDef closest to the mouse or NULL if no
+ * PointDef is considered hovered
+ */
 PointDef *get_hovered_point(AppState const *as, Pos2D const *w_mouse_pos) {
   PointDef *best = NULL;
   double best_dist = 0;
@@ -34,6 +44,10 @@ typedef struct {
   double dist;
 } SortData;
 
+/** Swaps the values behind a and b so that a->dist < b->dist after the function
+ * finishes.
+ * Used by the tiny insertion sorts when calculating the 2 closest lines/circles
+ */
 void swap_for_minmax(SortData *a, SortData *b) {
   if (a->dist >= b->dist) {
     SortData temp = *a;
@@ -42,6 +56,18 @@ void swap_for_minmax(SortData *a, SortData *b) {
   }
 }
 
+/** Gets the closest two lines to the mouse
+ *
+ * \param as            the current AppState
+ * \param w_mouse_pos   the position of the mouse in world coordinates
+ * \param other_out     an output parameter for the second closest hovered
+ *                      LineDef. Can be set to NULL to not use the value. If
+ *                      there aren't two lines being hovered, the output value
+ *                      will be set to NULL.
+ *
+ * \returns   A pointer to the closest hovered LineDef to the mouse or NULL if
+ *            there is no hovered LineDef.
+ */
 LineDef *get_hovered_lines(AppState const *as, Pos2D const *w_mouse_pos,
                            LineDef **other_out) {
   SortData bad = {.ld = NULL, .dist = 1e10};
