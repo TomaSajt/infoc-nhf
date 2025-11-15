@@ -19,6 +19,8 @@
   - Logika az elemk kiértékeléséhez, és további geometriai segédfüggvények
 - [geom/state.c](./geom/state.c)
   - A vászon elemeit kezelő függvények
+- [fonts/](./fonts/)
+  - A program által használt betűtípusok
 
 ---
 
