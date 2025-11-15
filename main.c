@@ -10,6 +10,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <assert.h>
 #include <math.h>
+#include <stdio.h>
 
 const SDL_DialogFileFilter file_filters[] = {
     {"Geom savefiles", "geom"},
@@ -502,6 +503,9 @@ int main(int argc, char const **argv) {
   SDL_AppResult rc = init_app(&appstate);
 
   if (argc >= 2) {
+    if (argc >= 3) {
+      printf("Multiple arguments were provided, only using the first!\n");
+    }
     do_load_from_file(&appstate, argv[1]);
   }
 
