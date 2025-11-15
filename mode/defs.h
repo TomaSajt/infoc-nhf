@@ -5,10 +5,6 @@
 
 #include <SDL3/SDL_keycode.h>
 
-// TODO: is there anything better to avoid circular imports?
-typedef struct AppState AppState;
-typedef struct EditorState EditorState;
-
 typedef struct MoveModeData {
   PointDef *grabbed;
 } MoveModeData;
@@ -41,6 +37,11 @@ typedef union {
   CircleModeData circle;
   CircleByLenModeData circle_by_len;
 } EditorStateData;
+
+// We can't import the definition of Appstate, since it uses EditorState in
+// itself instead, we use opaque struct declaration
+
+typedef struct AppState AppState;
 
 typedef struct {
   char const *name;
@@ -77,6 +78,6 @@ typedef struct EditorState {
   int num_cats;
   ModeInfo const *mode_info;
   EditorStateData data;
-} EditorState2;
+} EditorState;
 
 #endif
