@@ -14,6 +14,7 @@ find_package(SDL3_ttf REQUIRED CONFIG REQUIRED)
 include(FetchContent)
 
 # fork of SDL2_gfx for SDL3 support
+# TODO: maybe vendor used functions, or maybe just don't use them
 FetchContent_Declare(
   SDL3_gfx
   GIT_REPOSITORY https://github.com/sabdul-khabir/SDL3_gfx.git
@@ -21,8 +22,6 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(SDL3_gfx)
-
-# TODO: maybe vendor used functions, or maybe just don't use them
 
 add_compile_options(
     -Wall
@@ -60,6 +59,7 @@ target_link_libraries(infoc-nhf PRIVATE
     SDL3_gfx_Static
 )
 
+include(GNUInstallDirs)
 
 install(TARGETS infoc-nhf
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
