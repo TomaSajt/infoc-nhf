@@ -1,4 +1,4 @@
 # InfoC NHF - Geometria
 
-[Specifikáció](./SPECIFICATION.md)
-
+- [Specifikáció](./SPECIFICATION.md)
+- [Projekt struktúra](./STRUCTURE.md)

@@ -1,0 +1,22 @@
+- [main.c](./main.c)
+  - Meghajtó kód, és random kódrészek, amik később még átkerülnek más fájlokba
+- [draw.c](./draw.c)
+  - Grafikus segédfüggvények
+  - Használja a `SDL_gfx` könyvtárat
+- [savedata.c](./savedata.c)
+  - A `.geom` fileformátumot feldolgozó és író logika
+- [hover.c](./hover.c)
+  - Kód, ami eldönti, hogy mi van jelenleg a kurzor alatt, vagy mi jöjjön létre, ha pontot akarunk létrehozni a kurzor alatt
+- [mode/defs.c](./mode/defs.c)
+  - Nagy statikus vtable a módokhoz (így nem kell mindenhol switch-et használni)
+- [mode/*.c](./mode/)
+  - A módok viselkedéseinek leírása
+- [geom/defs.h](./geom/defs.h)
+  - A geometriai elemek definíciói
+- [geom/defs.c](./geom/defs.c)
+  - A geometriai elemek létrehozását elősegítő függvények definíciói
+- [geom/util.c](./geom/util.c)
+  - Logika az elemk kiértékeléséhez, és további geometriai segédfüggvények
+- [geom/state.c](./geom/state.c)
+  - A vászon elemeit kezelő függvények
+
