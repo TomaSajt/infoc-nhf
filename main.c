@@ -10,7 +10,6 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <assert.h>
 #include <math.h>
-#include <stdio.h>
 
 const SDL_DialogFileFilter file_filters[] = {
     {"Geom savefiles", "geom"},
@@ -69,7 +68,7 @@ void set_save_path(AppState *as, char const *save_path) {
 }
 
 void do_load_from_file(AppState *as, char const *file_path) {
-  SDL_Log("Loading file %s\n", file_path);
+  printf("Loading file %s\n", file_path);
   FILE *handle = fopen(file_path, "r");
   if (handle != NULL) {
     GeometryState new_gs;
@@ -95,12 +94,12 @@ void open__on_file_selected(void *userdata, char const *const *filelist,
   (void)filter; // unused parameter
 
   if (filelist == NULL) {
-    SDL_Log("An error occurred: %s\n", SDL_GetError());
+    printf("An error occurred: %s\n", SDL_GetError());
     return;
   }
   char const *file_path = filelist[0];
   if (file_path == NULL) {
-    SDL_Log("No files selected!\n");
+    printf("No files selected!\n");
     return;
   }
 
@@ -119,7 +118,7 @@ void show_open_prompt(AppState *as) {
 }
 
 void do_save_to_file(AppState *as, char const *file_path) {
-  SDL_Log("Saving to %s...\n", file_path);
+  printf("Saving to %s...\n", file_path);
   FILE *handle = fopen(file_path, "w");
   if (handle != NULL) {
     save_to_file(handle, &as->gs);
@@ -136,12 +135,12 @@ void save__on_file_selected(void *userdata, char const *const *filelist,
   (void)filter; // unused parameter
 
   if (filelist == NULL) {
-    SDL_Log("An error occurred: %s\n", SDL_GetError());
+    printf("An error occurred: %s\n", SDL_GetError());
     return;
   }
   char const *file_path = filelist[0];
   if (file_path == NULL) {
-    SDL_Log("No files selected!\n");
+    printf("No files selected!\n");
     return;
   }
 
@@ -168,7 +167,7 @@ void save_or_save_as(AppState *as) {
 }
 
 void make_new_canvas(AppState *as) {
-  SDL_Log("Creating new canvas...\n");
+  printf("Creating new canvas...\n");
   set_save_path(as, NULL);
   reset_mode_data(&as->es);
   clear_geometry_state(&as->gs);
@@ -219,23 +218,6 @@ SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
       incr_curr_cat_mode_ind(&as->es);
     select_mode_from_inds(&as->es);
     break;
-  case SDLK_I: {
-    PointDef *pd = alloc_and_reg_point(
-        &as->gs, make_point_intsec_line_line(as->gs.line_defs[as->gs.l_n - 2],
-                                             as->gs.line_defs[as->gs.l_n - 1]));
-    if (pd == NULL)
-      return SDL_APP_FAILURE;
-    break;
-  }
-  case SDLK_K: {
-    PointDef *pd = alloc_and_reg_point(
-        &as->gs, make_point_intsec_circle_circle(
-                     as->gs.circle_defs[as->gs.c_n - 2],
-                     as->gs.circle_defs[as->gs.c_n - 1], ICC_RIGHT));
-    if (pd == NULL)
-      return SDL_APP_FAILURE;
-    break;
-  }
   case SDLK_S:
     if (ctrl_held) {
       if (shift_held) {
@@ -245,7 +227,6 @@ SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
       }
     }
     break;
-
   case SDLK_O:
     if (ctrl_held) {
       show_open_prompt(as);
@@ -356,18 +337,7 @@ void render_mode_info(AppState *as) {
   }
 }
 
-void clear_screen(AppState *as, SDL_Color color) {
-  SDL_SetRenderDrawColor(as->renderer, color.r, color.g, color.b, color.a);
-  SDL_RenderClear(as->renderer);
-}
-
-SDL_AppResult on_render(AppState *as) {
-  printf("n=(%d, %d, %d)\n", as->gs.p_n, as->gs.l_n, as->gs.c_n);
-
-  clear_screen(as, BLACK);
-
-  render_mode_info(as);
-
+void render_save_info(AppState const *as) {
   char const *save_name = "Unsaved";
   if (as->save_path != NULL) {
     // Note: this might not work on windows
@@ -375,8 +345,20 @@ SDL_AppResult on_render(AppState *as) {
     save_name = pos == NULL ? as->save_path : pos + 1;
   }
   draw_text_to(as, save_name, WHITE, 700, 10);
+}
+
+void clear_screen(AppState *as, SDL_Color color) {
+  SDL_SetRenderDrawColor(as->renderer, color.r, color.g, color.b, color.a);
+  SDL_RenderClear(as->renderer);
+}
+
+SDL_AppResult on_render(AppState *as) {
+  clear_screen(as, BLACK);
+  render_mode_info(as);
+  render_save_info(as);
 
   {
+    // Display origin and x y axes as short segments
     PointDef p1 = make_point_literal((Pos2D){0.0, 0.0});
     PointDef p2 = make_point_literal((Pos2D){10.0, 0.0});
     PointDef p3 = make_point_literal((Pos2D){0.0, 10.0});
@@ -388,13 +370,16 @@ SDL_AppResult on_render(AppState *as) {
 
   Pos2D w_mouse_pos;
   {
-    float wmx, wmy;
-    SDL_GetMouseState(&wmx, &wmy);
-    float mx, my;
-    SDL_RenderCoordinatesFromWindow(as->renderer, wmx, wmy, &mx, &my);
-    Pos2D s_mouse_pos = (Pos2D){.x = mx, .y = my};
+    // TODO: actually use proper render coodinates everywhere
+    // TODO: maybe transform renderer instead of using ViewInfo
+    float wind_mx, wind_my;
+    SDL_GetMouseState(&wind_mx, &wind_my);
+    float sc_mx, sc_my;
+    SDL_RenderCoordinatesFromWindow(as->renderer, wind_mx, wind_my, &sc_mx,
+                                    &sc_my);
+    Pos2D sc_mouse_pos = (Pos2D){.x = sc_mx, .y = sc_my};
     w_mouse_pos =
-        pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
+        pos_screen_to_world(as->renderer, &as->view_info, sc_mouse_pos);
   }
 
   if (as->es.mode_info->on_render != NULL) {

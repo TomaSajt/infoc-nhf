@@ -35,7 +35,7 @@ SDL_Texture *make_text_texture(AppState const *as, char const *text,
                                SDL_Color color);
 bool draw_texture_to(SDL_Renderer *renderer, SDL_Texture *texture, float x,
                      float y);
-bool draw_text_to(AppState *as, char const *text, SDL_Color color, float x,
-                  float y);
+bool draw_text_to(AppState const *as, char const *text, SDL_Color color,
+                  float x, float y);
 
 #endif

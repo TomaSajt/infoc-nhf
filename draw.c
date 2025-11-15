@@ -169,8 +169,8 @@ bool draw_texture_to(SDL_Renderer *renderer, SDL_Texture *texture, float x,
   return SDL_RenderTexture(renderer, texture, NULL, &rect);
 }
 
-bool draw_text_to(AppState *as, char const *text, SDL_Color color, float x,
-                  float y) {
+bool draw_text_to(AppState const *as, char const *text, SDL_Color color,
+                  float x, float y) {
   SDL_Texture *texture = make_text_texture(as, text, color);
   if (texture == NULL)
     return false;
