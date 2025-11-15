@@ -20,3 +20,7 @@
 - [geom/state.c](./geom/state.c)
   - A vászon elemeit kezelő függvények
 
+---
+
+Megjegyzés: A `debugmalloc.h` nincs manuálisan `#include`-olva mindehova,
+hanem a `CMakeLists.txt`-ben compiler argumentum által force-include-olva van minden fileba automatikusan
