@@ -16,7 +16,7 @@
 - [geom/defs.c](./geom/defs.c)
   - A geometriai elemek létrehozását elősegítő függvények definíciói
 - [geom/util.c](./geom/util.c)
-  - Logika az elemk kiértékeléséhez, és további geometriai segédfüggvények
+  - Függvények logika elemek kiértékeléséhez és egyéb segédfüggvények
 - [geom/state.c](./geom/state.c)
   - A vászon elemeit kezelő függvények
 - [fonts/](./fonts/)
