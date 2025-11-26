@@ -1,9 +1,9 @@
-#ifndef SAVEDATA_H
-#define SAVEDATA_H
+#ifndef SAVE_DATA_H
+#define SAVE_DATA_H
 
 #include <stdio.h>
 
-#include "geom/state.h"
+#include "../geom/state.h"
 
 void save_to_file(FILE *handle, GeometryState const *gs);
 

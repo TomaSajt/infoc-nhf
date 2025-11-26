@@ -35,13 +35,16 @@ add_executable(infoc-nhf WIN32
     draw.c
     hover.c
     main.c
-    savedata.c
+
+    save/data.c
+    save/dialog.c
 
     geom/defs.c
     geom/state.c
     geom/util.c
 
     mode/defs.c
+    mode/util.c
     mode/circle.c
     mode/circle_by_len.c
     mode/delete.c

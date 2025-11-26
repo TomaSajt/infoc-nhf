@@ -1,5 +1,5 @@
-#include "savedata.h"
-#include "geom/defs.h"
+#include "data.h"
+#include "../geom/defs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
