@@ -238,19 +238,19 @@ SDL_AppResult on_render(AppState *as) {
       return SDL_APP_FAILURE;
   }
 
-  for (int i = 0; i < as->gs.p_n; i++) {
-    PointDef *pd = as->gs.point_defs[i];
-    draw_point(as, pd, WHITE);
+  for (GenericElemList *curr = as->gs.pd_list; curr != NULL;
+       curr = curr->next) {
+    draw_point(as, curr->pd, WHITE);
   }
 
-  for (int i = 0; i < as->gs.l_n; i++) {
-    LineDef *ld = as->gs.line_defs[i];
-    draw_line(as, ld, WHITE);
+  for (GenericElemList *curr = as->gs.ld_list; curr != NULL;
+       curr = curr->next) {
+    draw_line(as, curr->ld, WHITE);
   }
 
-  for (int i = 0; i < as->gs.c_n; i++) {
-    CircleDef *cd = as->gs.circle_defs[i];
-    draw_circle(as, cd, WHITE);
+  for (GenericElemList *curr = as->gs.cd_list; curr != NULL;
+       curr = curr->next) {
+    draw_circle(as, curr->cd, WHITE);
   }
 
   SDL_RenderPresent(as->renderer);
@@ -326,20 +326,8 @@ void make_default_appstate(AppState *as) {
   *as = (AppState){
       .window = NULL,
       .renderer = NULL,
-      .view_info =
-          {
-              .center = {.x = 0, .y = 0},
-              .scale = 1.0,
-          },
-      .gs =
-          {
-              .point_defs = {0},
-              .p_n = 0,
-              .line_defs = {0},
-              .l_n = 0,
-              .circle_defs = {0},
-              .c_n = 0,
-          },
+      .view_info = {.center = {.x = 0, .y = 0}, .scale = 1.0},
+      .gs = {.pd_list = NULL, .ld_list = NULL, .cd_list = NULL},
       .save_path = NULL,
   };
   make_default_editor_state(&as->es);

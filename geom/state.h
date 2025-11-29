@@ -3,15 +3,6 @@
 
 #include "defs.h"
 
-typedef struct {
-  PointDef *point_defs[100];
-  LineDef *line_defs[100];
-  CircleDef *circle_defs[100];
-  int p_n;
-  int l_n;
-  int c_n;
-} GeometryState;
-
 typedef struct GenericElemList GenericElemList;
 struct GenericElemList {
   union {
@@ -26,13 +17,13 @@ typedef struct {
   GenericElemList *pd_list;
   GenericElemList *ld_list;
   GenericElemList *cd_list;
-} GeometryState2;
+} GeometryState;
 
 void clear_geometry_state(GeometryState *gs);
 
-void register_point(GeometryState *gs, PointDef *pd);
-void register_line(GeometryState *gs, LineDef *ld);
-void register_circle(GeometryState *gs, CircleDef *cd);
+bool register_point(GeometryState *gs, PointDef *pd);
+bool register_line(GeometryState *gs, LineDef *ld);
+bool register_circle(GeometryState *gs, CircleDef *cd);
 
 PointDef *alloc_and_reg_point(GeometryState *gs, PointDef pd);
 LineDef *alloc_and_reg_line(GeometryState *gs, LineDef ld);

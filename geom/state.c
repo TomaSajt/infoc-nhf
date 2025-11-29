@@ -4,32 +4,58 @@
 
 #include <stdlib.h>
 
-// free() all elements in the geometry state and set counts back to zero
 void clear_geometry_state(GeometryState *gs) {
-  for (int i = 0; i < gs->p_n; i++) {
-    free(gs->point_defs[i]);
+  for (GenericElemList *curr = gs->pd_list; curr != NULL;) {
+    GenericElemList *next = curr->next;
+    free(curr->pd);
+    free(curr);
+    curr = next;
   }
-  for (int i = 0; i < gs->l_n; i++) {
-    free(gs->line_defs[i]);
+  gs->pd_list = NULL;
+  for (GenericElemList *curr = gs->ld_list; curr != NULL;) {
+    GenericElemList *next = curr->next;
+    free(curr->ld);
+    free(curr);
+    curr = next;
   }
-  for (int i = 0; i < gs->c_n; i++) {
-    free(gs->circle_defs[i]);
+  gs->ld_list = NULL;
+  for (GenericElemList *curr = gs->cd_list; curr != NULL;) {
+    GenericElemList *next = curr->next;
+    free(curr->cd);
+    free(curr);
+    curr = next;
   }
-  gs->p_n = 0;
-  gs->l_n = 0;
-  gs->c_n = 0;
+  gs->cd_list = NULL;
 }
 
-void register_point(GeometryState *gs, PointDef *pd) {
-  gs->point_defs[gs->p_n++] = pd;
+bool register_point(GeometryState *gs, PointDef *pd) {
+  GenericElemList *elem = (GenericElemList *)malloc(sizeof(GenericElemList));
+  if (elem == NULL)
+    return false;
+  elem->pd = pd;
+  elem->next = gs->pd_list;
+  gs->pd_list = elem;
+  return true;
 }
 
-void register_line(GeometryState *gs, LineDef *ld) {
-  gs->line_defs[gs->l_n++] = ld;
+bool register_line(GeometryState *gs, LineDef *ld) {
+  GenericElemList *elem = (GenericElemList *)malloc(sizeof(GenericElemList));
+  if (elem == NULL)
+    return false;
+  elem->ld = ld;
+  elem->next = gs->ld_list;
+  gs->ld_list = elem;
+  return true;
 }
 
-void register_circle(GeometryState *gs, CircleDef *cd) {
-  gs->circle_defs[gs->c_n++] = cd;
+bool register_circle(GeometryState *gs, CircleDef *cd) {
+  GenericElemList *elem = (GenericElemList *)malloc(sizeof(GenericElemList));
+  if (elem == NULL)
+    return false;
+  elem->cd = cd;
+  elem->next = gs->cd_list;
+  gs->cd_list = elem;
+  return true;
 }
 
 PointDef *alloc_and_reg_point(GeometryState *gs, PointDef pd) {
@@ -37,7 +63,10 @@ PointDef *alloc_and_reg_point(GeometryState *gs, PointDef pd) {
   if (alloc_pd == NULL)
     return NULL;
   *alloc_pd = pd;
-  register_point(gs, alloc_pd);
+  if (!register_point(gs, alloc_pd)) {
+    free(alloc_pd);
+    return NULL;
+  }
   return alloc_pd;
 }
 
@@ -46,7 +75,10 @@ LineDef *alloc_and_reg_line(GeometryState *gs, LineDef ld) {
   if (alloc_ld == NULL)
     return NULL;
   *alloc_ld = ld;
-  register_line(gs, alloc_ld);
+  if (!register_line(gs, alloc_ld)) {
+    free(alloc_ld);
+    return NULL;
+  }
   return alloc_ld;
 }
 
@@ -55,72 +87,81 @@ CircleDef *alloc_and_reg_circle(GeometryState *gs, CircleDef cd) {
   if (alloc_cd == NULL)
     return NULL;
   *alloc_cd = cd;
-  register_circle(gs, alloc_cd);
+  if (!register_circle(gs, alloc_cd)) {
+    free(alloc_cd);
+    return NULL;
+  }
   return alloc_cd;
 }
 
 void mark_everyting_dirty(GeometryState *gs) {
-  for (int i = 0; i < gs->p_n; i++) {
-    gs->point_defs[i]->val.dirty = true;
-  }
-  for (int i = 0; i < gs->l_n; i++) {
-    gs->line_defs[i]->val.dirty = true;
-  }
-  for (int i = 0; i < gs->c_n; i++) {
-    gs->circle_defs[i]->val.dirty = true;
-  }
+  for (GenericElemList *curr = gs->pd_list; curr != NULL; curr = curr->next)
+    curr->pd->val.dirty = true;
+  for (GenericElemList *curr = gs->ld_list; curr != NULL; curr = curr->next)
+    curr->ld->val.dirty = true;
+  for (GenericElemList *curr = gs->cd_list; curr != NULL; curr = curr->next)
+    curr->cd->val.dirty = true;
 }
 
 void delete_marked_cascading(GeometryState *gs) {
-  for (int i = 0; i < gs->p_n; i++) {
-    eval_point_del_flag(gs->point_defs[i]);
-  }
-  for (int i = 0; i < gs->l_n; i++) {
-    eval_line_del_flag(gs->line_defs[i]);
-  }
-  for (int i = 0; i < gs->c_n; i++) {
-    eval_circle_del_flag(gs->circle_defs[i]);
-  }
+  for (GenericElemList *curr = gs->pd_list; curr != NULL; curr = curr->next)
+    eval_point_del_flag(curr->pd);
+  for (GenericElemList *curr = gs->ld_list; curr != NULL; curr = curr->next)
+    eval_line_del_flag(curr->ld);
+  for (GenericElemList *curr = gs->cd_list; curr != NULL; curr = curr->next)
+    eval_circle_del_flag(curr->cd);
 
-  // TODO: implement in-place solution
-  GeometryState new_gs = {
-      .point_defs = {0},
-      .line_defs = {0},
-      .circle_defs = {0},
-      .p_n = 0,
-      .l_n = 0,
-      .c_n = 0,
-  };
-
-  for (int i = 0; i < gs->p_n; i++) {
-    PointDef *pd = gs->point_defs[i];
-    if (pd->del_flag == DF_YES) {
-      free(pd);
-    } else {
-      register_point(&new_gs, pd);
-      pd->del_flag = DF_DONT_KNOW;
+  {
+    GenericElemList sentinel;
+    sentinel.next = gs->pd_list;
+    GenericElemList *prev = &sentinel;
+    while (prev->next != NULL) {
+      GenericElemList *curr = prev->next;
+      if (curr->pd->del_flag == DF_YES) {
+        prev->next = curr->next;
+        free(curr->pd);
+        free(curr);
+      } else {
+        curr->pd->del_flag = DF_DONT_KNOW;
+        prev = curr;
+      }
     }
+    gs->pd_list = sentinel.next;
   }
-  for (int i = 0; i < gs->l_n; i++) {
-    LineDef *ld = gs->line_defs[i];
-    if (ld->del_flag == DF_YES) {
-      free(ld);
-    } else {
-      register_line(&new_gs, ld);
-      ld->del_flag = DF_DONT_KNOW;
+  {
+    GenericElemList sentinel;
+    sentinel.next = gs->ld_list;
+    GenericElemList *prev = &sentinel;
+    while (prev->next != NULL) {
+      GenericElemList *curr = prev->next;
+      if (curr->ld->del_flag == DF_YES) {
+        prev->next = curr->next;
+        free(curr->ld);
+        free(curr);
+      } else {
+        curr->ld->del_flag = DF_DONT_KNOW;
+        prev = curr;
+      }
     }
+    gs->ld_list = sentinel.next;
   }
-  for (int i = 0; i < gs->c_n; i++) {
-    CircleDef *cd = gs->circle_defs[i];
-    if (cd->del_flag == DF_YES) {
-      free(cd);
-    } else {
-      register_circle(&new_gs, cd);
-      cd->del_flag = DF_DONT_KNOW;
+  {
+    GenericElemList sentinel;
+    sentinel.next = gs->cd_list;
+    GenericElemList *prev = &sentinel;
+    while (prev->next != NULL) {
+      GenericElemList *curr = prev->next;
+      if (curr->cd->del_flag == DF_YES) {
+        prev->next = curr->next;
+        free(curr->cd);
+        free(curr);
+      } else {
+        curr->cd->del_flag = DF_DONT_KNOW;
+        prev = curr;
+      }
     }
+    gs->cd_list = sentinel.next;
   }
-
-  *gs = new_gs;
 }
 
 void delete_point(GeometryState *gs, PointDef *pd) {

@@ -1,6 +1,7 @@
 #include "hover.h"
 #include "draw.h" // TODO: this is only here for the hitbox radius
 #include "geom/defs.h"
+#include "geom/state.h"
 #include "geom/util.h"
 #include "mode/defs.h"
 
@@ -17,8 +18,9 @@
 PointDef *get_hovered_point(AppState const *as, Pos2D const *w_mouse_pos) {
   PointDef *best = NULL;
   double best_dist = 0;
-  for (int i = 0; i < as->gs.p_n; i++) {
-    PointDef *pd = as->gs.point_defs[i];
+  for (GenericElemList *curr = as->gs.pd_list; curr != NULL;
+       curr = curr->next) {
+    PointDef *pd = curr->pd;
     eval_point(pd);
     if (pd->val.invalid)
       continue;
@@ -73,8 +75,9 @@ LineDef *get_hovered_lines(AppState const *as, Pos2D const *w_mouse_pos,
   SortData bad = {.ld = NULL, .dist = 1e10};
   SortData arr[3] = {bad, bad, bad};
 
-  for (int i = 0; i < as->gs.l_n; i++) {
-    LineDef *ld = as->gs.line_defs[i];
+  for (GenericElemList *curr = as->gs.ld_list; curr != NULL;
+       curr = curr->next) {
+    LineDef *ld = curr->ld;
     eval_line(ld);
     if (ld->val.invalid)
       continue;
@@ -105,8 +108,9 @@ CircleDef *get_hovered_circles(AppState const *as, Pos2D const *w_mouse_pos,
   SortData bad = {.cd = NULL, .dist = 1e10};
   SortData arr[3] = {bad, bad, bad};
 
-  for (int i = 0; i < as->gs.c_n; i++) {
-    CircleDef *cd = as->gs.circle_defs[i];
+  for (GenericElemList *curr = as->gs.cd_list; curr != NULL;
+       curr = curr->next) {
+    CircleDef *cd = curr->cd;
     eval_circle(cd);
     if (cd->val.invalid)
       continue;

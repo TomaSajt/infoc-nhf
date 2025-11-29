@@ -80,7 +80,7 @@ void save_circle(FILE *handle, CircleDef *cd) {
   fprintf(handle, "\n");
 }
 
-void save_to_file(FILE *handle, GeometryState2 const *gs) {
+void save_to_file(FILE *handle, GeometryState const *gs) {
   // we assign an ID to each element to be saved
   // the IDs only have to be unique type-wise
   {
@@ -159,12 +159,8 @@ bool make_elem_holder(int n, GenericElemList ***array_out) {
   bool ok = true;
   for (int i = 0; i < n; i++) {
     array[i] = (GenericElemList *)malloc(sizeof(GenericElemList));
-    if (array[i] == NULL) {
+    if (array[i] == NULL)
       ok = false;
-      continue; // even if we get an error, we'll only handle it after the
-                // whole loop is done
-    }
-    array[i]->next = i == n - 1 ? NULL : array[i + 1];
   }
 
   if (!ok) {
@@ -172,6 +168,12 @@ bool make_elem_holder(int n, GenericElemList ***array_out) {
       free(array[i]);
     free(array);
     return false;
+  }
+
+  if (n > 0) {
+    for (int i = 0; i < n - 1; i++)
+      array[i]->next = array[i + 1];
+    array[n - 1]->next = NULL;
   }
 
   *array_out = array;
@@ -410,12 +412,13 @@ int get_rr_list_len(ReadResult const *rr_list) {
 }
 
 bool process_rr_lists(ReadResult *p_rr_list, ReadResult *l_rr_list,
-                      ReadResult *c_rr_list, GeometryState2 *gs) {
+                      ReadResult *c_rr_list, GeometryState *gs) {
   bool ret = true;
 
   int p_n = get_rr_list_len(p_rr_list);
   int l_n = get_rr_list_len(l_rr_list);
   int c_n = get_rr_list_len(c_rr_list);
+  printf("%d %d %d\n", p_n, l_n, c_n);
 
   ReadResult **ord_p_results, **ord_l_results, **ord_c_results;
   ret &= make_pointer_array_from_list(p_rr_list, p_n, &ord_p_results);
@@ -483,36 +486,40 @@ bool process_rr_lists(ReadResult *p_rr_list, ReadResult *l_rr_list,
     goto defs_cleanup;
   }
 
-  *gs = (GeometryState2){
+  *gs = (GeometryState){
       .pd_list = p_n > 0 ? point_defs_holder[0] : NULL,
       .ld_list = l_n > 0 ? line_defs_holder[0] : NULL,
       .cd_list = c_n > 0 ? circle_defs_holder[0] : NULL,
   };
 
 defs_cleanup:
-  for (int i = 0; i < p_n; i++)
-    free(point_defs_holder[i]->pd);
-  for (int i = 0; i < l_n; i++)
-    free(line_defs_holder[i]->ld);
-  for (int i = 0; i < c_n; i++)
-    free(circle_defs_holder[i]->cd);
+  if (!ret) {
+    for (int i = 0; i < p_n; i++)
+      free(point_defs_holder[i]->pd);
+    for (int i = 0; i < l_n; i++)
+      free(line_defs_holder[i]->ld);
+    for (int i = 0; i < c_n; i++)
+      free(circle_defs_holder[i]->cd);
+  }
 
 holder_cleanup:
-  if (point_defs_holder != NULL) {
-    for (int i = 0; i < p_n; i++)
-      free(point_defs_holder[i]);
-    free(point_defs_holder);
+  if (!ret) {
+    if (point_defs_holder != NULL) {
+      for (int i = 0; i < p_n; i++)
+        free(point_defs_holder[i]);
+    }
+    if (line_defs_holder != NULL) {
+      for (int i = 0; i < l_n; i++)
+        free(line_defs_holder[i]);
+    }
+    if (circle_defs_holder != NULL) {
+      for (int i = 0; i < c_n; i++)
+        free(circle_defs_holder[i]);
+    }
   }
-  if (line_defs_holder != NULL) {
-    for (int i = 0; i < l_n; i++)
-      free(line_defs_holder[i]);
-    free(line_defs_holder);
-  }
-  if (circle_defs_holder != NULL) {
-    for (int i = 0; i < c_n; i++)
-      free(circle_defs_holder[i]);
-    free(circle_defs_holder);
-  }
+  free(point_defs_holder);
+  free(line_defs_holder);
+  free(circle_defs_holder);
 
 ord_results_cleanup:
   free(ord_p_results);
@@ -530,7 +537,7 @@ void free_rr_list(ReadResult *list) {
   }
 }
 
-bool load_from_file(FILE *handle, GeometryState2 *gs) {
+bool load_from_file(FILE *handle, GeometryState *gs) {
   bool ret = true;
 
   ReadResult *p_rr_list = NULL, *l_rr_list = NULL, *c_rr_list = NULL;
