@@ -1,6 +1,7 @@
 #include "data.h"
 #include "../geom/defs.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -79,28 +80,39 @@ void save_circle(FILE *handle, CircleDef *cd) {
   fprintf(handle, "\n");
 }
 
-void save_to_file(FILE *handle, GeometryState const *gs) {
+void save_to_file(FILE *handle, GeometryState2 const *gs) {
   // we assign an ID to each element to be saved
   // the IDs only have to be unique type-wise
-  for (int i = 0; i < gs->p_n; i++)
-    gs->point_defs[i]->save_id = i;
-  for (int i = 0; i < gs->l_n; i++)
-    gs->line_defs[i]->save_id = i;
-  for (int i = 0; i < gs->c_n; i++)
-    gs->circle_defs[i]->save_id = i;
+  {
+    int id = 0;
+    for (GenericElemList *curr = gs->pd_list; curr != NULL; curr = curr->next)
+      curr->pd->save_id = id++;
+  }
+  {
+    int id = 0;
+    for (GenericElemList *curr = gs->ld_list; curr != NULL; curr = curr->next)
+      curr->ld->save_id = id++;
+  }
+  {
+    int id = 0;
+    for (GenericElemList *curr = gs->cd_list; curr != NULL; curr = curr->next)
+      curr->cd->save_id = id++;
+  }
 
-  for (int i = 0; i < gs->p_n; i++)
-    save_point(handle, gs->point_defs[i]);
-  for (int i = 0; i < gs->l_n; i++)
-    save_line(handle, gs->line_defs[i]);
-  for (int i = 0; i < gs->c_n; i++)
-    save_circle(handle, gs->circle_defs[i]);
+  for (GenericElemList *curr = gs->pd_list; curr != NULL; curr = curr->next)
+    save_point(handle, curr->pd);
+  for (GenericElemList *curr = gs->ld_list; curr != NULL; curr = curr->next)
+    save_line(handle, curr->ld);
+  for (GenericElemList *curr = gs->cd_list; curr != NULL; curr = curr->next)
+    save_circle(handle, curr->cd);
 }
 
-typedef struct {
+typedef struct ReadResult ReadResult;
+struct ReadResult {
   int id;
-  char rest[256];
-} ReadResult;
+  char rest[256]; // a line in the save file is not allowed to be longer
+  ReadResult *next;
+};
 
 int id_cmp(void const *a, void const *b) {
   ReadResult *aa = *(ReadResult **)a;
@@ -112,9 +124,63 @@ void sort_by_id(ReadResult **sorted_results, int n) {
   qsort(sorted_results, n, sizeof(ReadResult *), id_cmp);
 }
 
+bool make_pointer_array_from_list(ReadResult *list, int n,
+                                  ReadResult ***array_out) {
+  *array_out = NULL;
+
+  ReadResult **array = (ReadResult **)malloc(sizeof(ReadResult *) * n);
+  if (n > 0 && array == NULL) {
+    return false;
+  }
+
+  ReadResult *curr = list;
+  for (int i = 0; i < n; i++) {
+    assert(curr != NULL);
+    array[i] = curr;
+    curr = curr->next;
+  }
+  assert(curr == NULL);
+
+  *array_out = array;
+  return true;
+}
+
+// creates an array of list nodes of a length n list
+// the contents of the list nodes are not initialized, only `next` is set
+bool make_elem_holder(int n, GenericElemList ***array_out) {
+  *array_out = NULL;
+
+  GenericElemList **array =
+      (GenericElemList **)malloc(sizeof(GenericElemList *) * n);
+  if (n > 0 && array == NULL) {
+    return false;
+  }
+
+  bool ok = true;
+  for (int i = 0; i < n; i++) {
+    array[i] = (GenericElemList *)malloc(sizeof(GenericElemList));
+    if (array[i] == NULL) {
+      ok = false;
+      continue; // even if we get an error, we'll only handle it after the
+                // whole loop is done
+    }
+    array[i]->next = i == n - 1 ? NULL : array[i + 1];
+  }
+
+  if (!ok) {
+    for (int i = 0; i < n; i++)
+      free(array[i]);
+    free(array);
+    return false;
+  }
+
+  *array_out = array;
+  return true;
+}
+
 int id_rr_cmp(void const *key, void const *elem) {
   int id = *(int *)key;                  // key is int*
-  ReadResult *rr = *(ReadResult **)elem; // elem is Person*
+  ReadResult *rr = *(ReadResult **)elem; // elem is ReadResult*
   return id - rr->id;
 }
 
@@ -126,9 +192,19 @@ int id_to_index(int id, ReadResult **sorted_results, int n) {
   return rr - sorted_results;
 }
 
-bool parse_point(char *data, PointDef *pd, GeometryState *gs,
-                 ReadResult **sorted_p_results, ReadResult **sorted_l_results,
-                 ReadResult **sorted_c_results) {
+typedef struct {
+  GenericElemList **point_defs_holder;
+  GenericElemList **line_defs_holder;
+  GenericElemList **circle_defs_holder;
+  ReadResult **ord_p_results;
+  ReadResult **ord_l_results;
+  ReadResult **ord_c_results;
+  int p_n;
+  int l_n;
+  int c_n;
+} ParseContext;
+
+bool parse_point(char *data, PointDef *pd, ParseContext const *ctx) {
   int type_i;
   if (sscanf(data, "%d", &type_i) != 1)
     return false;
@@ -145,11 +221,12 @@ bool parse_point(char *data, PointDef *pd, GeometryState *gs,
     int id1, id2;
     if (sscanf(data, "%*d %d %d", &id1, &id2) != 2)
       return false;
-    int ind1 = id_to_index(id1, sorted_p_results, gs->p_n);
-    int ind2 = id_to_index(id2, sorted_p_results, gs->p_n);
+    int ind1 = id_to_index(id1, ctx->ord_p_results, ctx->p_n);
+    int ind2 = id_to_index(id2, ctx->ord_p_results, ctx->p_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    *pd = make_point_midpoint(gs->point_defs[ind1], gs->point_defs[ind2]);
+    *pd = make_point_midpoint(ctx->point_defs_holder[ind1]->pd,
+                              ctx->point_defs_holder[ind2]->pd);
     return true;
   }
   case PD_GLIDER_ON_LINE: {
@@ -157,21 +234,22 @@ bool parse_point(char *data, PointDef *pd, GeometryState *gs,
     double prog;
     if (sscanf(data, "%*d %d %lf", &id, &prog) != 2)
       return false;
-    int ind = id_to_index(id, sorted_l_results, gs->l_n);
+    int ind = id_to_index(id, ctx->ord_l_results, ctx->l_n);
     if (ind == -1)
       return false;
-    *pd = make_point_glider_on_line(gs->line_defs[ind], prog);
+    *pd = make_point_glider_on_line(ctx->line_defs_holder[ind]->ld, prog);
     return true;
   }
   case PD_INTSEC_LINE_LINE: {
     int id1, id2;
     if (sscanf(data, "%*d %d %d", &id1, &id2) != 2)
       return false;
-    int ind1 = id_to_index(id1, sorted_l_results, gs->l_n);
-    int ind2 = id_to_index(id2, sorted_l_results, gs->l_n);
+    int ind1 = id_to_index(id1, ctx->ord_l_results, ctx->l_n);
+    int ind2 = id_to_index(id2, ctx->ord_l_results, ctx->l_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    *pd = make_point_intsec_line_line(gs->line_defs[ind1], gs->line_defs[ind2]);
+    *pd = make_point_intsec_line_line(ctx->line_defs_holder[ind1]->ld,
+                                      ctx->line_defs_holder[ind2]->ld);
     return true;
   }
   case PD_GLIDER_ON_CIRCLE: {
@@ -179,11 +257,11 @@ bool parse_point(char *data, PointDef *pd, GeometryState *gs,
     double prog;
     if (sscanf(data, "%*d %d %lf", &id, &prog) != 2)
       return false;
-    int ind = id_to_index(id, sorted_c_results, gs->c_n);
+    int ind = id_to_index(id, ctx->ord_c_results, ctx->c_n);
     if (ind == -1)
       return false;
 
-    *pd = make_point_glider_on_circle(gs->circle_defs[ind], prog);
+    *pd = make_point_glider_on_circle(ctx->circle_defs_holder[ind]->cd, prog);
     return true;
   }
   case PD_INTSEC_LINE_CIRCLE: {
@@ -194,12 +272,13 @@ bool parse_point(char *data, PointDef *pd, GeometryState *gs,
     ILCProgType prog_type = (ILCProgType)prog_type_i;
     if (prog_type != ILC_PROG_LOWER && prog_type != ILC_PROG_HIGHER)
       return false;
-    int ind1 = id_to_index(id1, sorted_l_results, gs->l_n);
-    int ind2 = id_to_index(id2, sorted_c_results, gs->c_n);
+    int ind1 = id_to_index(id1, ctx->ord_l_results, ctx->l_n);
+    int ind2 = id_to_index(id2, ctx->ord_c_results, ctx->c_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    *pd = make_point_intsec_line_circle(gs->line_defs[ind1],
-                                        gs->circle_defs[ind2], prog_type);
+    *pd = make_point_intsec_line_circle(ctx->line_defs_holder[ind1]->ld,
+                                        ctx->circle_defs_holder[ind2]->cd,
+                                        prog_type);
     return true;
   }
   case PD_INTSEC_CIRCLE_CIRCLE: {
@@ -211,12 +290,13 @@ bool parse_point(char *data, PointDef *pd, GeometryState *gs,
     ICCSide side = (ICCSide)side_i;
     if (side != ICC_LEFT && side != ICC_RIGHT)
       return false;
-    int ind1 = id_to_index(id1, sorted_c_results, gs->c_n);
-    int ind2 = id_to_index(id2, sorted_c_results, gs->c_n);
+    int ind1 = id_to_index(id1, ctx->ord_c_results, ctx->c_n);
+    int ind2 = id_to_index(id2, ctx->ord_c_results, ctx->c_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    *pd = make_point_intsec_circle_circle(gs->circle_defs[ind1],
-                                          gs->circle_defs[ind2], side);
+    *pd = make_point_intsec_circle_circle(ctx->circle_defs_holder[ind1]->cd,
+                                          ctx->circle_defs_holder[ind2]->cd,
+                                          side);
     return true;
   }
   }
@@ -224,8 +304,7 @@ bool parse_point(char *data, PointDef *pd, GeometryState *gs,
   return false;
 }
 
-bool parse_line(char *data, LineDef *ld, GeometryState *gs,
-                ReadResult **sorted_p_results, ReadResult **sorted_l_results) {
+bool parse_line(char *data, LineDef *ld, ParseContext const *ctx) {
   int ext_mode_i;
   int type_i;
   if (sscanf(data, "%d %d", &ext_mode_i, &type_i) != 2)
@@ -242,13 +321,13 @@ bool parse_line(char *data, LineDef *ld, GeometryState *gs,
     int id1, id2;
     if (sscanf(data, "%*d %*d %d %d", &id1, &id2) != 2)
       return false;
-    int ind1 = id_to_index(id1, sorted_p_results, gs->p_n);
-    int ind2 = id_to_index(id2, sorted_p_results, gs->p_n);
+    int ind1 = id_to_index(id1, ctx->ord_p_results, ctx->p_n);
+    int ind2 = id_to_index(id2, ctx->ord_p_results, ctx->p_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
 
-    *ld = make_line_point_to_point(ext_mode, gs->point_defs[ind1],
-                                   gs->point_defs[ind2]);
+    *ld = make_line_point_to_point(ext_mode, ctx->point_defs_holder[ind1]->pd,
+                                   ctx->point_defs_holder[ind2]->pd);
     return true;
   }
   case LD_PARALLEL: {
@@ -258,11 +337,12 @@ bool parse_line(char *data, LineDef *ld, GeometryState *gs,
     int id1, id2;
     if (sscanf(data, "%*d %*d %d %d", &id1, &id2) != 2)
       return false;
-    int ind1 = id_to_index(id1, sorted_l_results, gs->l_n);
-    int ind2 = id_to_index(id2, sorted_p_results, gs->p_n);
+    int ind1 = id_to_index(id1, ctx->ord_l_results, ctx->l_n);
+    int ind2 = id_to_index(id2, ctx->ord_p_results, ctx->p_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    *ld = make_line_parallel(gs->line_defs[ind1], gs->point_defs[ind2]);
+    *ld = make_line_parallel(ctx->line_defs_holder[ind1]->ld,
+                             ctx->point_defs_holder[ind2]->pd);
     return true;
   }
   case LD_PERPENDICULAR: {
@@ -272,11 +352,12 @@ bool parse_line(char *data, LineDef *ld, GeometryState *gs,
     int id1, id2;
     if (sscanf(data, "%*d %*d %d %d", &id1, &id2) != 2)
       return false;
-    int ind1 = id_to_index(id1, sorted_l_results, gs->l_n);
-    int ind2 = id_to_index(id2, sorted_p_results, gs->p_n);
+    int ind1 = id_to_index(id1, ctx->ord_l_results, ctx->l_n);
+    int ind2 = id_to_index(id2, ctx->ord_p_results, ctx->p_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    *ld = make_line_perpendicular(gs->line_defs[ind1], gs->point_defs[ind2]);
+    *ld = make_line_perpendicular(ctx->line_defs_holder[ind1]->ld,
+                                  ctx->point_defs_holder[ind2]->pd);
     return true;
   }
   }
@@ -284,9 +365,7 @@ bool parse_line(char *data, LineDef *ld, GeometryState *gs,
   return false;
 }
 
-bool parse_circle(char *data, CircleDef *cd, GeometryState *gs,
-                  ReadResult **sorted_p_results,
-                  ReadResult **sorted_l_results) {
+bool parse_circle(char *data, CircleDef *cd, ParseContext const *ctx) {
   int type_i;
   if (sscanf(data, "%d", &type_i) != 1)
     return false;
@@ -296,26 +375,24 @@ bool parse_circle(char *data, CircleDef *cd, GeometryState *gs,
     int id1, id2;
     if (sscanf(data, "%*d %d %d", &id1, &id2) != 2)
       return false;
-    int ind1 = id_to_index(id1, sorted_p_results, gs->p_n);
-    int ind2 = id_to_index(id2, sorted_p_results, gs->p_n);
+    int ind1 = id_to_index(id1, ctx->ord_p_results, ctx->p_n);
+    int ind2 = id_to_index(id2, ctx->ord_p_results, ctx->p_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    *cd = make_circle_center_point_outer_point(gs->point_defs[ind1],
-                                               gs->point_defs[ind2]);
+    *cd = make_circle_center_point_outer_point(
+        ctx->point_defs_holder[ind1]->pd, ctx->point_defs_holder[ind2]->pd);
     return true;
   }
   case CD_CENTER_POINT_RADIUS_SEG: {
     int id1, id2;
     if (sscanf(data, "%*d %d %d", &id1, &id2) != 2)
       return false;
-    int ind1 = id_to_index(id1, sorted_p_results, gs->p_n);
-    int ind2 = id_to_index(id2, sorted_l_results, gs->l_n);
+    int ind1 = id_to_index(id1, ctx->ord_p_results, ctx->p_n);
+    int ind2 = id_to_index(id2, ctx->ord_l_results, ctx->l_n);
     if (ind1 == -1 || ind2 == -1)
       return false;
-    cd->center_point_radius_seg.center = gs->point_defs[ind1];
-    cd->center_point_radius_seg.rad_seg = gs->line_defs[ind2];
-    *cd = make_circle_center_point_radius_seg(gs->point_defs[ind1],
-                                              gs->line_defs[ind2]);
+    *cd = make_circle_center_point_radius_seg(ctx->point_defs_holder[ind1]->pd,
+                                              ctx->line_defs_holder[ind2]->ld);
     return true;
   }
   }
@@ -323,104 +400,187 @@ bool parse_circle(char *data, CircleDef *cd, GeometryState *gs,
   return false;
 }
 
-bool load_from_file(FILE *handle, GeometryState *gs) {
-  ReadResult p_rrs[100], l_rrs[100], c_rrs[100];
-  int p_n = 0, l_n = 0, c_n = 0;
-  while (true) {
-    char type;
-    int id;
-    int res = fscanf(handle, "%c %d ", &type, &id);
-    if (res == EOF)
-      break;
-    if (res != 2) {
-      printf("Error: res was: %d\n", res);
-      return false;
-    }
-    ReadResult *rr;
-    switch (type) {
-    case 'p':
-      rr = &p_rrs[p_n++];
-      break;
-    case 'l':
-      rr = &l_rrs[l_n++];
-      break;
-    case 'c':
-      rr = &c_rrs[c_n++];
-      break;
-    default:
-      printf("Unknown elem type\n");
-      return false;
-    }
-    rr->id = id;
-    char *ptr = fgets(rr->rest, 256, handle);
-    // TODO: handle if line was too long!
-    if (ptr == NULL) {
-      printf("Error: fgets read nothing\n");
-      return false;
-    }
+int get_rr_list_len(ReadResult const *rr_list) {
+  int cnt = 0;
+  while (rr_list != NULL) {
+    cnt++;
+    rr_list = rr_list->next;
+  }
+  return cnt;
+}
+
+bool process_rr_lists(ReadResult *p_rr_list, ReadResult *l_rr_list,
+                      ReadResult *c_rr_list, GeometryState2 *gs) {
+  bool ret = true;
+
+  int p_n = get_rr_list_len(p_rr_list);
+  int l_n = get_rr_list_len(l_rr_list);
+  int c_n = get_rr_list_len(c_rr_list);
+
+  ReadResult **ord_p_results, **ord_l_results, **ord_c_results;
+  ret &= make_pointer_array_from_list(p_rr_list, p_n, &ord_p_results);
+  ret &= make_pointer_array_from_list(l_rr_list, l_n, &ord_l_results);
+  ret &= make_pointer_array_from_list(c_rr_list, c_n, &ord_c_results);
+  if (!ret) {
+    goto ord_results_cleanup;
   }
 
-  ReadResult *srt_p_rrs[100];
-  ReadResult *srt_l_rrs[100];
-  ReadResult *srt_c_rrs[100];
+  sort_by_id(ord_p_results, p_n);
+  sort_by_id(ord_l_results, l_n);
+  sort_by_id(ord_c_results, c_n);
 
-  for (int i = 0; i < p_n; i++)
-    srt_p_rrs[i] = &p_rrs[i];
-  for (int i = 0; i < l_n; i++)
-    srt_l_rrs[i] = &l_rrs[i];
-  for (int i = 0; i < c_n; i++)
-    srt_c_rrs[i] = &c_rrs[i];
+  GenericElemList **point_defs_holder, **line_defs_holder, **circle_defs_holder;
+  ret &= make_elem_holder(p_n, &point_defs_holder);
+  ret &= make_elem_holder(l_n, &line_defs_holder);
+  ret &= make_elem_holder(c_n, &circle_defs_holder);
+  if (!ret) {
+    goto holder_cleanup;
+  }
 
-  sort_by_id(srt_p_rrs, p_n);
-  sort_by_id(srt_l_rrs, l_n);
-  sort_by_id(srt_c_rrs, c_n);
+  for (int i = 0; i < p_n; i++) {
+    point_defs_holder[i]->pd = (PointDef *)malloc(sizeof(PointDef));
+    if (point_defs_holder[i]->pd == NULL)
+      ret = false;
+  }
+  for (int i = 0; i < l_n; i++) {
+    line_defs_holder[i]->ld = (LineDef *)malloc(sizeof(LineDef));
+    if (line_defs_holder[i]->ld == NULL)
+      ret = false;
+  }
+  for (int i = 0; i < c_n; i++) {
+    circle_defs_holder[i]->cd = (CircleDef *)malloc(sizeof(CircleDef));
+    if (circle_defs_holder[i]->cd == NULL)
+      ret = false;
+  }
 
-  *gs = (GeometryState){
-      .point_defs = {0},
-      .line_defs = {0},
-      .circle_defs = {0},
+  if (!ret) {
+    goto defs_cleanup;
+  }
+
+  ParseContext ctx = (ParseContext){
+      .point_defs_holder = point_defs_holder,
+      .line_defs_holder = line_defs_holder,
+      .circle_defs_holder = circle_defs_holder,
+      .ord_p_results = ord_p_results,
+      .ord_l_results = ord_l_results,
+      .ord_c_results = ord_c_results,
       .p_n = p_n,
       .l_n = l_n,
       .c_n = c_n,
   };
 
-  for (int i = 0; i < p_n; i++) {
-    gs->point_defs[i] = (PointDef *)malloc(sizeof(PointDef));
+  for (int i = 0; ret && i < p_n; i++) {
+    ret = parse_point(ord_p_results[i]->rest, point_defs_holder[i]->pd, &ctx);
   }
-  for (int i = 0; i < l_n; i++) {
-    gs->line_defs[i] = (LineDef *)malloc(sizeof(LineDef));
+  for (int i = 0; ret && i < l_n; i++) {
+    ret = parse_line(ord_l_results[i]->rest, line_defs_holder[i]->ld, &ctx);
   }
-  for (int i = 0; i < c_n; i++) {
-    gs->circle_defs[i] = (CircleDef *)malloc(sizeof(CircleDef));
-  }
-
-  bool ok = true;
-  for (int i = 0; ok && i < p_n; i++) {
-    ok = parse_point(srt_p_rrs[i]->rest, gs->point_defs[i], gs, srt_p_rrs,
-                     srt_l_rrs, srt_c_rrs);
-  }
-  for (int i = 0; ok && i < l_n; i++) {
-    ok = parse_line(srt_l_rrs[i]->rest, gs->line_defs[i], gs, srt_p_rrs,
-                    srt_l_rrs);
+  for (int i = 0; ret && i < c_n; i++) {
+    ret = parse_circle(ord_c_results[i]->rest, circle_defs_holder[i]->cd, &ctx);
   }
 
-  for (int i = 0; ok && i < c_n; i++) {
-    ok = parse_circle(srt_c_rrs[i]->rest, gs->circle_defs[i], gs, srt_p_rrs,
-                      srt_l_rrs);
+  if (!ret) {
+    goto defs_cleanup;
   }
 
-  if (!ok) {
-    for (int i = 0; i < p_n; i++) {
-      free(gs->point_defs[i]);
+  *gs = (GeometryState2){
+      .pd_list = p_n > 0 ? point_defs_holder[0] : NULL,
+      .ld_list = l_n > 0 ? line_defs_holder[0] : NULL,
+      .cd_list = c_n > 0 ? circle_defs_holder[0] : NULL,
+  };
+
+defs_cleanup:
+  for (int i = 0; i < p_n; i++)
+    free(point_defs_holder[i]->pd);
+  for (int i = 0; i < l_n; i++)
+    free(line_defs_holder[i]->ld);
+  for (int i = 0; i < c_n; i++)
+    free(circle_defs_holder[i]->cd);
+
+holder_cleanup:
+  if (point_defs_holder != NULL) {
+    for (int i = 0; i < p_n; i++)
+      free(point_defs_holder[i]);
+    free(point_defs_holder);
+  }
+  if (line_defs_holder != NULL) {
+    for (int i = 0; i < l_n; i++)
+      free(line_defs_holder[i]);
+    free(line_defs_holder);
+  }
+  if (circle_defs_holder != NULL) {
+    for (int i = 0; i < c_n; i++)
+      free(circle_defs_holder[i]);
+    free(circle_defs_holder);
+  }
+
+ord_results_cleanup:
+  free(ord_p_results);
+  free(ord_l_results);
+  free(ord_c_results);
+
+  return ret;
+}
+
+void free_rr_list(ReadResult *list) {
+  while (list != NULL) {
+    ReadResult *next = list->next;
+    free(list);
+    list = next;
+  }
+}
+
+bool load_from_file(FILE *handle, GeometryState2 *gs) {
+  bool ret = true;
+
+  ReadResult *p_rr_list = NULL, *l_rr_list = NULL, *c_rr_list = NULL;
+
+  while (true) {
+    char type;
+    int id;
+    int scan_res = fscanf(handle, "%c %d ", &type, &id);
+    if (scan_res == EOF)
+      break;
+    if (scan_res != 2) {
+      printf("Error: scan_res was: %d\n", scan_res);
+      ret = false;
+      goto rr_list_cleanup;
     }
-    for (int i = 0; i < l_n; i++) {
-      free(gs->line_defs[i]);
+
+    ReadResult **target_list = type == 'p'   ? &p_rr_list
+                               : type == 'l' ? &l_rr_list
+                               : type == 'c' ? &c_rr_list
+                                             : NULL;
+    if (target_list == NULL) {
+      ret = false;
+      goto rr_list_cleanup;
     }
-    for (int i = 0; i < c_n; i++) {
-      free(gs->circle_defs[i]);
+
+    ReadResult *rr = (ReadResult *)malloc(sizeof(ReadResult));
+    if (rr == NULL) {
+      ret = false;
+      goto rr_list_cleanup;
     }
-    return false;
+
+    rr->id = id;
+    rr->next = *target_list;
+    *target_list = rr;
+
+    char *ptr = fgets(rr->rest, 256, handle);
+    // TODO: handle if line was too long!
+    if (ptr == NULL) {
+      printf("Error: fgets read nothing\n");
+      ret = false;
+      goto rr_list_cleanup;
+    }
   }
 
-  return true;
+  ret = process_rr_lists(p_rr_list, l_rr_list, c_rr_list, gs);
+
+rr_list_cleanup:
+  free_rr_list(p_rr_list);
+  free_rr_list(l_rr_list);
+  free_rr_list(c_rr_list);
+
+  return ret;
 }

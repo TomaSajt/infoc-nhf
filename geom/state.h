@@ -12,6 +12,22 @@ typedef struct {
   int c_n;
 } GeometryState;
 
+typedef struct GenericElemList GenericElemList;
+struct GenericElemList {
+  union {
+    PointDef *pd;
+    LineDef *ld;
+    CircleDef *cd;
+  };
+  GenericElemList *next;
+};
+
+typedef struct {
+  GenericElemList *pd_list;
+  GenericElemList *ld_list;
+  GenericElemList *cd_list;
+} GeometryState2;
+
 void clear_geometry_state(GeometryState *gs);
 
 void register_point(GeometryState *gs, PointDef *pd);
