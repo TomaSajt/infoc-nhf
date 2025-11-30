@@ -1,6 +1,8 @@
 #include "dialog.h"
 #include "../mode/util.h"
+#include "SDL3/SDL_messagebox.h"
 #include "data.h"
+#include <stdio.h>
 
 const SDL_DialogFileFilter file_filters[] = {
     {"Geom savefiles", "geom"},
@@ -16,7 +18,10 @@ void set_save_path(AppState *as, char const *save_path) {
   }
 }
 
-void do_load_from_file(AppState *as, char const *file_path) {
+void do_load_from_file(AppState *as, char const *file_path, bool show_confirm) {
+  if (show_confirm && !show_lose_data_prompt(as)) {
+    return;
+  }
   printf("Loading file %s\n", file_path);
   FILE *handle = fopen(file_path, "r");
   if (handle != NULL) {
@@ -55,7 +60,7 @@ void open__on_file_selected(void *userdata, char const *const *filelist,
   if (filelist[1] != NULL) {
     printf("Multiple files were selected, only using the first!\n");
   }
-  do_load_from_file(as, file_path);
+  do_load_from_file(as, file_path, true);
 }
 
 void show_open_prompt(AppState *as) {
@@ -120,4 +125,35 @@ void make_new_canvas(AppState *as) {
   set_save_path(as, NULL);
   reset_mode_data(&as->es);
   clear_geometry_state(&as->gs);
+}
+
+bool show_lose_data_prompt(AppState *as) {
+  SDL_MessageBoxButtonData const buttons[] = {
+      {
+          .buttonID = 1,
+          .text = "Yes",
+          .flags = SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT,
+      },
+      {
+          .buttonID = 0,
+          .text = "Cancel",
+          .flags = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT,
+      },
+  };
+  SDL_MessageBoxData const messageboxdata = {
+      .window = as->window,
+      .title = "Continue?",
+      .message = "Do you want to continue? Any unsaved data will be lost.",
+      .numbuttons = 2,
+      .buttons = buttons,
+      .flags = SDL_MESSAGEBOX_WARNING,
+  };
+
+  int button_id;
+  bool success = SDL_ShowMessageBox(&messageboxdata, &button_id);
+  if (!success) {
+    printf("SDL error: %s\n", SDL_GetError());
+    return false;
+  }
+  return button_id == 1;
 }

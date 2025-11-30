@@ -86,7 +86,8 @@ SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
 
   case SDLK_N:
     if (ctrl_held) {
-      make_new_canvas(as);
+      if (show_lose_data_prompt(as))
+        make_new_canvas(as);
     }
     break;
   default:
@@ -344,7 +345,7 @@ int main(int argc, char const **argv) {
     if (argc >= 3) {
       printf("Multiple arguments were provided, only using the first!\n");
     }
-    do_load_from_file(&appstate, argv[1]);
+    do_load_from_file(&appstate, argv[1], false);
   }
 
   while (rc == SDL_APP_CONTINUE) {
