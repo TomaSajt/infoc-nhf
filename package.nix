@@ -27,8 +27,8 @@ stdenv.mkDerivation {
     (lib.cmakeFeature "FETCHCONTENT_SOURCE_DIR_SDL3_GFX" "${fetchFromGitHub {
       owner = "sabdul-khabir";
       repo = "SDL3_gfx";
-      rev = "add4f8c517d7b0275a6dcd67638d073be051ea88";
-      hash = "sha256-2oRBylxVFdMg0yaALaHDH2uWQtAVVMVH+re+AAwN49c=";
+      rev = "27b177ba86f13ea3c106c26fcd48169f482a10e1";
+      hash = "sha256-NWxfKHNPWV1IBP+sAmoebvilgzI6+AcBr+ghQo5WCUY=";
     }}")
   ];
 }

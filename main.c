@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void zoom(ViewInfo *view_info, Pos2D fp, double mul) {
   *view_info = (ViewInfo){

@@ -2,7 +2,9 @@
 #include "../mode/util.h"
 #include "SDL3/SDL_messagebox.h"
 #include "data.h"
+
 #include <stdio.h>
+#include <stdlib.h>
 
 const SDL_DialogFileFilter file_filters[] = {
     {"Geom savefiles", "geom"},

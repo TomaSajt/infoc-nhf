@@ -145,10 +145,6 @@ void draw_circle(AppState const *as, CircleDef *cd, SDL_Color color) {
       pos_world_to_screen(as->renderer, &as->view_info, cd->val.center);
   double screen_radius = as->view_info.scale * cd->val.radius;
 
-  // https://github.com/sabdul-khabir/SDL3_gfx/pull/18#issuecomment-3448747073
-  if (screen_radius < 1.0)
-    screen_radius = 0.0;
-
   circleRGBA(as->renderer, screen_center.x, screen_center.y, screen_radius,
              color.r, color.g, color.b, color.a);
 }

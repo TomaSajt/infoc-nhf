@@ -18,7 +18,7 @@ include(FetchContent)
 FetchContent_Declare(
   SDL3_gfx
   GIT_REPOSITORY https://github.com/sabdul-khabir/SDL3_gfx.git
-  GIT_TAG        add4f8c517d7b0275a6dcd67638d073be051ea88
+  GIT_TAG        27b177ba86f13ea3c106c26fcd48169f482a10e1
 )
 
 FetchContent_MakeAvailable(SDL3_gfx)
