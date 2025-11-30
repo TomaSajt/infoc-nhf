@@ -23,4 +23,6 @@ typedef struct AppState {
   char *save_path;
 } AppState;
 
+void zoom(ViewInfo *view_info, Pos2D fp, double mul);
+
 #endif

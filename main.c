@@ -14,17 +14,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void zoom(ViewInfo *view_info, Pos2D fp, double mul) {
-  *view_info = (ViewInfo){
-      .scale = view_info->scale * mul,
-      .center =
-          {
-              .x = fp.x + (view_info->center.x - fp.x) / mul,
-              .y = fp.y + (view_info->center.y - fp.y) / mul,
-          },
-  };
-}
-
 SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
   SDL_Keycode key_code = event->key;
   // we use SDLK_UNKNOWN as the "No keybind" marker for a mode,

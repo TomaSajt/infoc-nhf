@@ -35,6 +35,7 @@ add_executable(infoc-nhf WIN32
     draw.c
     hover.c
     main.c
+    state.c
 
     save/data.c
     save/dialog.c
