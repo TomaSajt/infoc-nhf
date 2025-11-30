@@ -178,3 +178,8 @@ bool draw_text_to(AppState const *as, char const *text, SDL_Color color,
   SDL_DestroyTexture(texture);
   return res;
 }
+
+void clear_screen(AppState *as, SDL_Color color) {
+  SDL_SetRenderDrawColor(as->renderer, color.r, color.g, color.b, color.a);
+  SDL_RenderClear(as->renderer);
+}

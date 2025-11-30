@@ -38,4 +38,6 @@ bool draw_texture_to(SDL_Renderer *renderer, SDL_Texture *texture, float x,
 bool draw_text_to(AppState const *as, char const *text, SDL_Color color,
                   float x, float y);
 
+void clear_screen(AppState *as, SDL_Color color);
+
 #endif

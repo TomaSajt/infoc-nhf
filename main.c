@@ -149,7 +149,7 @@ SDL_AppResult on_mouse_wheel(AppState *as, SDL_MouseWheelEvent *event) {
 SDL_AppResult on_event(AppState *as, SDL_Event *event) {
   switch (event->type) {
   case SDL_EVENT_QUIT:
-    return SDL_APP_SUCCESS;
+    return show_lose_data_prompt(as) ? SDL_APP_SUCCESS : SDL_APP_CONTINUE;
   case SDL_EVENT_KEY_DOWN:
     return on_key_down(as, &event->key);
   case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -199,11 +199,6 @@ void render_save_info(AppState const *as) {
   draw_text_to(as, save_name, WHITE, 700, 10);
 }
 
-void clear_screen(AppState *as, SDL_Color color) {
-  SDL_SetRenderDrawColor(as->renderer, color.r, color.g, color.b, color.a);
-  SDL_RenderClear(as->renderer);
-}
-
 SDL_AppResult on_render(AppState *as) {
   clear_screen(as, BLACK);
   render_mode_info(as);
@@ -224,11 +219,8 @@ SDL_AppResult on_render(AppState *as) {
   {
     // TODO: actually use proper render coodinates everywhere
     // TODO: maybe transform renderer instead of using ViewInfo
-    float wind_mx, wind_my;
-    SDL_GetMouseState(&wind_mx, &wind_my);
     float sc_mx, sc_my;
-    SDL_RenderCoordinatesFromWindow(as->renderer, wind_mx, wind_my, &sc_mx,
-                                    &sc_my);
+    SDL_GetMouseState(&sc_mx, &sc_my);
     Pos2D sc_mouse_pos = (Pos2D){.x = sc_mx, .y = sc_my};
     w_mouse_pos =
         pos_screen_to_world(as->renderer, &as->view_info, sc_mouse_pos);
