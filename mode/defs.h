@@ -48,7 +48,6 @@ typedef struct {
   SDL_Keycode keycode;
   void (*init_data)(EditorStateData *data);
   bool (*on_mouse_down)(AppState *as, Pos2D const *w_mouse_pos);
-  bool (*on_mouse_move)(AppState *as, Pos2D const *w_mouse_pos);
   bool (*on_mouse_up)(AppState *as);
   bool (*on_render)(AppState *as, Pos2D const *w_mouse_pos);
 } ModeInfo;

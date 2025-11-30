@@ -97,19 +97,6 @@ SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
   return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult on_mouse_move(AppState *as, SDL_MouseMotionEvent *motion) {
-  Pos2D s_mouse_pos = (Pos2D){.x = motion->x, .y = motion->y};
-  Pos2D w_mouse_pos =
-      pos_screen_to_world(as->renderer, &as->view_info, s_mouse_pos);
-
-  if (as->es.mode_info->on_mouse_move != NULL) {
-    if (!as->es.mode_info->on_mouse_move(as, &w_mouse_pos))
-      return SDL_APP_FAILURE;
-  }
-
-  return SDL_APP_CONTINUE;
-}
-
 SDL_AppResult on_mouse_button_down(AppState *as, SDL_MouseButtonEvent *event) {
   if (event->button != 1)
     return SDL_APP_CONTINUE;
@@ -159,8 +146,6 @@ SDL_AppResult on_event(AppState *as, SDL_Event *event) {
     return on_mouse_button_up(as, &event->button);
   case SDL_EVENT_MOUSE_WHEEL:
     return on_mouse_wheel(as, &event->wheel);
-  case SDL_EVENT_MOUSE_MOTION:
-    return on_mouse_move(as, &event->motion);
   }
   return SDL_APP_CONTINUE;
 }
