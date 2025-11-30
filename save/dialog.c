@@ -11,7 +11,7 @@ const SDL_DialogFileFilter file_filters[] = {
     {"All files", "*"},
 };
 
-void set_save_path(AppState *as, char const *save_path) {
+static void set_save_path(AppState *as, char const *save_path) {
   char *old_save_path = as->save_path;
   as->save_path = save_path == NULL ? NULL : strdup(save_path);
 
@@ -46,8 +46,8 @@ void do_load_from_file(AppState *as, char const *file_path, bool show_confirm) {
   }
 }
 
-void open__on_file_selected(void *userdata, char const *const *filelist,
-                            int filter) {
+static void open__on_file_selected(void *userdata, char const *const *filelist,
+                                   int filter) {
   AppState *as = userdata;
   (void)filter; // unused parameter
 
@@ -91,8 +91,8 @@ void do_save_to_file(AppState *as, char const *file_path) {
   }
 }
 
-void save__on_file_selected(void *userdata, char const *const *filelist,
-                            int filter) {
+static void save__on_file_selected(void *userdata, char const *const *filelist,
+                                   int filter) {
   AppState *as = userdata;
   (void)filter; // unused parameter
 

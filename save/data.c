@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void save_point(FILE *handle, PointDef *pd) {
+static void save_point(FILE *handle, PointDef *pd) {
   fprintf(handle, "p %d %d ", pd->save_id, pd->type);
   switch (pd->type) {
   case PD_LITERAL:
@@ -45,7 +45,7 @@ void save_point(FILE *handle, PointDef *pd) {
   fprintf(handle, "\n");
 }
 
-void save_line(FILE *handle, LineDef *ld) {
+static void save_line(FILE *handle, LineDef *ld) {
   fprintf(handle, "l %d %d %d ", ld->save_id, ld->ext_mode, ld->type);
   switch (ld->type) {
   case LD_POINT_TO_POINT:
@@ -64,7 +64,7 @@ void save_line(FILE *handle, LineDef *ld) {
   fprintf(handle, "\n");
 }
 
-void save_circle(FILE *handle, CircleDef *cd) {
+static void save_circle(FILE *handle, CircleDef *cd) {
   fprintf(handle, "c %d %d ", cd->save_id, cd->type);
   switch (cd->type) {
   case CD_CENTER_POINT_OUTER_POINT:
@@ -115,18 +115,18 @@ struct ReadResult {
   ReadResult *next;
 };
 
-int id_cmp(void const *a, void const *b) {
+static int id_cmp(void const *a, void const *b) {
   ReadResult *aa = *(ReadResult **)a;
   ReadResult *bb = *(ReadResult **)b;
   return aa->id - bb->id;
 }
 
-void sort_by_id(ReadResult **sorted_results, int n) {
+static void sort_by_id(ReadResult **sorted_results, int n) {
   qsort(sorted_results, n, sizeof(ReadResult *), id_cmp);
 }
 
-bool make_pointer_array_from_list(ReadResult *list, int n,
-                                  ReadResult ***array_out) {
+static bool make_pointer_array_from_list(ReadResult *list, int n,
+                                         ReadResult ***array_out) {
   *array_out = NULL;
 
   ReadResult **array = (ReadResult **)malloc(sizeof(ReadResult *) * n);
@@ -148,7 +148,7 @@ bool make_pointer_array_from_list(ReadResult *list, int n,
 
 // creates an array of list nodes of a length n list
 // the contents of the list nodes are not initialized, only `next` is set
-bool make_elem_holder(int n, GenericElemList ***array_out) {
+static bool make_elem_holder(int n, GenericElemList ***array_out) {
   *array_out = NULL;
 
   GenericElemList **array =
@@ -181,13 +181,13 @@ bool make_elem_holder(int n, GenericElemList ***array_out) {
   return true;
 }
 
-int id_rr_cmp(void const *key, void const *elem) {
+static int id_rr_cmp(void const *key, void const *elem) {
   int id = *(int *)key;                  // key is int*
   ReadResult *rr = *(ReadResult **)elem; // elem is ReadResult*
   return id - rr->id;
 }
 
-int id_to_index(int id, ReadResult **sorted_results, int n) {
+static int id_to_index(int id, ReadResult **sorted_results, int n) {
   ReadResult **rr =
       bsearch(&id, sorted_results, n, sizeof(ReadResult **), id_rr_cmp);
   if (rr == NULL)
@@ -207,7 +207,7 @@ typedef struct {
   int c_n;
 } ParseContext;
 
-bool parse_point(char *data, PointDef *pd, ParseContext const *ctx) {
+static bool parse_point(char *data, PointDef *pd, ParseContext const *ctx) {
   int type_i;
   if (sscanf(data, "%d", &type_i) != 1)
     return false;
@@ -307,7 +307,7 @@ bool parse_point(char *data, PointDef *pd, ParseContext const *ctx) {
   return false;
 }
 
-bool parse_line(char *data, LineDef *ld, ParseContext const *ctx) {
+static bool parse_line(char *data, LineDef *ld, ParseContext const *ctx) {
   int ext_mode_i;
   int type_i;
   if (sscanf(data, "%d %d", &ext_mode_i, &type_i) != 2)
@@ -368,7 +368,7 @@ bool parse_line(char *data, LineDef *ld, ParseContext const *ctx) {
   return false;
 }
 
-bool parse_circle(char *data, CircleDef *cd, ParseContext const *ctx) {
+static bool parse_circle(char *data, CircleDef *cd, ParseContext const *ctx) {
   int type_i;
   if (sscanf(data, "%d", &type_i) != 1)
     return false;
@@ -403,7 +403,7 @@ bool parse_circle(char *data, CircleDef *cd, ParseContext const *ctx) {
   return false;
 }
 
-int get_rr_list_len(ReadResult const *rr_list) {
+static int get_rr_list_len(ReadResult const *rr_list) {
   int cnt = 0;
   while (rr_list != NULL) {
     cnt++;
@@ -412,8 +412,8 @@ int get_rr_list_len(ReadResult const *rr_list) {
   return cnt;
 }
 
-bool process_rr_lists(ReadResult *p_rr_list, ReadResult *l_rr_list,
-                      ReadResult *c_rr_list, GeometryState *gs) {
+static bool process_rr_lists(ReadResult *p_rr_list, ReadResult *l_rr_list,
+                             ReadResult *c_rr_list, GeometryState *gs) {
   bool ret = true;
 
   int p_n = get_rr_list_len(p_rr_list);
@@ -530,7 +530,7 @@ ord_results_cleanup:
   return ret;
 }
 
-void free_rr_list(ReadResult *list) {
+static void free_rr_list(ReadResult *list) {
   while (list != NULL) {
     ReadResult *next = list->next;
     free(list);

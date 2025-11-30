@@ -50,7 +50,7 @@ typedef struct {
  * finishes.
  * Used by the tiny insertion sorts when calculating the 2 closest lines/circles
  */
-void swap_for_minmax(SortData *a, SortData *b) {
+static void swap_for_minmax(SortData *a, SortData *b) {
   if (a->dist >= b->dist) {
     SortData temp = *a;
     *a = *b;

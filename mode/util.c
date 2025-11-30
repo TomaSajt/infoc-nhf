@@ -1,6 +1,6 @@
 #include "util.h"
 
-ModeInfo const *calc_mode_from_inds(EditorState const *es) {
+static ModeInfo const *calc_mode_from_inds(EditorState const *es) {
   CategoryState const *cs = &es->category_states[es->sel_cat_ind];
   return &cs->cat_info->modes[cs->sel_mode_ind];
 }

@@ -12,7 +12,8 @@ Pos2D lerp(Pos2D const *start, Pos2D const *end, double prog) {
   };
 }
 
-Pos2D pos_from_circle_angle(Pos2D const *center, double radius, double angle) {
+static Pos2D pos_from_circle_angle(Pos2D const *center, double radius,
+                                   double angle) {
   return (Pos2D){
       .x = center->x + radius * cos(angle),
       .y = center->y + radius * sin(angle),
@@ -21,8 +22,9 @@ Pos2D pos_from_circle_angle(Pos2D const *center, double radius, double angle) {
 
 // returns false if no or infinite solutions
 // puts point into res
-bool calc_intsec_line_line(Pos2D const *s1, Pos2D const *e1, Pos2D const *s2,
-                           Pos2D const *e2, Pos2D *res) {
+static bool calc_intsec_line_line(Pos2D const *s1, Pos2D const *e1,
+                                  Pos2D const *s2, Pos2D const *e2,
+                                  Pos2D *res) {
   double v1x = e1->x - s1->x;
   double v1y = e1->y - s1->y;
   double v2x = e2->x - s2->x;
@@ -42,11 +44,9 @@ bool calc_intsec_line_line(Pos2D const *s1, Pos2D const *e1, Pos2D const *s2,
   return true;
 }
 
-double vec_len(double x, double y) { return sqrt(x * x + y * y); }
-
-bool calc_intsec_line_circle(Pos2D const *start, Pos2D const *end,
-                             Pos2D const *center, double radius,
-                             ILCProgType prog_type, Pos2D *res) {
+static bool calc_intsec_line_circle(Pos2D const *start, Pos2D const *end,
+                                    Pos2D const *center, double radius,
+                                    ILCProgType prog_type, Pos2D *res) {
   double vx = end->x - start->x;
   double vy = end->y - start->y;
   double dx = center->x - start->x;
@@ -74,9 +74,9 @@ bool calc_intsec_line_circle(Pos2D const *start, Pos2D const *end,
   return true;
 }
 
-bool calc_intsec_circle_circle(Pos2D const *center1, double radius1,
-                               Pos2D const *center2, double radius2,
-                               ICCSide side, Pos2D *res) {
+static bool calc_intsec_circle_circle(Pos2D const *center1, double radius1,
+                                      Pos2D const *center2, double radius2,
+                                      ICCSide side, Pos2D *res) {
   double dx = center2->x - center1->x;
   double dy = center2->y - center1->y;
 
@@ -393,7 +393,9 @@ bool eval_circle_del_flag(CircleDef *cd) {
 }
 
 double dist_from_pos(Pos2D const *pos1, Pos2D const *pos2) {
-  return vec_len(pos1->x - pos2->x, pos1->y - pos2->y);
+  double dx = pos1->x - pos2->x;
+  double dy = pos1->y - pos2->y;
+  return sqrt(dx * dx + dy * dy);
 }
 
 double clamp_line_prog(double prog, LineExtMode ext_mode) {

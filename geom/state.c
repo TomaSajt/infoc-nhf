@@ -113,7 +113,7 @@ void mark_everything_df_dont_know(GeometryState *gs) {
     curr->cd->del_flag = DF_DONT_KNOW;
 }
 
-void propagate_del_flag(GeometryState *gs) {
+static void propagate_del_flag(GeometryState *gs) {
   for (GenericElemList *curr = gs->pd_list; curr != NULL; curr = curr->next)
     eval_point_del_flag(curr->pd);
   for (GenericElemList *curr = gs->ld_list; curr != NULL; curr = curr->next)

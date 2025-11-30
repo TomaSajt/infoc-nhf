@@ -2,19 +2,19 @@
 
 SDL_Color const default_color = {.r = 255, .g = 255, .b = 255, .a = 255};
 
-void init_misc_point_data(PointDef *p) {
+static void init_misc_point_data(PointDef *p) {
   p->val.dirty = true;
   p->del_flag = DF_DONT_KNOW;
   p->color = default_color;
 }
 
-void init_misc_line_data(LineDef *l) {
+static void init_misc_line_data(LineDef *l) {
   l->val.dirty = true;
   l->del_flag = DF_DONT_KNOW;
   l->color = default_color;
 }
 
-void init_misc_circle_data(CircleDef *c) {
+static void init_misc_circle_data(CircleDef *c) {
   c->val.dirty = true;
   c->del_flag = DF_DONT_KNOW;
   c->color = default_color;
@@ -28,6 +28,7 @@ PointDef make_point_literal(Pos2D pos) {
   init_misc_point_data(&p);
   return p;
 }
+
 PointDef make_point_midpoint(PointDef *p1, PointDef *p2) {
   PointDef p = {
       .type = PD_MIDPOINT,
@@ -36,6 +37,7 @@ PointDef make_point_midpoint(PointDef *p1, PointDef *p2) {
   init_misc_point_data(&p);
   return p;
 }
+
 PointDef make_point_glider_on_line(LineDef *l, float prog) {
   PointDef p = {
       .type = PD_GLIDER_ON_LINE,
@@ -44,6 +46,7 @@ PointDef make_point_glider_on_line(LineDef *l, float prog) {
   init_misc_point_data(&p);
   return p;
 }
+
 PointDef make_point_intsec_line_line(LineDef *l1, LineDef *l2) {
   PointDef p = {
       .type = PD_INTSEC_LINE_LINE,
@@ -52,6 +55,7 @@ PointDef make_point_intsec_line_line(LineDef *l1, LineDef *l2) {
   init_misc_point_data(&p);
   return p;
 }
+
 PointDef make_point_glider_on_circle(CircleDef *c, float prog) {
   PointDef p = {
       .type = PD_GLIDER_ON_CIRCLE,
@@ -60,6 +64,7 @@ PointDef make_point_glider_on_circle(CircleDef *c, float prog) {
   init_misc_point_data(&p);
   return p;
 }
+
 PointDef make_point_intsec_line_circle(LineDef *l, CircleDef *c,
                                        ILCProgType prog_type) {
   PointDef p = {
@@ -69,6 +74,7 @@ PointDef make_point_intsec_line_circle(LineDef *l, CircleDef *c,
   init_misc_point_data(&p);
   return p;
 }
+
 PointDef make_point_intsec_circle_circle(CircleDef *c1, CircleDef *c2,
                                          ICCSide side) {
   PointDef p = {
@@ -99,6 +105,7 @@ LineDef make_line_parallel(LineDef *l, PointDef *p) {
   init_misc_line_data(&nl);
   return nl;
 }
+
 LineDef make_line_perpendicular(LineDef *l, PointDef *p) {
   LineDef nl = {
       .ext_mode = L_EXT_LINE,
@@ -118,6 +125,7 @@ CircleDef make_circle_center_point_outer_point(PointDef *center,
   init_misc_circle_data(&c);
   return c;
 }
+
 CircleDef make_circle_center_point_radius_seg(PointDef *center,
                                               LineDef *rad_seg) {
   CircleDef c = {

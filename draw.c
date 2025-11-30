@@ -13,7 +13,7 @@ SDL_Color const MAGENTA = {.r = 0xff, .g = 0x00, .b = 0xff, .a = 0xff};
 SDL_Color const CYAN = {.r = 0x00, .g = 0xff, .b = 0xff, .a = 0xff};
 SDL_Color const WHITE = {.r = 0xff, .g = 0xff, .b = 0xff, .a = 0xff};
 
-bool is_point_movable(PointDef const *pd) {
+static bool is_point_movable(PointDef const *pd) {
   return pd->type == PD_LITERAL || pd->type == PD_GLIDER_ON_LINE ||
          pd->type == PD_GLIDER_ON_CIRCLE;
 }
@@ -36,9 +36,10 @@ void draw_point(AppState const *as, PointDef *pd) {
                    pd->color.a);
 }
 
-void clamp_line_ends_onto_screen(Pos2D const *s, Pos2D const *e, double sc_w,
-                                 double sc_h, double *prog_s_out,
-                                 double *prog_e_out) {
+static void clamp_line_ends_onto_screen(Pos2D const *s, Pos2D const *e,
+                                        double sc_w, double sc_h,
+                                        double *prog_s_out,
+                                        double *prog_e_out) {
   double vx = e->x - s->x;
   double vy = e->y - s->y;
   // bool use_x_bounds = fabs(vy) / fabs(vx) < (double)sc_h / sc_w;
