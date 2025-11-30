@@ -81,6 +81,9 @@ static void save_circle(FILE *handle, CircleDef *cd) {
   fprintf(handle, "\n");
 }
 
+/**
+ * Saves the given `GeometryState` into the file specifed by `handle`
+ */
 void save_to_file(FILE *handle, GeometryState const *gs) {
   // we assign an ID to each element to be saved
   // the IDs only have to be unique type-wise
@@ -115,16 +118,19 @@ struct ReadResult {
   ReadResult *next;
 };
 
+// compare function for sorting the pointer array by id
 static int id_cmp(void const *a, void const *b) {
   ReadResult *aa = *(ReadResult **)a;
   ReadResult *bb = *(ReadResult **)b;
   return aa->id - bb->id;
 }
 
+// sorts a pointer array by id
 static void sort_by_id(ReadResult **sorted_results, int n) {
   qsort(sorted_results, n, sizeof(ReadResult *), id_cmp);
 }
 
+// creates an array containing the nodes of the given linked list
 static bool make_pointer_array_from_list(ReadResult *list, int n,
                                          ReadResult ***array_out) {
   *array_out = NULL;

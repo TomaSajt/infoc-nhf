@@ -1,5 +1,14 @@
 #include "view.h"
 
+/**
+ * Multiply the input ViewInfo's `.scale` field by `mul` and modify the
+ * `.center` field so that the given fix point stays on the screen where it
+ * originally was.
+ *
+ * \param view_info the ViewInfo struct to modify
+ * \param fp the fix point on the plane
+ * \param mul the scaling factor
+ */
 void zoom(ViewInfo *view_info, Pos2D fp, double mul) {
   *view_info = (ViewInfo){
       .scale = view_info->scale * mul,

@@ -48,7 +48,7 @@ SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
   switch (key_code) {
   case SDLK_W:
     if (ctrl_held) {
-      return SDL_APP_SUCCESS;
+      return show_lose_data_prompt(as) ? SDL_APP_SUCCESS : SDL_APP_CONTINUE;
     }
     break;
   case SDLK_ESCAPE:

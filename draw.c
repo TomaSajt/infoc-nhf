@@ -13,11 +13,13 @@ SDL_Color const MAGENTA = {.r = 0xff, .g = 0x00, .b = 0xff, .a = 0xff};
 SDL_Color const CYAN = {.r = 0x00, .g = 0xff, .b = 0xff, .a = 0xff};
 SDL_Color const WHITE = {.r = 0xff, .g = 0xff, .b = 0xff, .a = 0xff};
 
-static bool is_point_movable(PointDef const *pd) {
-  return pd->type == PD_LITERAL || pd->type == PD_GLIDER_ON_LINE ||
-         pd->type == PD_GLIDER_ON_CIRCLE;
-}
-
+/**
+ * Draws a point specified by the given `PointDef` onto the screen.
+ * The point will have a larger half-transparent aura if it's a movable type.
+ *
+ * \param as the current `AppState`
+ * \param pd a ponter to the `PointDef` to draw
+ */
 void draw_point(AppState const *as, PointDef *pd) {
   eval_point(pd);
   if (pd->val.invalid)
@@ -26,7 +28,9 @@ void draw_point(AppState const *as, PointDef *pd) {
   Pos2D screen_pos =
       pos_world_to_screen(as->renderer, &as->view_info, pd->val.pos);
 
-  if (is_point_movable(pd)) {
+  bool show_aura = pd->type == PD_LITERAL || pd->type == PD_GLIDER_ON_LINE ||
+                   pd->type == PD_GLIDER_ON_CIRCLE;
+  if (show_aura) {
     filledCircleRGBA(as->renderer, screen_pos.x, screen_pos.y,
                      POINT_HITBOX_RADIUS, pd->color.r, pd->color.g, pd->color.b,
                      pd->color.a / 4);
@@ -36,6 +40,19 @@ void draw_point(AppState const *as, PointDef *pd) {
                    pd->color.a);
 }
 
+/** For a line (given by the two helper points) calculate the progress values
+ * for endpoints of the actual segment to draw.
+ *
+ * Internally it compares the slope of the line to the aspect ratio to decide
+ * which equation to solve.
+ *
+ * \param s the first helper point for the line/ray
+ * \param e the second helper point for the line/ray
+ * \param sc_w the screen width
+ * \param sc_h the screen height
+ * \param prog_s_out output parameter for the first calculated progress value
+ * \param prog_e_out output parameter for the second calculated progress value
+ */
 static void clamp_line_ends_onto_screen(Pos2D const *s, Pos2D const *e,
                                         double sc_w, double sc_h,
                                         double *prog_s_out,
@@ -53,6 +70,12 @@ static void clamp_line_ends_onto_screen(Pos2D const *s, Pos2D const *e,
   }
 }
 
+/**
+ * Draws a linelike element specified by the given `LineDef` onto the screen.
+ *
+ * \param as the current `AppState`
+ * \param ld a ponter to the `LineDef` to draw
+ */
 void draw_line(AppState const *as, LineDef *ld) {
   eval_line(ld);
   if (ld->val.invalid)
@@ -67,10 +90,13 @@ void draw_line(AppState const *as, LineDef *ld) {
   SDL_GetRenderOutputSize(as->renderer, &sc_w, &sc_h);
 
   double prog_s, prog_e;
+  // when drawing a segment draw between the actual endpoints
   if (ld->ext_mode == L_EXT_SEGMENT) {
     prog_s = 0;
     prog_e = 1;
   } else {
+    // when drawing rays or lines we calculate which segment covers the screen
+    // as needed
     clamp_line_ends_onto_screen(&screen_start, &screen_end, sc_w, sc_h, &prog_s,
                                 &prog_e);
     if (ld->ext_mode == L_EXT_RAY) {
@@ -85,7 +111,7 @@ void draw_line(AppState const *as, LineDef *ld) {
   Pos2D e = lerp(&screen_start, &screen_end, prog_e);
 
   if (false) {
-    // TODO: add toggle
+    // TODO: maybe add debug toggle
     filledCircleRGBA(as->renderer, s.x, s.y, POINT_RENDER_RADIUS, RED.r, RED.g,
                      RED.b, RED.a);
     filledCircleRGBA(as->renderer, e.x, e.y, POINT_RENDER_RADIUS, GREEN.r,
@@ -96,6 +122,12 @@ void draw_line(AppState const *as, LineDef *ld) {
            ld->color.b, ld->color.a);
 }
 
+/**
+ * Draws a circle specified by the given `CircleDef` onto the screen.
+ *
+ * \param as the current `AppState`
+ * \param cd a ponter to the `CircleDef` to draw
+ */
 void draw_circle(AppState const *as, CircleDef *cd) {
   eval_circle(cd);
   if (cd->val.invalid)
@@ -110,6 +142,12 @@ void draw_circle(AppState const *as, CircleDef *cd) {
              cd->color.r, cd->color.g, cd->color.b, cd->color.a);
 }
 
+/**
+ * Tries to create a texture for the given text with the given color.
+ *
+ * \returns the created texture, which should be freed by the caller after use,
+ * or NULL if the texture creation failed
+ */
 SDL_Texture *make_text_texture(AppState const *as, char const *text,
                                SDL_Color color) {
   SDL_Surface *text_surf = TTF_RenderText_Blended(as->font, text, 0, color);
@@ -120,12 +158,23 @@ SDL_Texture *make_text_texture(AppState const *as, char const *text,
   return texture;
 }
 
+/**
+ * Draws the given texture to the specified location onto the screen.
+ *
+ * \returns whether the operation was successful
+ */
 bool draw_texture_to(SDL_Renderer *renderer, SDL_Texture *texture, float x,
                      float y) {
   SDL_FRect rect = {.x = x, .y = y, .w = texture->w, .h = texture->h};
   return SDL_RenderTexture(renderer, texture, NULL, &rect);
 }
 
+/**
+ * Draws the given text onto the screen by creating and then destroying a
+ * texture.
+ *
+ * \returns whether the operation was successful
+ */
 bool draw_text_to(AppState const *as, char const *text, SDL_Color color,
                   float x, float y) {
   SDL_Texture *texture = make_text_texture(as, text, color);
@@ -136,6 +185,9 @@ bool draw_text_to(AppState const *as, char const *text, SDL_Color color,
   return res;
 }
 
+/**
+ * Clears the entire screen with the given color
+ */
 void clear_screen(AppState *as, SDL_Color color) {
   SDL_SetRenderDrawColor(as->renderer, color.r, color.g, color.b, color.a);
   SDL_RenderClear(as->renderer);
