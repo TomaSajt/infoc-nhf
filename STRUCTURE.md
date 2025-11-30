@@ -3,10 +3,12 @@
 - [draw.c](./draw.c)
   - Grafikus segédfüggvények
   - Használja a `SDL_gfx` könyvtárat
-- [savedata.c](./savedata.c)
-  - A `.geom` fileformátumot feldolgozó és író logika
 - [hover.c](./hover.c)
   - Kód, ami eldönti, hogy mi van jelenleg a kurzor alatt, vagy mi jöjjön létre, ha pontot akarunk létrehozni a kurzor alatt
+- [save/data.c](./save/data.c)
+  - A `.geom` fileformátumot feldolgozó és író logika
+- [save/dialog.c](./save/dialog.c)
+  - A mentés és betöltés logikát meghívó függvények és párbeszédablakok logikája.
 - [mode/defs.c](./mode/defs.c)
   - Nagy statikus vtable a módokhoz (így nem kell mindenhol switch-et használni)
 - [mode/*.c](./mode/)
