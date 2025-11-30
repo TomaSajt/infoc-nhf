@@ -146,6 +146,7 @@ void draw_circle(AppState const *as, CircleDef *cd) {
       pos_world_to_screen(as->renderer, &as->view_info, cd->val.center);
   double screen_radius = as->view_info.scale * cd->val.radius;
 
+  // TODO: fix circle drawing glitch when circle is much bigger than the screen
   circleRGBA(as->renderer, screen_center.x, screen_center.y, screen_radius,
              cd->color.r, cd->color.g, cd->color.b, cd->color.a);
 }
