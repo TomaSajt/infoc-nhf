@@ -4,6 +4,10 @@
 
 #include <stdlib.h>
 
+/**
+ * Free everything in the the given `GeometryState` and return it into an empty
+ * state
+ */
 void clear_geometry_state(GeometryState *gs) {
   for (GenericElemList *curr = gs->pd_list; curr != NULL;) {
     GenericElemList *next = curr->next;
@@ -122,6 +126,10 @@ static void propagate_del_flag(GeometryState *gs) {
     eval_circle_del_flag(curr->cd);
 }
 
+/**
+  Delete everything that is a marked with DF_YES or is a descendent of it.
+  The function resets the del_flag after use.
+ */
 void delete_marked_cascading(GeometryState *gs) {
   propagate_del_flag(gs);
   {
@@ -177,6 +185,10 @@ void delete_marked_cascading(GeometryState *gs) {
 
 SDL_Color const delete_mark_color = {.r = 255, .g = 0, .b = 0, .a = 255};
 
+/**
+  Color everything red that is marked with DF_YES or a descendent of it.
+  The function resets the del_flag after use
+ */
 void color_df_cascading_and_reset(GeometryState *gs) {
   propagate_del_flag(gs);
   for (GenericElemList *curr = gs->pd_list; curr != NULL; curr = curr->next)

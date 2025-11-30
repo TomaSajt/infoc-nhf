@@ -74,7 +74,7 @@
 - Esc billentyű megnyomásakor vagy módváltáskor el lesz felejtve a megjegyzett elem.
 
 ## Mentés / Betöltés
-- A program a sajét `.geom` fájlkiterjesztését használja mentésre.
+- A program a saját `.geom` fájlkiterjesztését használja mentésre.
 - A képernyő bal alsó sarkában látszódik a jelenleg betöltött file neve.
 - A programnak futtatáskor meg lehet adni egy fájlnevet, hogy azt induláskor azonnal betöltse.
 - Billentyűkombinációk
