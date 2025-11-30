@@ -34,6 +34,8 @@ bool linelike__on_render(AppState *as, Pos2D const *w_mouse_pos,
   PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);
 
   if (data->saved != NULL) {
+    data->saved->color = GREEN;
+
     LineDef pot_line = make_line_point_to_point(ext_mode, data->saved, &pot);
     pot_line.color = CYAN;
     draw_line(as, &pot_line);

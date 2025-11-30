@@ -36,8 +36,17 @@ bool circle_by_len__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {
 bool circle_by_len__on_render(AppState *as, Pos2D const *w_mouse_pos) {
   CircleByLenModeData *data = &as->es.data.circle_by_len;
 
-  if (data->saved == NULL)
+  if (data->saved == NULL) {
+    LineDef *ld = get_hovered_line(as, w_mouse_pos);
+    if (ld == NULL)
+      return true;
+    if (ld->ext_mode != L_EXT_SEGMENT)
+      return true;
+    ld->color = CYAN;
     return true;
+  } else {
+    data->saved->color = GREEN;
+  }
 
   PointDef pot;
   PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);

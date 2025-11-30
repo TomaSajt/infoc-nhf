@@ -34,8 +34,16 @@ bool par_per__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos,
 bool par_per__on_render(AppState *as, Pos2D const *w_mouse_pos, bool is_par) {
   ParPerModeData *data = &as->es.data.par_per;
 
-  if (data->saved == NULL)
+  if (data->saved == NULL) {
+    LineDef *ld = get_hovered_line(as, w_mouse_pos);
+    if (ld == NULL)
+      return true;
+
+    ld->color = CYAN;
     return true;
+  }
+
+  data->saved->color = GREEN;
 
   PointDef pot;
   PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);

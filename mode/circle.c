@@ -32,6 +32,8 @@ bool circle__on_render(AppState *as, Pos2D const *w_mouse_pos) {
   PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);
 
   if (data->saved != NULL) {
+    data->saved->color = GREEN;
+
     CircleDef pot_circle =
         make_circle_center_point_outer_point(data->saved, &pot);
     pot_circle.color = CYAN;

@@ -61,7 +61,7 @@ bool move__on_render(AppState *as, Pos2D const *w_mouse_pos) {
     return true;
   }
 
-  data->grabbed->color = CYAN;
+  data->grabbed->color = GREEN;
   try_move_point_to_pos(data->grabbed, w_mouse_pos);
   mark_everyting_dirty(&as->gs);
 
