@@ -3,6 +3,11 @@
 
 #include "defs.h"
 
+/**
+ * GeometryState contains a 3 generic linked list of pointers.
+ * Each of those lists only actually contain one type of pointer.
+ */
+
 typedef struct GenericElemList GenericElemList;
 struct GenericElemList {
   union {

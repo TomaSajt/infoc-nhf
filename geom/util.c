@@ -5,6 +5,9 @@
 
 #define M_TAU 6.28318530717958647693
 
+/**
+ * Does linear interpolation between two points
+ */
 Pos2D lerp(Pos2D const *start, Pos2D const *end, double prog) {
   return (Pos2D){
       .x = start->x * (1.0 - prog) + end->x * prog,
