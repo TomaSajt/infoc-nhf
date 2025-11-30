@@ -6,6 +6,7 @@
   - A `debugmalloc.h` ezen a fileon belül force-`#include`-olva van minden forráskód fileba automatikusan
 - [fonts/](./fonts/)
   - A program által használt betűtípusok
+
 ## Forráskód felbontása:
 - [main.c](./main.c)
   - Meghajtó kód
