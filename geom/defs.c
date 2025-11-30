@@ -1,7 +1,6 @@
 #include "defs.h"
 
 SDL_Color const default_color = {.r = 255, .g = 255, .b = 255, .a = 255};
-SDL_Color const delete_mark_color = {.r = 255, .g = 0, .b = 0, .a = 255};
 
 void init_misc_point_data(PointDef *p) {
   p->val.dirty = true;

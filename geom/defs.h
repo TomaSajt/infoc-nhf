@@ -5,7 +5,6 @@
 #include <stdbool.h>
 
 extern SDL_Color const default_color;
-extern SDL_Color const delete_mark_color;
 
 typedef struct {
   double x;

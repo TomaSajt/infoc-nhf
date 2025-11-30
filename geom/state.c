@@ -175,6 +175,8 @@ void delete_marked_cascading(GeometryState *gs) {
   mark_everything_df_dont_know(gs);
 }
 
+SDL_Color const delete_mark_color = {.r = 255, .g = 0, .b = 0, .a = 255};
+
 void color_df_cascading_and_reset(GeometryState *gs) {
   propagate_del_flag(gs);
   for (GenericElemList *curr = gs->pd_list; curr != NULL; curr = curr->next)

@@ -18,48 +18,6 @@ bool is_point_movable(PointDef const *pd) {
          pd->type == PD_GLIDER_ON_CIRCLE;
 }
 
-Pos2D pos_world_to_view(ViewInfo const *view_info, Pos2D pos) {
-  return (Pos2D){
-      .x = (pos.x - view_info->center.x) * view_info->scale,
-      .y = (pos.y - view_info->center.y) * view_info->scale,
-  };
-}
-
-Pos2D pos_view_to_world(ViewInfo const *view_info, Pos2D pos) {
-  return (Pos2D){
-      .x = pos.x / view_info->scale + view_info->center.x,
-      .y = pos.y / view_info->scale + view_info->center.y,
-  };
-}
-
-Pos2D pos_view_to_screen(SDL_Renderer *renderer, Pos2D pos) {
-  int sc_w, sc_h;
-  SDL_GetRenderOutputSize(renderer, &sc_w, &sc_h);
-  return (Pos2D){
-      .x = sc_w * 0.5 + pos.x,
-      .y = sc_h * 0.5 - pos.y,
-  };
-}
-
-Pos2D pos_screen_to_view(SDL_Renderer *renderer, Pos2D pos) {
-  int sc_w, sc_h;
-  SDL_GetRenderOutputSize(renderer, &sc_w, &sc_h);
-  return (Pos2D){
-      .x = pos.x - sc_w * 0.5,
-      .y = sc_h * 0.5 - pos.y,
-  };
-}
-
-Pos2D pos_world_to_screen(SDL_Renderer *renderer, ViewInfo const *view_info,
-                          Pos2D pos) {
-  return pos_view_to_screen(renderer, pos_world_to_view(view_info, pos));
-}
-
-Pos2D pos_screen_to_world(SDL_Renderer *renderer, ViewInfo const *view_info,
-                          Pos2D pos) {
-  return pos_view_to_world(view_info, pos_screen_to_view(renderer, pos));
-}
-
 void draw_point(AppState const *as, PointDef *pd) {
   eval_point(pd);
   if (pd->val.invalid)
