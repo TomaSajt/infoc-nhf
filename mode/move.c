@@ -1,4 +1,5 @@
 #include "move.h"
+#include "../draw.h"
 #include "../geom/util.h"
 #include "../hover.h"
 
@@ -49,13 +50,18 @@ bool move__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos) {
   return true;
 }
 
-bool move__on_mouse_move(AppState *as, Pos2D const *w_mouse_pos) {
+bool move__on_render(AppState *as, Pos2D const *w_mouse_pos) {
 
   MoveModeData *data = &as->es.data.move;
 
-  if (data->grabbed == NULL)
+  if (data->grabbed == NULL) {
+    PointDef *hovered_point = get_hovered_point(as, w_mouse_pos);
+    if (hovered_point != NULL)
+      hovered_point->color = CYAN;
     return true;
+  }
 
+  data->grabbed->color = CYAN;
   try_move_point_to_pos(data->grabbed, w_mouse_pos);
   mark_everyting_dirty(&as->gs);
 

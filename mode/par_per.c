@@ -42,11 +42,15 @@ bool par_per__on_render(AppState *as, Pos2D const *w_mouse_pos, bool is_par) {
 
   LineDef pot_line = is_par ? make_line_parallel(data->saved, &pot)
                             : make_line_perpendicular(data->saved, &pot);
-  draw_line(as, &pot_line, CYAN);
+  pot_line.color = CYAN;
+  draw_line(as, &pot_line);
 
   // don't redraw already existing point
   if (pd == NULL) {
-    draw_point(as, &pot, CYAN);
+    pot.color = CYAN;
+    draw_point(as, &pot);
+  } else {
+    pd->color = CYAN;
   }
 
   return true;

@@ -1,7 +1,11 @@
 #ifndef GEOM_DEFS_H_
 #define GEOM_DEFS_H_
 
+#include "SDL3/SDL_pixels.h"
 #include <stdbool.h>
+
+extern SDL_Color const default_color;
+extern SDL_Color const delete_mark_color;
 
 typedef struct {
   double x;
@@ -101,6 +105,7 @@ struct PointDef {
   };
   PointVal val;
   DeletionFlag del_flag;
+  SDL_Color color;
   // This value is only ever meant to be set/used inside save functions
   int save_id;
 };
@@ -143,6 +148,7 @@ struct LineDef {
   };
   LineVal val;
   DeletionFlag del_flag;
+  SDL_Color color;
   // This value is only ever meant to be set/used inside save functions
   int save_id;
 };
@@ -177,6 +183,7 @@ struct CircleDef {
   };
   CircleVal val;
   DeletionFlag del_flag;
+  SDL_Color color;
   // This value is only ever meant to be set/used inside save functions
   int save_id;
 };

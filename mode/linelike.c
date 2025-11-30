@@ -35,12 +35,16 @@ bool linelike__on_render(AppState *as, Pos2D const *w_mouse_pos,
 
   if (data->saved != NULL) {
     LineDef pot_line = make_line_point_to_point(ext_mode, data->saved, &pot);
-    draw_line(as, &pot_line, CYAN);
+    pot_line.color = CYAN;
+    draw_line(as, &pot_line);
   }
 
   // don't redraw already existing point
   if (pd == NULL) {
-    draw_point(as, &pot, CYAN);
+    pot.color = CYAN;
+    draw_point(as, &pot);
+  } else {
+    pd->color = CYAN;
   }
 
   return true;

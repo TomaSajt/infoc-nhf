@@ -103,14 +103,27 @@ void mark_everyting_dirty(GeometryState *gs) {
     curr->cd->val.dirty = true;
 }
 
-void delete_marked_cascading(GeometryState *gs) {
+void mark_everything_df_dont_know(GeometryState *gs) {
+
+  for (GenericElemList *curr = gs->pd_list; curr != NULL; curr = curr->next)
+    curr->pd->del_flag = DF_DONT_KNOW;
+  for (GenericElemList *curr = gs->ld_list; curr != NULL; curr = curr->next)
+    curr->ld->del_flag = DF_DONT_KNOW;
+  for (GenericElemList *curr = gs->cd_list; curr != NULL; curr = curr->next)
+    curr->cd->del_flag = DF_DONT_KNOW;
+}
+
+void propagate_del_flag(GeometryState *gs) {
   for (GenericElemList *curr = gs->pd_list; curr != NULL; curr = curr->next)
     eval_point_del_flag(curr->pd);
   for (GenericElemList *curr = gs->ld_list; curr != NULL; curr = curr->next)
     eval_line_del_flag(curr->ld);
   for (GenericElemList *curr = gs->cd_list; curr != NULL; curr = curr->next)
     eval_circle_del_flag(curr->cd);
+}
 
+void delete_marked_cascading(GeometryState *gs) {
+  propagate_del_flag(gs);
   {
     GenericElemList sentinel;
     sentinel.next = gs->pd_list;
@@ -122,7 +135,6 @@ void delete_marked_cascading(GeometryState *gs) {
         free(curr->pd);
         free(curr);
       } else {
-        curr->pd->del_flag = DF_DONT_KNOW;
         prev = curr;
       }
     }
@@ -139,7 +151,6 @@ void delete_marked_cascading(GeometryState *gs) {
         free(curr->ld);
         free(curr);
       } else {
-        curr->ld->del_flag = DF_DONT_KNOW;
         prev = curr;
       }
     }
@@ -156,25 +167,24 @@ void delete_marked_cascading(GeometryState *gs) {
         free(curr->cd);
         free(curr);
       } else {
-        curr->cd->del_flag = DF_DONT_KNOW;
         prev = curr;
       }
     }
     gs->cd_list = sentinel.next;
   }
+  mark_everything_df_dont_know(gs);
 }
 
-void delete_point(GeometryState *gs, PointDef *pd) {
-  pd->del_flag = DF_YES;
-  delete_marked_cascading(gs);
-}
-
-void delete_line(GeometryState *gs, LineDef *ld) {
-  ld->del_flag = DF_YES;
-  delete_marked_cascading(gs);
-}
-
-void delete_circle(GeometryState *gs, CircleDef *cd) {
-  cd->del_flag = DF_YES;
-  delete_marked_cascading(gs);
+void color_df_cascading_and_reset(GeometryState *gs) {
+  propagate_del_flag(gs);
+  for (GenericElemList *curr = gs->pd_list; curr != NULL; curr = curr->next)
+    if (curr->pd->del_flag == DF_YES)
+      curr->pd->color = delete_mark_color;
+  for (GenericElemList *curr = gs->ld_list; curr != NULL; curr = curr->next)
+    if (curr->ld->del_flag == DF_YES)
+      curr->ld->color = delete_mark_color;
+  for (GenericElemList *curr = gs->cd_list; curr != NULL; curr = curr->next)
+    if (curr->cd->del_flag == DF_YES)
+      curr->cd->color = delete_mark_color;
+  mark_everything_df_dont_know(gs);
 }

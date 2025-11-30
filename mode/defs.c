@@ -14,13 +14,14 @@ ModeInfo const manage_category_modes[] = {
         .keycode = SDLK_M,
         .init_data = move__init_data,
         .on_mouse_down = move__on_mouse_down,
-        .on_mouse_move = move__on_mouse_move,
+        .on_render = move__on_render,
         .on_mouse_up = move__on_mouse_up,
     },
     {
         .name = "Delete (D)",
         .keycode = SDLK_D,
         .on_mouse_down = delete__on_mouse_down,
+        .on_render = delete__on_render,
     },
 };
 

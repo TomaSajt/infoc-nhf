@@ -43,11 +43,15 @@ bool circle_by_len__on_render(AppState *as, Pos2D const *w_mouse_pos) {
   PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);
 
   CircleDef pot_circle = make_circle_center_point_radius_seg(&pot, data->saved);
-  draw_circle(as, &pot_circle, CYAN);
+  pot_circle.color = CYAN;
+  draw_circle(as, &pot_circle);
 
   // don't redraw already existing point
   if (pd == NULL) {
-    draw_point(as, &pot, CYAN);
+    pot.color = CYAN;
+    draw_point(as, &pot);
+  } else {
+    pd->color = CYAN;
   }
 
   return true;

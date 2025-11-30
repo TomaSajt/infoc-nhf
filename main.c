@@ -212,8 +212,10 @@ SDL_AppResult on_render(AppState *as) {
     PointDef p3 = make_point_literal((Pos2D){0.0, 10.0});
     LineDef l1 = make_line_point_to_point(L_EXT_SEGMENT, &p1, &p2);
     LineDef l2 = make_line_point_to_point(L_EXT_SEGMENT, &p1, &p3);
-    draw_line(as, &l1, YELLOW);
-    draw_line(as, &l2, YELLOW);
+    l1.color = YELLOW;
+    l2.color = YELLOW;
+    draw_line(as, &l1);
+    draw_line(as, &l2);
   }
 
   Pos2D w_mouse_pos;
@@ -234,17 +236,20 @@ SDL_AppResult on_render(AppState *as) {
 
   for (GenericElemList *curr = as->gs.pd_list; curr != NULL;
        curr = curr->next) {
-    draw_point(as, curr->pd, WHITE);
+    draw_point(as, curr->pd);
+    curr->pd->color = default_color;
   }
 
   for (GenericElemList *curr = as->gs.ld_list; curr != NULL;
        curr = curr->next) {
-    draw_line(as, curr->ld, WHITE);
+    draw_line(as, curr->ld);
+    curr->ld->color = default_color;
   }
 
   for (GenericElemList *curr = as->gs.cd_list; curr != NULL;
        curr = curr->next) {
-    draw_circle(as, curr->cd, WHITE);
+    draw_circle(as, curr->cd);
+    curr->cd->color = default_color;
   }
 
   SDL_RenderPresent(as->renderer);

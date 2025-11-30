@@ -27,9 +27,9 @@ Pos2D pos_world_to_screen(SDL_Renderer *renderer, ViewInfo const *view_info,
 Pos2D pos_screen_to_world(SDL_Renderer *renderer, ViewInfo const *view_info,
                           Pos2D pos);
 
-void draw_point(AppState const *as, PointDef *pd, SDL_Color color);
-void draw_line(AppState const *as, LineDef *ld, SDL_Color color);
-void draw_circle(AppState const *as, CircleDef *cd, SDL_Color color);
+void draw_point(AppState const *as, PointDef *pd);
+void draw_line(AppState const *as, LineDef *ld);
+void draw_circle(AppState const *as, CircleDef *cd);
 
 SDL_Texture *make_text_texture(AppState const *as, char const *text,
                                SDL_Color color);

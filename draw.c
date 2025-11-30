@@ -60,7 +60,7 @@ Pos2D pos_screen_to_world(SDL_Renderer *renderer, ViewInfo const *view_info,
   return pos_view_to_world(view_info, pos_screen_to_view(renderer, pos));
 }
 
-void draw_point(AppState const *as, PointDef *pd, SDL_Color color) {
+void draw_point(AppState const *as, PointDef *pd) {
   eval_point(pd);
   if (pd->val.invalid)
     return;
@@ -70,11 +70,12 @@ void draw_point(AppState const *as, PointDef *pd, SDL_Color color) {
 
   if (is_point_movable(pd)) {
     filledCircleRGBA(as->renderer, screen_pos.x, screen_pos.y,
-                     POINT_HITBOX_RADIUS, color.r, color.g, color.b,
-                     color.a / 4);
+                     POINT_HITBOX_RADIUS, pd->color.r, pd->color.g, pd->color.b,
+                     pd->color.a / 4);
   }
   filledCircleRGBA(as->renderer, screen_pos.x, screen_pos.y,
-                   POINT_RENDER_RADIUS, color.r, color.g, color.b, color.a);
+                   POINT_RENDER_RADIUS, pd->color.r, pd->color.g, pd->color.b,
+                   pd->color.a);
 }
 
 void clamp_line_ends_onto_screen(Pos2D const *s, Pos2D const *e, double sc_w,
@@ -93,7 +94,7 @@ void clamp_line_ends_onto_screen(Pos2D const *s, Pos2D const *e, double sc_w,
   }
 }
 
-void draw_line(AppState const *as, LineDef *ld, SDL_Color color) {
+void draw_line(AppState const *as, LineDef *ld) {
   eval_line(ld);
   if (ld->val.invalid)
     return;
@@ -132,11 +133,11 @@ void draw_line(AppState const *as, LineDef *ld, SDL_Color color) {
                      GREEN.g, GREEN.b, GREEN.a);
   }
 
-  lineRGBA(as->renderer, s.x, s.y, e.x, e.y, color.r, color.g, color.b,
-           color.a);
+  lineRGBA(as->renderer, s.x, s.y, e.x, e.y, ld->color.r, ld->color.g,
+           ld->color.b, ld->color.a);
 }
 
-void draw_circle(AppState const *as, CircleDef *cd, SDL_Color color) {
+void draw_circle(AppState const *as, CircleDef *cd) {
   eval_circle(cd);
   if (cd->val.invalid)
     return;
@@ -146,7 +147,7 @@ void draw_circle(AppState const *as, CircleDef *cd, SDL_Color color) {
   double screen_radius = as->view_info.scale * cd->val.radius;
 
   circleRGBA(as->renderer, screen_center.x, screen_center.y, screen_radius,
-             color.r, color.g, color.b, color.a);
+             cd->color.r, cd->color.g, cd->color.b, cd->color.a);
 }
 
 SDL_Texture *make_text_texture(AppState const *as, char const *text,

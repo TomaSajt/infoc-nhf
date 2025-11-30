@@ -32,12 +32,16 @@ bool midpoint__on_render(AppState *as, Pos2D const *w_mouse_pos) {
   PointDef *pd = get_potential_point(as, w_mouse_pos, &pot);
 
   if (pd == NULL) {
-    draw_point(as, &pot, CYAN);
+    pot.color = CYAN;
+    draw_point(as, &pot);
+  } else {
+    pd->color = CYAN;
   }
 
   if (data->saved != NULL) {
     PointDef pot_midpoint = make_point_midpoint(data->saved, &pot);
-    draw_point(as, &pot_midpoint, CYAN);
+    pot_midpoint.color = CYAN;
+    draw_point(as, &pot_midpoint);
   }
 
   return true;

@@ -34,11 +34,15 @@ bool circle__on_render(AppState *as, Pos2D const *w_mouse_pos) {
   if (data->saved != NULL) {
     CircleDef pot_circle =
         make_circle_center_point_outer_point(data->saved, &pot);
-    draw_circle(as, &pot_circle, CYAN);
+    pot_circle.color = CYAN;
+    draw_circle(as, &pot_circle);
   }
 
   if (pd == NULL) {
-    draw_point(as, &pot, CYAN);
+    pot.color = CYAN;
+    draw_point(as, &pot);
+  } else {
+    pd->color = CYAN;
   }
 
   return true;

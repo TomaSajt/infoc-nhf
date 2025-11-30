@@ -31,8 +31,7 @@ CircleDef *alloc_and_reg_circle(GeometryState *gs, CircleDef cd);
 
 void mark_everyting_dirty(GeometryState *gs);
 
-void delete_point(GeometryState *gs, PointDef *pd);
-void delete_line(GeometryState *gs, LineDef *ld);
-void delete_circle(GeometryState *gs, CircleDef *cd);
+void delete_marked_cascading(GeometryState *gs);
+void color_df_cascading_and_reset(GeometryState *gs);
 
 #endif

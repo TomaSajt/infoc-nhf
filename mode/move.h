@@ -8,7 +8,7 @@ void move__init_data(EditorStateData *data);
 
 bool move__on_mouse_down(AppState *as, Pos2D const *w_mouse_pos);
 
-bool move__on_mouse_move(AppState *as, Pos2D const *w_mouse_pos);
+bool move__on_render(AppState *as, Pos2D const *w_mouse_pos);
 
 bool move__on_mouse_up(AppState *as);
 
