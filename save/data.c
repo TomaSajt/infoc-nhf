@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void save_point(FILE *handle, PointDef *pd) {
   fprintf(handle, "p %d %d ", pd->save_id, pd->type);
@@ -574,9 +575,15 @@ bool load_from_file(FILE *handle, GeometryState *gs) {
     *target_list = rr;
 
     char *ptr = fgets(rr->rest, 256, handle);
-    // TODO: handle if line was too long!
     if (ptr == NULL) {
       printf("Error: fgets read nothing\n");
+      ret = false;
+      goto rr_list_cleanup;
+    }
+
+    int len = strlen(rr->rest);
+    if (rr->rest[len - 1] != '\n') {
+      printf("Error: fgets tried to read a line longer than 256 chars\n");
       ret = false;
       goto rr_list_cleanup;
     }
