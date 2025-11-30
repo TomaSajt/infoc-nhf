@@ -36,11 +36,13 @@ void do_load_from_file(AppState *as, char const *file_path, bool show_confirm) {
       set_save_path(as, file_path);
       printf("Load successful\n");
     } else {
-      printf("Load failed\n");
+      SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
+                               "Failed to load file", as->window);
     }
     fclose(handle);
   } else {
-    printf("Failed to open file\n");
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
+                             "Failed to open file", as->window);
   }
 }
 
@@ -50,6 +52,9 @@ void open__on_file_selected(void *userdata, char const *const *filelist,
   (void)filter; // unused parameter
 
   if (filelist == NULL) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
+                             "An error occurred with the file selector",
+                             as->window);
     printf("An error occurred: %s\n", SDL_GetError());
     return;
   }
@@ -81,7 +86,8 @@ void do_save_to_file(AppState *as, char const *file_path) {
     set_save_path(as, file_path);
     fclose(handle);
   } else {
-    printf("Failed to open file\n");
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
+                             "Failed to open file", as->window);
   }
 }
 
@@ -91,6 +97,9 @@ void save__on_file_selected(void *userdata, char const *const *filelist,
   (void)filter; // unused parameter
 
   if (filelist == NULL) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error",
+                             "An error occurred with the file selector",
+                             as->window);
     printf("An error occurred: %s\n", SDL_GetError());
     return;
   }
