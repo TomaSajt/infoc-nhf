@@ -8,11 +8,12 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-#include <SDL3_ttf/SDL_ttf.h>
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#define FONT_SIZE 24
 
 SDL_AppResult on_key_down(AppState *as, SDL_KeyboardEvent *event) {
   SDL_Keycode key_code = event->key;
@@ -171,7 +172,10 @@ void render_save_info(AppState const *as) {
     char const *pos = strrchr(as->save_path, '/');
     save_name = pos == NULL ? as->save_path : pos + 1;
   }
-  draw_text_to(as, save_name, WHITE, 700, 10);
+  int sc_w, sc_h;
+  if (SDL_GetRenderOutputSize(as->renderer, &sc_w, &sc_h)) {
+    draw_text_to(as, save_name, WHITE, 10, sc_h - 10 - FONT_SIZE);
+  }
 }
 
 SDL_AppResult on_render(AppState *as) {
@@ -194,8 +198,6 @@ SDL_AppResult on_render(AppState *as) {
 
   Pos2D w_mouse_pos;
   {
-    // TODO: actually use proper render coodinates everywhere
-    // TODO: maybe transform renderer instead of using ViewInfo
     float sc_mx, sc_my;
     SDL_GetMouseState(&sc_mx, &sc_my);
     Pos2D sc_mouse_pos = (Pos2D){.x = sc_mx, .y = sc_my};
@@ -251,7 +253,8 @@ SDL_AppResult init_app(AppState *as) {
     return SDL_APP_FAILURE;
   }
 
-  as->font = TTF_OpenFont("./fonts/liberation/LiberationSerif-Regular.ttf", 24);
+  as->font =
+      TTF_OpenFont("./fonts/liberation/LiberationSerif-Regular.ttf", FONT_SIZE);
   if (as->font == NULL) {
     printf("Font not found!\n");
     return SDL_APP_FAILURE;
